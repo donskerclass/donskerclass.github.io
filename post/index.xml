@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on David Childers</title>
+    <link>/post/</link>
+    <description>Recent content in Posts on David Childers</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>&amp;copy; 2018</copyright>
+    <lastBuildDate>Sun, 01 Jan 2017 00:00:00 -0500</lastBuildDate>
+    
+	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Top Papers 2017</title>
+      <link>/post/top-papers-2017/</link>
+      <pubDate>Thu, 07 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/top-papers-2017/</guid>
+      <description>Inspired by Paul Goldsmith-Pinkham and following on Noah Smith and others in an end of-year tradition, here is a not-quite-ordered list of the top 10-ish papers I read in 2017. I read too many arxiv preprints and older papers to choose ones based on actual publication date, so these are chosen from the “Read in 2017” folder of my reference manager, which tells me that I have somehow read 176 papers (so far) in 2017.</description>
+    </item>
+    
+    <item>
+      <title>A Nontechnical Introduction to My Thesis</title>
+      <link>/post/a-nontechnical-introduction-to-my-thesis/</link>
+      <pubDate>Fri, 08 Jan 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/a-nontechnical-introduction-to-my-thesis/</guid>
+      <description>Attention Conservation Notice: Over 2000 words, written for an intended audience of non-economists, describing my thesis, which is supposed to be about Inequality, which you probably care about, but in fact is mostly about algorithms, which maybe only some of you care about. Most of the length is a discussion of rational expectations models which will be old news to economists and slightly bizarre to those who aren’t.
+Given that I am currently in the midst of completing graduate school and making the transition to other (potentially better) things, I thought it would be a good time to talk about what I’ve been doing with the past, say, 5 to 7 years of my life.</description>
+    </item>
+    
+    <item>
+      <title>Top Papers Read in 2015</title>
+      <link>/post/top-papers-read-in-2015/</link>
+      <pubDate>Sun, 27 Dec 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/top-papers-read-in-2015/</guid>
+      <description>So, inspired by Brian and the general spirit of end-of-year reflection, some thoughts on what I’ve read this year.     According to my reference manager software, I’ve read 183 papers this year, which is somewhat overstated because many were read last year but are dated incorrectly, and a substantial portion of the list contains slides, lecture notes, or other documents not quite meriting the status of article.</description>
+    </item>
+    
+    <item>
+      <title>Aggregate shocks in cross-sectional data, or the alternative to a macroeconomic model isn&#39;t no macroeconomic model, it&#39;s a bad macroeconomic model</title>
+      <link>/post/aggregate-shocks-in-cross-sectional-data/</link>
+      <pubDate>Mon, 20 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/aggregate-shocks-in-cross-sectional-data/</guid>
+      <description>Inspired by the release of a new and quite clear explainer on the topic by Hahn, Kuersteiner, and Mazzocco (HKM) amid a growing trend of using microeconomic data to learn about macroeconomic or aggregate effects, I believe it’s a good time to write something about what microeconometricians and applied microeconomists ought to know about dealing with aggregate effects. Broadly, this refers to any time-dependent variability in a data-generating process that can’t be modeled is independent across individual observations.</description>
+    </item>
+    
+    <item>
+      <title>Why I’m blogging</title>
+      <link>/post/why-i-m-blogging/</link>
+      <pubDate>Wed, 03 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/why-i-m-blogging/</guid>
+      <description>In an effort to get into the habit of writing down my thoughts, I am, ill-advisedly, experimenting with starting a blog. I expect to cover mainly topics in statistics, econometrics, machine learning, and numerical computation, with some chance of also entertaining thoughts on how these relate to macroeconomics. Actual macroeconomics will be kept to a minimum, as that topic attracts sufficient attention online already, except in the case that I lack the self-control to avoid arguing on the internet.</description>
+    </item>
+    
+    <item>
+      <title>Why Laplacians?</title>
+      <link>/post/why-laplacians/</link>
+      <pubDate>Wed, 03 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/why-laplacians/</guid>
+      <description>Attention Conservation Notice: Over 5000 words about math that I don’t particularly understand, written mostly to clarify my thoughts. A reader familiar with the topic (roughly, spectral or harmonic theory on graphs and manifolds) will find little here new except possibly misconceptions, while a reader not familiar with the topic will find minimal motivation and poorly explained jargon. The ideal reader is a pedant or troll who can tell me why I’m wrong about everything.</description>
+    </item>
+    
+  </channel>
+</rss>

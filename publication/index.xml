@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Publications on David Childers</title>
+    <link>/publication/</link>
+    <description>Recent content in Publications on David Childers</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>&amp;copy; 2018</copyright>
+    <lastBuildDate>Sun, 01 Jan 2017 00:00:00 -0500</lastBuildDate>
+    
+	<atom:link href="/publication/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Solution of Rational Expectations Models with Function Valued States</title>
+      <link>/publication/functionvaluedstates/</link>
+      <pubDate>Mon, 15 Jan 2018 00:00:00 -0500</pubDate>
+      
+      <guid>/publication/functionvaluedstates/</guid>
+      <description>Previous versions of this paper circulated under the title On the Solution and Application of Rational Expectations Models with Function-Valued States</description>
+    </item>
+    
+    <item>
+      <title>Computational Methods for Economic Models with Function Valued States</title>
+      <link>/publication/thesis/</link>
+      <pubDate>Sun, 01 May 2016 00:00:00 -0400</pubDate>
+      
+      <guid>/publication/thesis/</guid>
+      <description>Portions of this PhD thesis have been adapted into the paper Solution of Rational Expectations Models with Function Valued States. The thesis contains additional results including a very different algorithm for the non-compact case, expanded analysis of the economic geography model, and additional numerical applications.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Review on David Childers</title>
+    <link>/tags/review/</link>
+    <description>Recent content in Review on David Childers</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>&amp;copy; 2018</copyright>
+    <lastBuildDate>Thu, 07 Dec 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/review/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Top Papers 2017</title>
+      <link>/post/top-papers-2017/</link>
+      <pubDate>Thu, 07 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/top-papers-2017/</guid>
+      <description>Inspired by Paul Goldsmith-Pinkham and following on Noah Smith and others in an end of-year tradition, here is a not-quite-ordered list of the top 10-ish papers I read in 2017. I read too many arxiv preprints and older papers to choose ones based on actual publication date, so these are chosen from the “Read in 2017” folder of my reference manager, which tells me that I have somehow read 176 papers (so far) in 2017.</description>
+    </item>
+    
+    <item>
+      <title>Top Papers Read in 2015</title>
+      <link>/post/top-papers-read-in-2015/</link>
+      <pubDate>Sun, 27 Dec 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/top-papers-read-in-2015/</guid>
+      <description>So, inspired by Brian and the general spirit of end-of-year reflection, some thoughts on what I’ve read this year.     According to my reference manager software, I’ve read 183 papers this year, which is somewhat overstated because many were read last year but are dated incorrectly, and a substantial portion of the list contains slides, lecture notes, or other documents not quite meriting the status of article.</description>
+    </item>
+    
+  </channel>
+</rss>

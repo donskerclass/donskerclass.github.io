@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Econometrics on David Childers</title>
+    <link>/tags/econometrics/</link>
+    <description>Recent content in Econometrics on David Childers</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>&amp;copy; 2018</copyright>
+    <lastBuildDate>Thu, 07 Dec 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/econometrics/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Top Papers 2017</title>
+      <link>/post/top-papers-2017/</link>
+      <pubDate>Thu, 07 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/top-papers-2017/</guid>
+      <description>Inspired by Paul Goldsmith-Pinkham and following on Noah Smith and others in an end of-year tradition, here is a not-quite-ordered list of the top 10-ish papers I read in 2017. I read too many arxiv preprints and older papers to choose ones based on actual publication date, so these are chosen from the “Read in 2017” folder of my reference manager, which tells me that I have somehow read 176 papers (so far) in 2017.</description>
+    </item>
+    
+    <item>
+      <title>Top Papers Read in 2015</title>
+      <link>/post/top-papers-read-in-2015/</link>
+      <pubDate>Sun, 27 Dec 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/top-papers-read-in-2015/</guid>
+      <description>So, inspired by Brian and the general spirit of end-of-year reflection, some thoughts on what I’ve read this year.     According to my reference manager software, I’ve read 183 papers this year, which is somewhat overstated because many were read last year but are dated incorrectly, and a substantial portion of the list contains slides, lecture notes, or other documents not quite meriting the status of article.</description>
+    </item>
+    
+    <item>
+      <title>Aggregate shocks in cross-sectional data, or the alternative to a macroeconomic model isn&#39;t no macroeconomic model, it&#39;s a bad macroeconomic model</title>
+      <link>/post/aggregate-shocks-in-cross-sectional-data/</link>
+      <pubDate>Mon, 20 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/aggregate-shocks-in-cross-sectional-data/</guid>
+      <description>Inspired by the release of a new and quite clear explainer on the topic by Hahn, Kuersteiner, and Mazzocco (HKM) amid a growing trend of using microeconomic data to learn about macroeconomic or aggregate effects, I believe it’s a good time to write something about what microeconometricians and applied microeconomists ought to know about dealing with aggregate effects. Broadly, this refers to any time-dependent variability in a data-generating process that can’t be modeled is independent across individual observations.</description>
+    </item>
+    
+    <item>
+      <title>Why Laplacians?</title>
+      <link>/post/why-laplacians/</link>
+      <pubDate>Wed, 03 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/why-laplacians/</guid>
+      <description>Attention Conservation Notice: Over 5000 words about math that I don’t particularly understand, written mostly to clarify my thoughts. A reader familiar with the topic (roughly, spectral or harmonic theory on graphs and manifolds) will find little here new except possibly misconceptions, while a reader not familiar with the topic will find minimal motivation and poorly explained jargon. The ideal reader is a pedant or troll who can tell me why I’m wrong about everything.</description>
+    </item>
+    
+  </channel>
+</rss>

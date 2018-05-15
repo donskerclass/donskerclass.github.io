@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Spectral theory on David Childers</title>
+    <link>/tags/spectral-theory/</link>
+    <description>Recent content in Spectral theory on David Childers</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>&amp;copy; 2018</copyright>
+    <lastBuildDate>Wed, 03 Jun 2015 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/spectral-theory/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Why Laplacians?</title>
+      <link>/post/why-laplacians/</link>
+      <pubDate>Wed, 03 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/why-laplacians/</guid>
+      <description>Attention Conservation Notice: Over 5000 words about math that I don’t particularly understand, written mostly to clarify my thoughts. A reader familiar with the topic (roughly, spectral or harmonic theory on graphs and manifolds) will find little here new except possibly misconceptions, while a reader not familiar with the topic will find minimal motivation and poorly explained jargon. The ideal reader is a pedant or troll who can tell me why I’m wrong about everything.</description>
+    </item>
+    
+  </channel>
+</rss>
