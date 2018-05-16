@@ -78,6 +78,15 @@
     </item>
     
     <item>
+      <title>Curriculum Vitae</title>
+      <link>/home/cv/</link>
+      <pubDate>Tue, 15 May 2018 00:00:00 -0400</pubDate>
+      
+      <guid>/home/cv/</guid>
+      <description>PDF</description>
+    </item>
+    
+    <item>
       <title>Blog</title>
       <link>/home/posts/</link>
       <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
