@@ -11,6 +11,58 @@
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>An Empirical Heterogeneous Agents Models Reading List</title>
+      <link>/post/an-empirical-heterogeneous-agents-models-reading-list/</link>
+      <pubDate>Tue, 20 Nov 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/an-empirical-heterogeneous-agents-models-reading-list/</guid>
+      <description>
+
+&lt;p&gt;Inspired by a request by &lt;a href=&#34;https://khakieconomics.github.io/&#34; target=&#34;_blank&#34;&gt;Jim Savage&lt;/a&gt; asking for examples of recent work using heterogeneous agent models, I&amp;rsquo;ve put together a far from comprehensive list of papers demonstrating the range of work being done using these tools to understand a variety of issues at the intersection of macroeconomics and microeconomic data. While the field has a ways to go in terms of econometric modeling, the best recent work involves much more substantial use of data to discipline results and compare alternative hypotheses. While the days of putting together a model with some half-baked mechanism, &amp;ldquo;calibrating&amp;rdquo; a few parameters to whatever values some old person used in a paper that got published, and showing a table of randomly chosen model and data moments to compare for which a J test would soundly reject equality but which for some reason you call a &amp;ldquo;good fit&amp;rdquo; are, um, not quite over, recent work now commonly involves actually writing down models which can encompass multiple competing mechanisms, collecting microeconomic data which directly speaks to those mechanisms, and using that data and model to quantitatively evaluate the results. Some of the work is even capable of putting standard errors on the estimates!&lt;/p&gt;
+
+&lt;p&gt;The following short list gives a taste of where the field has been moving, and I have some hope that it will continue to move further in this direction.&lt;/p&gt;
+
+&lt;h1 id=&#34;income-distribution-and-the-economy&#34;&gt;Income Distribution and the Economy&lt;/h1&gt;
+
+&lt;p&gt;Handbook Chapter bringing up to date and empirically evaluating the research efforts descending from foundational work of &lt;a href=&#34;http://perseus.iies.su.se/~pkrus/ref_pub/250034.pdf&#34; target=&#34;_blank&#34;&gt;Krusell and Smith 1998&lt;/a&gt;:&lt;/p&gt;
+
+&lt;p&gt;Krueger, Mitman, and Perri &amp;ldquo;&lt;a href=&#34;https://www.dropbox.com/s/y9yv228pnaaie4i/HandbookKMP.pdf?raw=1&#34; target=&#34;_blank&#34;&gt;Macroeconomics  and  Household  Heterogeneity&lt;/a&gt;&amp;rdquo; 2016&lt;/p&gt;
+
+&lt;h1 id=&#34;income-and-wealth-distribution-modeling&#34;&gt;Income and Wealth Distribution Modeling&lt;/h1&gt;
+
+&lt;p&gt;Gabaix, Lasry, Lions, Moll &amp;ldquo;&lt;a href=&#34;https://scholar.harvard.edu/files/xgabaix/files/dynamics_of_inequality.pdf&#34; target=&#34;_blank&#34;&gt;The Dynamics of Inequality&lt;/a&gt;&amp;rdquo; &lt;em&gt;ECTA&lt;/em&gt; 2016&lt;/p&gt;
+
+&lt;p&gt;Hubmer, Krusell, and Smith &amp;ldquo;&lt;a href=&#34;https://economics.yale.edu/sites/default/files/files/Graduate/Uploads/HubmerKrusellSmith_Wealth2017.pdf&#34; target=&#34;_blank&#34;&gt;The Historical Evolution of the Wealth Distribution: A
+Quantitative-Theoretic Investigation&lt;/a&gt;&amp;rdquo; 2017&lt;/p&gt;
+
+&lt;h1 id=&#34;monetary&#34;&gt;Monetary&lt;/h1&gt;
+
+&lt;p&gt;Most influential recent paper:&lt;/p&gt;
+
+&lt;p&gt;Kaplan, Moll, and Violante &amp;ldquo;&lt;a href=&#34;http://violante.mycpanel.princeton.edu/Workingpapers/HANK_revision_MASTER.pdf&#34; target=&#34;_blank&#34;&gt;Monetary Policy According to HANK&lt;/a&gt;&amp;rdquo; &lt;em&gt;AER&lt;/em&gt; 2018&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;See also&lt;/em&gt;:&lt;/p&gt;
+
+&lt;p&gt;Auclert &amp;ldquo;&lt;a href=&#34;http://web.stanford.edu/~aauclert/mp_redistribution.pdf&#34; target=&#34;_blank&#34;&gt;Monetary Policy and the Redistribution Channel&lt;/a&gt;&amp;rdquo; 2018
+and &lt;a href=&#34;https://aauclert.people.stanford.edu/research&#34; target=&#34;_blank&#34;&gt;several other papers by Auclert&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Goernemann, Kuester and Nakajima &amp;ldquo;&lt;a href=&#34;https://drive.google.com/file/d/0BxRm9kW6_YBqWFRrajRLWGJ0SHc/view&#34; target=&#34;_blank&#34;&gt;Doves for the Rich, Hawks for the Poor? Distributional Consequences of Monetary Policy&lt;/a&gt;&amp;rdquo;  &lt;em&gt;ECTA forthcoming&lt;/em&gt;&lt;/p&gt;
+
+&lt;h1 id=&#34;development&#34;&gt;Development&lt;/h1&gt;
+
+&lt;p&gt;The &lt;a href=&#34;http://townsend-thai.mit.edu/&#34; target=&#34;_blank&#34;&gt;Townsend Thai Project&lt;/a&gt;, which collects extremely detailed spending, income and credit data from rural Thai villages, has inspired a large number of &lt;a href=&#34;http://townsend-thai.mit.edu/papers/&#34; target=&#34;_blank&#34;&gt;papers using the data&lt;/a&gt; along with quantitative heterogeneous agent models to understand credit in rural economies. See as an example&lt;/p&gt;
+
+&lt;p&gt;Buera, Kaboski, and Shin &amp;ldquo;&lt;a href=&#34;https://www3.nd.edu/~jkaboski/BKS_MacroMicro.pdf&#34; target=&#34;_blank&#34;&gt;The Macroeconomics of Microfinance&lt;/a&gt;&amp;rdquo; 2017&lt;/p&gt;
+
+&lt;h1 id=&#34;additional-topics&#34;&gt;Additional Topics&lt;/h1&gt;
+
+&lt;p&gt;Literally anything by &lt;a href=&#34;https://voices.uchicago.edu/vavra/research/&#34; target=&#34;_blank&#34;&gt;Joe Vavra&lt;/a&gt; is several standard deviations in quality above the rest of the field in terms of careful, detailed empirical modeling. See, eg his work on &lt;a href=&#34;https://cpb-us-w2.wpmucdn.com/voices.uchicago.edu/dist/7/914/files/2018/03/housing-8-16-2017-riidny-body-23xw55t.pdf&#34; target=&#34;_blank&#34;&gt;House Prices and Consumer Spending&lt;/a&gt; or &lt;a href=&#34;https://cpb-us-w2.wpmucdn.com/voices.uchicago.edu/dist/7/914/files/2018/03/econometrica_body-2kbvfl4.pdf&#34; target=&#34;_blank&#34;&gt;Durables Consumption over the Business Cycle&lt;/a&gt; and his work using BLS micro pricing data with &lt;a href=&#34;https://cpb-us-w2.wpmucdn.com/voices.uchicago.edu/dist/7/914/files/2018/03/qje_final_online-2asbwxj.pdf&#34; target=&#34;_blank&#34;&gt;heterogenous firm models of price dispersion&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://sites.google.com/site/kyleherkenhoff/research&#34; target=&#34;_blank&#34;&gt;Kyle Herkenhoff&lt;/a&gt; is another researcher doing detailed empirical work in this field, with a focus on consumer credit.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Automated Solution of Heterogeneous Agent Models</title>
       <link>/publication/automatedsolution/</link>
       <pubDate>Sat, 13 Oct 2018 00:00:00 -0400</pubDate>
