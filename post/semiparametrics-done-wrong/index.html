@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="theme" content="hugo-academic">
+  <meta name="generator" content="Hugo 0.40.3" />
+  <meta name="author" content="David Childers">
+
+  
+  
+  
+  
+    
+      
+    
+  
+  <meta name="description" content="Colleagues, friends, acquaintances, television personalities, and random people on the street often ask me &ldquo;What is your deal with simulated method of moments?&rdquo; So, instead of just making a face like I&rsquo;ve just drunk spoiled milk when I get to the end of a promising abstract and read the phrase &ldquo;We estimate the model using the simulated method of moments&rdquo; like I usually do, I figure it would be worthwhile to lay out some more coherent thoughts, with some simple strawman examples, of why I find most analyses using the simulated method of moments (along with related methods like indirect inference1) to be unreliable tools for learning anything useful about the economy.">
+
+  
+  <link rel="alternate" hreflang="en-us" href="/post/semiparametrics-done-wrong/">
+
+  
+
+
+  
+
+  
+  
+  <meta name="theme-color" content="hsl(339, 90%, 68%)">
+  
+  
+  
+  
+    
+  
+  
+    
+    
+      
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/dracula.min.css">
+      
+    
+  
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha512-6MXa8B6uaO18Hid6blRMetEIoPqHf7Ux1tnyIQdpt9qI5OACx7C+O3IVTr98vwGnlcg0LOLa02i9Y1HpVhlfiw==" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha512-SfTiTlX6kk+qitfevl/7LibUOeJWlt9rbyDn92a1DqWOw9vWG2MFoays0sgObmWazO5BQPiFucnnEAjpAB+/Sw==" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" integrity="sha256-ygkqlh3CYSUri3LhQxzdcm0n1EQvH2Y+U5S2idbLtxs=" crossorigin="anonymous">
+  
+  
+  
+  
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Montserrat:400,700%7cRoboto:400,400italic,700%7cRoboto&#43;Mono">
+  
+  <link rel="stylesheet" href="/styles.css">
+  
+
+  
+
+  
+  <link rel="alternate" href="/index.xml" type="application/rss+xml" title="David Childers">
+  <link rel="feed" href="/index.xml" type="application/rss+xml" title="David Childers">
+  
+
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="icon" type="image/png" href="/img/icon.png">
+  <link rel="apple-touch-icon" type="image/png" href="/img/icon-192.png">
+
+  <link rel="canonical" href="/post/semiparametrics-done-wrong/">
+
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="twitter:site" content="@DonskerClass">
+  <meta property="twitter:creator" content="@DonskerClass">
+  
+  <meta property="og:site_name" content="David Childers">
+  <meta property="og:url" content="/post/semiparametrics-done-wrong/">
+  <meta property="og:title" content="Semiparametrics Done Wrong | David Childers">
+  <meta property="og:description" content="Colleagues, friends, acquaintances, television personalities, and random people on the street often ask me &ldquo;What is your deal with simulated method of moments?&rdquo; So, instead of just making a face like I&rsquo;ve just drunk spoiled milk when I get to the end of a promising abstract and read the phrase &ldquo;We estimate the model using the simulated method of moments&rdquo; like I usually do, I figure it would be worthwhile to lay out some more coherent thoughts, with some simple strawman examples, of why I find most analyses using the simulated method of moments (along with related methods like indirect inference1) to be unreliable tools for learning anything useful about the economy.">
+  <meta property="og:locale" content="en-us">
+  
+  <meta property="article:published_time" content="2018-12-29T00:00:00&#43;00:00">
+  
+  <meta property="article:modified_time" content="2018-12-29T00:00:00&#43;00:00">
+  
+
+  
+  
+
+  <title>Semiparametrics Done Wrong | David Childers</title>
+
+</head>
+<body id="top" data-spy="scroll" data-target="#toc" data-offset="71" class="dark">
+
+<nav class="navbar navbar-default navbar-fixed-top" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="navbar-header">
+      
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+              data-target=".navbar-collapse" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+      <a class="navbar-brand" href="/">David Childers</a>
+    </div>
+
+    
+    <div class="collapse navbar-collapse">
+
+      
+      
+      <ul class="nav navbar-nav navbar-right">
+        
+
+        
+        
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#about">
+            
+            <span>Home</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+        
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#publications_selected">
+            
+            <span>Research</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+        
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#teaching">
+            
+            <span>Teaching</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a href="/#cv">
+            
+            <span>CV</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+        
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#posts">
+            
+            <span>Blog</span>
+            
+          </a>
+        </li>
+
+        
+        
+      
+
+      
+      </ul>
+
+    </div>
+  </div>
+</nav>
+
+
+<article class="article" itemscope itemtype="http://schema.org/Article">
+
+  
+
+
+  <div class="article-container">
+    <h1 itemprop="name">Semiparametrics Done Wrong</h1>
+
+    
+
+<div class="article-metadata">
+
+  <span class="article-date">
+    
+    <time datetime="2018-12-29 00:00:00 &#43;0000 UTC" itemprop="datePublished dateModified">
+      Dec 29, 2018
+    </time>
+  </span>
+  <span itemscope itemprop="author publisher" itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="David Childers">
+  </span>
+
+  
+
+  
+  
+
+  
+  
+  
+  
+
+  
+  
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    <li>
+      <a class="twitter"
+         href="https://twitter.com/intent/tweet?text=Semiparametrics%20Done%20Wrong&amp;url=%2fpost%2fsemiparametrics-done-wrong%2f"
+         target="_blank" rel="noopener">
+        <i class="fa fa-twitter"></i>
+      </a>
+    </li>
+    <li>
+      <a class="facebook"
+         href="https://www.facebook.com/sharer.php?u=%2fpost%2fsemiparametrics-done-wrong%2f"
+         target="_blank" rel="noopener">
+        <i class="fa fa-facebook"></i>
+      </a>
+    </li>
+    <li>
+      <a class="linkedin"
+         href="https://www.linkedin.com/shareArticle?mini=true&amp;url=%2fpost%2fsemiparametrics-done-wrong%2f&amp;title=Semiparametrics%20Done%20Wrong"
+         target="_blank" rel="noopener">
+        <i class="fa fa-linkedin"></i>
+      </a>
+    </li>
+    <li>
+      <a class="weibo"
+         href="http://service.weibo.com/share/share.php?url=%2fpost%2fsemiparametrics-done-wrong%2f&amp;title=Semiparametrics%20Done%20Wrong"
+         target="_blank" rel="noopener">
+        <i class="fa fa-weibo"></i>
+      </a>
+    </li>
+    <li>
+      <a class="email"
+         href="mailto:?subject=Semiparametrics%20Done%20Wrong&amp;body=%2fpost%2fsemiparametrics-done-wrong%2f">
+        <i class="fa fa-envelope"></i>
+      </a>
+    </li>
+  </ul>
+</div>
+
+
+  
+
+</div>
+
+
+    <div class="article-style" itemprop="articleBody">
+      <p>Colleagues, friends, acquaintances, television personalities, and random people on the street often ask me &ldquo;What is your deal with simulated method of moments?&rdquo; So, instead of just making a face like I&rsquo;ve just drunk spoiled milk when I get to the end of a promising abstract and read the phrase &ldquo;We estimate the model using the simulated method of moments&rdquo; like I usually do, I figure it would be worthwhile to lay out some more coherent thoughts, with some simple strawman examples, of why I find most analyses using the simulated method of moments (along with related methods like indirect inference<sup class="footnote-ref" id="fnref:1"><a href="#fn:1">1</a></sup>) to be unreliable tools for learning anything useful about the economy.</p>
+
+<p>To a large extent, the problems with SMM are <em>not</em> with its statistical properties. For the most part, it does what it says on the tin (err, let&rsquo;s say in <a href="https://books.google.com/books/about/Simulation_based_Econometric_Methods.html?id=BsNBtAEACAAJ&amp;source=kp_book_description" target="_blank">Gourieroux and Monfort&rsquo;s monograph</a>): given a correctly specified parametric model from which you can simulate, and some set of sample averages from the data, you can recover the parameters with reasonable asymptotic precision, without going through a lot of computationally intensive or intractable likelihood evaluations, which can be especially nasty if you have a model for which each likelihood evaluation requires operations like high dimensional integration (as in nonlinear state space models and other latent variable models) or optimization (as in economic models of the behavior of optimizing agents). Simulation error adds some factor (inversely proportional to the number of simulated data sets) to the standard errors relative to usual generalized method of moments estimation, which itself may have larger standard errors than MLE, but these can be measured and quantified, and even reduced down to the efficient level with enough simulations and <a href="https://public.econ.duke.edu/~get/wpapers/GT1989.pdf" target="_blank">proper choice of moments</a>. In graduate school, for my qualifier exam in Econometrics, I chose for my topic simulation estimation so this was some of the first technical econometric literature I had exposure to, and for 1980&rsquo;s-1990&rsquo;s style work, most of it holds up fine.<sup class="footnote-ref" id="fnref:2"><a href="#fn:2">2</a></sup></p>
+
+<p>Beyond these properties, SMM has another &ldquo;desirable&rdquo; property: you don&rsquo;t need to use every conceivable moment from your data to estimate your model, so long as you have a set of moments sufficient to identify the parameters. This is closely related to the ability of the generalized method of moments to perform semiparametric inference. Given a set of moments implied by a model $E[g(z,\theta)]=0$, $g(.,.)\mathcal{Z}\times\Theta\to\mathbb{R}^K$, you can estimate the parameter value $\theta$ which satisfies these conditions. Equivalently, one is implicitly defining a set of probability distributions $\mathcal{F}(\theta):={f(z):\int g(z,\theta)f(z)dz=0}$ where the set need not be single-valued, and may even be infinite-dimensional in some cases, in which case the model is called &ldquo;semiparametric.&rdquo; As an example, if $g(z,\theta)=z-\theta$, then $\mathcal{F}(\theta)$ is the set of all measures with mean $\theta$. One can always recover the parameters (which are said to be &ldquo;identified&rdquo;) so long as ${\mathcal{F}(\theta):\theta\in\Theta}$ form a partition of a set of measures $\mathcal{F}:=\cup_{\theta\in\Theta}\mathcal{F}(\theta)$ over data $z\in\mathcal{Z}$, that is, if different parameters correspond to distributions with different values of the moments. Researchers outside of econometrics usually have a preference for defining a set of measures explicitly rather than implicitly, but the modeling principles are the same as any other way of defining a likelihood. Among other things, this means that one can do things like test the model by testing whether the distribution of the data is in $\mathcal{F}$, or putting a prior distribution over this set, which under the identifiability condition may be done by having a prior over $\Theta$ augmented with a prior over the <a href="https://betanalpha.github.io/assets/case_studies/conditional_probability_theory.html" target="_blank">fiber bundle</a> over $\mathcal{F}(\theta)$<sup class="footnote-ref" id="fnref:3"><a href="#fn:3">3</a></sup></p>
+
+<p>The problem with SMM is that it is frequently used as a way to use only a smaller set of moments for estimation, but almost never used for genuine semiparametric inference, to define a model which identifies a parameter which may correspond to a large set of possible probability distributions. Instead of starting with a moment and finding the set of probability distributions that correspond to it, one starts with a set of probability distributions (given by a simulated model) and finds some moments $M(\theta)=\int m(z)f(z,\theta)dz$ which it generates, which then produce a set of moment functions $g(z,\theta)=m(z)-M(\theta)$ which themselves generate a set of probability distributions $\mathcal{F}_m(\theta):={f(z):\int g(z,\theta)f(z)dz=0}$.</p>
+
+<p>By construction, it must be the case that $f(z,\theta)\in\mathcal{F}_m(\theta)$. However, it is often the case that $\mathcal{F}<em>m:=\cup</em>{\theta\in\Theta}\mathcal{F}_m(\theta)$ is a strict superset of $\mathcal{F}={f(.,\theta)\theta\in\Theta}$, the model from which one is simulating. In words, the set of probability models which satisfy the moment conditions can be much larger than the set of distributions compatible with the model. For example, with the same number of moments as parameters (and a rank condition), $\mathcal{F}_m$ is all possible distributions, even if the simulation model is highly restrictive. In principle this can be fine, if one is explicitly thinking about SMM as a semiparametric method in which $\theta$ corresponds to the set $\mathcal{F}_m(\theta)$ rather than the measure $f(.\theta)$. Except when this set is a singleton, it seems to rarely have structure of interest, like decomposability into a parameter of interest and a nuisance parameter, as in more explicit semiparametric constructions.<sup class="footnote-ref" id="fnref:4"><a href="#fn:4">4</a></sup> In these cases, the use of a limited set of moments serves only to reduce or eliminate the power to detect model misspecification and to confuse the set of models $\mathcal{F}_m(\theta)$ with the particular element $f(,\theta)$.</p>
+
+<p>This is particularly attractive if you have a model which is misspecified and which you have no interest in changing or if you are not interested in distinguishing between $f(.,theta)$ and a set of models which may not even be observationally equivalent, but whose differences cannot be detected using the moments chosen. There are scientifically legitimate reasons to want each of these. The former rests on desire to provide &ldquo;reasonable&rdquo; simplifications to ensure tractability, interpretability, and all of these other things people speak of as benefits of parsimony, whatever that means. In my experience, pressing this point usually results in the quoting of <a href="https://en.wikipedia.org/wiki/All_models_are_wrong" target="_blank">George Box</a>. The latter is of course the point of semiparametric inference, to the extent that the equivalence class of models is equivalent in a way meaningful to the application. These can also be used, however, as underpowered studies with weak construct validity in other fields might be,<sup class="footnote-ref" id="fnref:5"><a href="#fn:5">5</a></sup> to construct sequences of studies all &ldquo;supporting&rdquo; some claimed class of proposition, building up a large literature containing negligible content.</p>
+
+<p>To give a concrete example of how this might play out, let&rsquo;s introduce a simple economic model, and think about how different estimation methods might result in more or less reliable results. To build a straw man, I&rsquo;ll pick a model I will call &ldquo;Supply and Demand.&rdquo;</p>
+
+<p>Suppose we have data on $N$ spatially or temporally separated markets $i$, each iid, in which a quantity $Q_i$ of a homogeneous good is sold by producers to consumers at price $P_i$. The causal response of consumers in market $i$ to an intervention setting the price to $P_i$, is parameterized by a linear function, which I will call a &ldquo;demand curve&rdquo;
+$$Q^i(P)=a_0+a_1P$$
+and similarly, the causal response of producers in market $i$ to purchases of a quantity $Q$ by consumers will be to adjust the price to a level set by a linear function which I will call the &ldquo;supply curve&rdquo;
+$$P^i(Q)=b_0+b_1Q$$</p>
+
+<p>Completing the model, let&rsquo;s make the controversial assumption that $P_i=P^i(Q_i)$ and $Q_i=Q^i(P_i)$.</p>
+
+<p>The resulting distribution, which we can simulate from or characterize in closed form in this case, is
+$$(P_i,Q_i)=(\frac{b_0+a_0b_1}{1-a_1b_1},\frac{a_0+a_1b_0}{1-a_1b_1})\ \forall\ i$$</p>
+
+<p>Statisticians will notice several problems with this model in practice.</p>
+
+<p>First off, the model is nonstochastic, giving a Dirac measure at a single point, which can&rsquo;t possibly match any data set ever observed. One solution to this problem would be to change the model in some way to incorporate the heterogeneity which must be present in the data, but that would be &ldquo;ad hoc.&rdquo; In the days before SMM, what economists would do instead is add measurement error: $$P_i,Q_i=(\frac{b_0+a_0b_1}{1-a_1b_1},\frac{a_0+a_1b_0}{1-a_1b_1})+(\epsilon_i^P,\epsilon_i^Q)$$ $$(\epsilon_i^P,\epsilon_i^Q)\sim MVN((0,0),\Sigma)$$
+With this model, you can estimate by likelihood methods and any discrepancy from the model gets attributed to errors in the data. With the simulated method of moments, one need not even make this gesture towards explaining the sources of variability in the data: you simply need to find a set of moments that can match. A common choice here might be the mean of each variable, $m(.)=(P_i,Q_i)$ so one only needs to compare the sample means $(\bar{P},\bar{Q})$ to the model implied $E[(P_i,Q_i)]$, which in this case is just the fixed values. Because we are comparing quantities of the same dimension, we don&rsquo;t need to worry about the fact that the model does not capture any other feature of the distribution of the data. In this case, the SMM estimator is identical to the MLE in the measurement error model, which is identical to the GMM estimator in the model where only the mean and not the full distribution of the measurement error is specified. So for these moments, the model $\mathcal{F}_m(\theta)$ corresponds to all distributions with average price and quantity given by the model implied values. To the extent that this is a sensible semiparametric model, the results do not differ between methods; with SMM, you just get away with not thinking about it.</p>
+
+<p>A second problem with this model is that the parameters are not identified: we have 4 parameters but only 2 moments. So, if we are not going to be satisfied with partial identification, we ought to find some additional identifying information. To be concrete, suppose the policy intervention we care about is a proportional tax $(1+t_i)$ on sales of the item. Suppose that this tax has been randomly assigned across markets. Then, our model becomes
+$$Q^i(P,t)=a_0+a_1P(1+t)$$
+$$P^i(Q)=b_0+b1Q$$
+$$t_i\sim f(t,\gamma)$$
+Solving the simultaneous system, obtain
+$$(P_i,Q_i)=(\frac{b_0+a_0b_1+b_1a_1t_i}{1-a_1b_1},\frac{a_0+a_1b_0(1+t_i)}{1-a_1b_1(1+t_i)})$$</p>
+
+<p>Finish this&hellip;</p>
+<div class="footnotes">
+
+<hr />
+
+<ol>
+<li id="fn:1">My critiques also hold for primitive ancestors of these techniques like calibration. I want to emphasize that my criticism has little to do with the well-trodden criticisms of calibration on statistical grounds, and encompasses features which are shared by methods which provide proper frequentist uncertainty quantification. Heckman and Hansen&rsquo;s <a href="https://pubs.aeaweb.org/doi/pdfplus/10.1257/jep.10.1.87" target="_blank">discussion of calibration</a> covers all of these classes of criticisms, and you should probably read them rather than me.
+ <a class="footnote-return" href="#fnref:1"><sup>^</sup></a></li>
+<li id="fn:2">I still have <a href="https://donskerclass.github.io/files/pdf/simulationpresentation.pdf" target="_blank">the notes I prepared</a>. Both tastes and standards of rigor have changed over time, as the project of trying to shoehorn every conceivable data anlysis procedure into a Taylor-expansions-of-sample-averages framework has reached its limits, but the approximations mostly work well in practice even when not all the i&rsquo;s are dotted and t&rsquo;s crossed the way one would expect now. One might attribute this to a predilection among econometric theorists for testing results by simulation, I suppose.
+ <a class="footnote-return" href="#fnref:2"><sup>^</sup></a></li>
+<li id="fn:3">This is the idea behind <a href="https://repository.upenn.edu/cgi/viewcontent.cgi?article=3795&amp;context=edissertations" target="_blank">Bayesian GMM</a> and <a href="https://arxiv.org/abs/1507.08645" target="_blank">related methods</a>, along with a wide variety of <a href="https://press.princeton.edu/titles/10259.html" target="_blank">Bayesian semiparametric models</a> (<a href="https://cran.r-project.org/web/packages/bayesm/index.html" target="_blank">R package</a>) for <a href="https://github.com/SamAdhikari/BayesIV" target="_blank">particular applications</a>
+ <a class="footnote-return" href="#fnref:3"><sup>^</sup></a></li>
+<li id="fn:4">See <a href="http://eprints.lse.ac.uk/6864/1/Semi-Parametric_Indirect_Inference.pdf" target="_blank">Dridi, Guay, and Renault (2007)</a> for explicit conditions under which one can treat such a model as semiparametric. To some extent, I see <a href="https://www.aeaweb.org/articles?id=10.1257/jep.32.3.59" target="_blank">Nakamura and Steinsson</a>&rsquo;s advocacy for the use of &ldquo;identified moments&rdquo; as a suggestion to choose $m$ in such a way that the set of distributions in $\mathcal{F}_m(\theta)$ has common scientific or policy implications. While this is a laudable goal, guaranteeing this requires some explicit thought into the structure of $\mathcal{F}_m(\theta)$. To achieve this, their suggestion involves using &ldquo;credibility revolution&rdquo; style reduced form semiparametric estimates as moments, so that at least a subset of the implications of the model hold under the same conditions that the reduced form estimates do.
+ <a class="footnote-return" href="#fnref:4"><sup>^</sup></a></li>
+<li id="fn:5">Cf Shalizi&rsquo;s <a href="http://bactra.org/weblog/698.html" target="_blank">&ldquo;Neutral Model of Inquiry&rdquo;</a>, also <a href="https://callingbullshit.org/syllabus.html" target="_blank">here</a> and <a href="https://andrewgelman.com/2016/09/21/what-has-happened-down-here-is-the-winds-have-changed/" target="_blank">here</a>
+ <a class="footnote-return" href="#fnref:5"><sup>^</sup></a></li>
+</ol>
+</div>
+
+    </div>
+
+    
+
+
+<div class="article-tags">
+  
+  <a class="btn btn-primary btn-outline" href="/tags/econometrics/">econometrics</a>
+  
+  <a class="btn btn-primary btn-outline" href="/tags/rants/">rants</a>
+  
+</div>
+
+
+
+
+    
+    
+    <div class="article-widget">
+      <div class="hr-light"></div>
+      <h3>Related</h3>
+      <ul>
+        
+        <li><a href="/post/top-papers-2017/">Top Papers 2017</a></li>
+        
+        <li><a href="/post/top-papers-read-in-2015/">Top Papers Read in 2015</a></li>
+        
+        <li><a href="/post/aggregate-shocks-in-cross-sectional-data/">Aggregate shocks in cross-sectional data, or the alternative to a macroeconomic model isn&#39;t no macroeconomic model, it&#39;s a bad macroeconomic model</a></li>
+        
+        <li><a href="/post/why-laplacians/">Why Laplacians?</a></li>
+        
+      </ul>
+    </div>
+    
+
+    
+
+    
+
+
+  </div>
+</article>
+
+<footer class="site-footer">
+  <div class="container">
+    <p class="powered-by">
+
+      &copy; 2018 &middot; 
+
+      Powered by the
+      <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+      <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+      <span class="pull-right" aria-hidden="true">
+        <a href="#" id="back_to_top">
+          <span class="button_icon">
+            <i class="fa fa-chevron-up fa-2x"></i>
+          </span>
+        </a>
+      </span>
+
+    </p>
+  </div>
+</footer>
+
+
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close btn-large" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Cite</h4>
+      </div>
+      <div>
+        <pre><code class="modal-body tex"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-primary btn-outline js-copy-cite" href="#" target="_blank">
+          <i class="fa fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-primary btn-outline js-download-cite" href="#" target="_blank">
+          <i class="fa fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+    
+
+    
+
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" integrity="sha512-3P8rXCuGJdNZOnUx/03c1jOTnMn3rP63nBip5gOP2qmUh5YAdVAvFZ1E+QLZZbC1rtMrQb+mah3AfYW11RUrWA==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.3/imagesloaded.pkgd.min.js" integrity="sha512-umsR78NN0D23AzgoZ11K7raBD+R6hqKojyBZs1w8WvYlsI+QuKRGBx3LFCwhatzBunCjDuJpDHwxD13sLMbpRA==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha512-iztkobsvnjKfAtTNdHkGVjAYTrrtlC7mGp/54c40wowO7LhURYl3gVzzcEqGl/qKXQltJ2HwMrdLcNUdo+N/RQ==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.4/isotope.pkgd.min.js" integrity="sha512-VDBOIlDbuC4VWxGJNmuFRQ0Li0SKkDpmGyuhAG5LTDLd/dJ/S0WMVxriR2Y+CyPL5gzjpN4f/6iqWVBJlht0tQ==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" integrity="sha256-X5PoE3KU5l+JcX+w09p/wHl9AzK333C4hJ2I9S5mD4M=" crossorigin="anonymous"></script>
+    
+    
+    <script src="/js/hugo-academic.js"></script>
+    
+
+    
+    
+      
+      
+      <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js" integrity="sha256-/BfiIkHlHoVihZdc6TFuj7MmJ0TWcWsMXkeDFwhi0zw=" crossorigin="anonymous"></script>
+      
+
+      
+
+      
+
+      <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    
+    
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({ tex2jax: { inlineMath: [['$','$'], ['\\(','\\)']] } });
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_CHTML" integrity="sha512-tOav5w1OjvsSJzePRtt2uQPFwBoHt1VZcUq8l8nm5284LEKE9FSJBQryzMBzHxY5P0zRdNqEcpLIRVYFNgu1jw==" crossorigin="anonymous"></script>
+    
+    
+
+  </body>
+</html>
+

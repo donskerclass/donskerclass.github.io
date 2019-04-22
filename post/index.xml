@@ -13,6 +13,15 @@
     
     
     <item>
+      <title>Semiparametrics Done Wrong</title>
+      <link>/post/semiparametrics-done-wrong/</link>
+      <pubDate>Sat, 29 Dec 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/semiparametrics-done-wrong/</guid>
+      <description>Colleagues, friends, acquaintances, television personalities, and random people on the street often ask me &amp;ldquo;What is your deal with simulated method of moments?&amp;rdquo; So, instead of just making a face like I&amp;rsquo;ve just drunk spoiled milk when I get to the end of a promising abstract and read the phrase &amp;ldquo;We estimate the model using the simulated method of moments&amp;rdquo; like I usually do, I figure it would be worthwhile to lay out some more coherent thoughts, with some simple strawman examples, of why I find most analyses using the simulated method of moments (along with related methods like indirect inference1) to be unreliable tools for learning anything useful about the economy.</description>
+    </item>
+    
+    <item>
       <title>An Empirical Heterogeneous Agents Models Reading List</title>
       <link>/post/an-empirical-heterogeneous-agents-models-reading-list/</link>
       <pubDate>Tue, 20 Nov 2018 00:00:00 +0000</pubDate>
@@ -74,6 +83,15 @@ Given that I am currently in the midst of completing graduate school and making 
       
       <guid>/post/why-laplacians/</guid>
       <description>Attention Conservation Notice: Over 5000 words about math that I don’t particularly understand, written mostly to clarify my thoughts. A reader familiar with the topic (roughly, spectral or harmonic theory on graphs and manifolds) will find little here new except possibly misconceptions, while a reader not familiar with the topic will find minimal motivation and poorly explained jargon. The ideal reader is a pedant or troll who can tell me why I’m wrong about everything.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/post/2018-12-29-semiparametrics-done-wrong/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2018-12-29-semiparametrics-done-wrong/</guid>
+      <description>Semiparametrics Done Wrong       code{white-space: pre;} pre:not([class]) { background-color: white; }  if (window.hljs) { hljs.configure({languages: []}); hljs.initHighlightingOnLoad(); if (document.readyState &amp;&amp; document.readyState === &#34;complete&#34;) { window.setTimeout(function() { hljs.initHighlighting(); }, 0); } }  h1 { font-size: 34px; } h1.title { font-size: 38px; } h2 { font-size: 30px; } h3 { font-size: 24px; } h4 { font-size: 18px; } h5 { font-size: 16px; } h6 { font-size: 12px; } .</description>
     </item>
     
   </channel>
