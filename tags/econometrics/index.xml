@@ -7,19 +7,10 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
-    <lastBuildDate>Sat, 29 Dec 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 07 Dec 2017 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/econometrics/index.xml" rel="self" type="application/rss+xml" />
     
-    
-    <item>
-      <title>Semiparametrics Done Wrong</title>
-      <link>/post/semiparametrics-done-wrong/</link>
-      <pubDate>Sat, 29 Dec 2018 00:00:00 +0000</pubDate>
-      
-      <guid>/post/semiparametrics-done-wrong/</guid>
-      <description>Colleagues, friends, acquaintances, television personalities, and random people on the street often ask me &amp;ldquo;What is your deal with simulated method of moments?&amp;rdquo; So, instead of just making a face like I&amp;rsquo;ve just drunk spoiled milk when I get to the end of a promising abstract and read the phrase &amp;ldquo;We estimate the model using the simulated method of moments&amp;rdquo; like I usually do, I figure it would be worthwhile to lay out some more coherent thoughts, with some simple strawman examples, of why I find most analyses using the simulated method of moments (along with related methods like indirect inference1) to be unreliable tools for learning anything useful about the economy.</description>
-    </item>
     
     <item>
       <title>Top Papers 2017</title>
