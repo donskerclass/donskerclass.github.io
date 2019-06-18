@@ -7,7 +7,7 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
-    <lastBuildDate>Sun, 15 Oct 2017 00:00:00 -0400</lastBuildDate>
+    <lastBuildDate>Sun, 15 Oct 2017 00:00:00 +0200</lastBuildDate>
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
@@ -65,7 +65,7 @@ and &lt;a href=&#34;https://aauclert.people.stanford.edu/research&#34; target=&#
     <item>
       <title>Automated Solution of Heterogeneous Agent Models</title>
       <link>/publication/automatedsolution/</link>
-      <pubDate>Sat, 13 Oct 2018 00:00:00 -0400</pubDate>
+      <pubDate>Sat, 13 Oct 2018 00:00:00 +0200</pubDate>
       
       <guid>/publication/automatedsolution/</guid>
       <description>&lt;p&gt;Draft for Comment and Review. Not for Circulation.&lt;/p&gt;
@@ -75,7 +75,7 @@ and &lt;a href=&#34;https://aauclert.people.stanford.edu/research&#34; target=&#
     <item>
       <title>Solution of Rational Expectations Models with Function Valued States</title>
       <link>/publication/functionvaluedstates/</link>
-      <pubDate>Mon, 15 Jan 2018 00:00:00 -0500</pubDate>
+      <pubDate>Mon, 15 Jan 2018 00:00:00 +0100</pubDate>
       
       <guid>/publication/functionvaluedstates/</guid>
       <description>&lt;p&gt;Previous versions of this paper circulated under the title &lt;em&gt;On the Solution and Application of Rational Expectations Models with Function-Valued States&lt;/em&gt;&lt;/p&gt;
@@ -203,7 +203,7 @@ This year was big on Bayes for me, reflecting both my research interests and the
     <item>
       <title>Computational Methods for Economic Models with Function Valued States</title>
       <link>/publication/thesis/</link>
-      <pubDate>Sun, 01 May 2016 00:00:00 -0400</pubDate>
+      <pubDate>Sun, 01 May 2016 00:00:00 +0200</pubDate>
       
       <guid>/publication/thesis/</guid>
       <description>&lt;p&gt;Portions of this PhD thesis have been adapted into the paper &lt;em&gt;Solution of Rational Expectations Models with Function Valued States&lt;/em&gt;. The thesis contains additional results including a very different algorithm for the non-compact case, expanded analysis of the economic geography model, and additional numerical applications.&lt;/p&gt;
