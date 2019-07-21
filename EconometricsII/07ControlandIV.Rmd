@@ -1,0 +1,589 @@
+---
+title: "Control and Instrumental Variables"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+## Causality
+
+- Want to know causal effect of $X$ on $Y$
+    - How does education affect wages?
+    - How does changing the price you charge affect how much your customers buy?
+    - How does sentencing affect crime?
+    
+## Causal Models
+- Data comes from a world where some variables cause other variables
+- We describe these relationships by a **structural model**
+    - Potential outcomes, structural equations, or causal graphs
+- In some cases, observed data allows us to learn information about (parameters of) causal model
+- Last classes: 2 cases where regression can be used to find causal effects
+    - Experiments
+    - Control       
+- Today
+    - When can we use control? 
+    - What to do when control not possible?
+    
+<!-- ## Experiments: Review -->
+
+<!-- - In randomized experiment, data comes from world in which X assigned directly -->
+<!-- - Causal effect $P(Y|do(X))$ is equal to conditional distribution $P(Y|X)$ -->
+<!-- - Can estimate conditional mean of outcome by regression -->
+<!-- $$Y=\beta_0 +\beta_{1}X + U$$ -->
+<!-- $$X\perp U$$ -->
+<!-- - $\beta_1$ gives causal effect of $X$  -->
+<!--     - Average treatment effect when causal effect heterogeneous -->
+
+
+## Control: Review
+- In situations where control is useful, $X$ determined by $W$, with all other variation in $X$ random ($Y^x\perp X|W$)
+- Causal effect of $X$ on $Y$ given by adjustment formula
+$$E(Y|do(X))=\int E(Y|X,W)P(W)dW$$
+- Linear model for $E[Y|X,W]$ 
+$$Y =\beta_0 +\beta_{1}X +\beta_{2}W + U$$
+    - Correct specification of $E[Y|X,W]$ means $E[U|X,W]=0$
+        - (Mean) independence of residual
+    - $\beta_1$ gives average treatment effect (ATE) of $X$ 
+    
+## d-separation in general graphs
+
+- Want rules for arbitrary graphs describing when control is sufficient to recover causal effect
+    - First, define rule describing what conditioning implies for independence
+    
+- When does conditioning on set of nodes $W$ imply for two disjoint sets of nodes $X$ $Y$ that $X\perp Y|W$?
+- We say a (non-directed) path from $X_i$ to $Y_j$ is **blocked** by $W$ if it contains either
+    - A collider which is *not* in $W$ and of which $W$ is *not* a descendant
+    - A non-collider which *is* in $W$
+- We say $X$ and $Y$ are **d-separated** (by $W$) if all paths between $X$ and $Y$ are blocked
+- **Theorem** (Pearl, 2009)
+    - $X\perp Y|W$ if and only if $X$ and $Y$ are d-separated by $W$
+
+## Backdoor Criterion
+
+- Using d-separation, can define a complete criterion for when control recovers $P(Y|do(X=x))$
+- A set of variables $W$ satisfies **Backdoor Criterion** between $X$ and $Y$ if
+    - No node in $W$ is a descendant of $X$
+    - $W$ blocks every path between $X$ and $Y$ that contains an edge directed into $X$ 
+- **Theorem** (Pearl, 2009): If $W$ satisfies the backdoor criterion between $X$ and $Y$, the adjustment formula recovers the causal effect of $X$ on $Y$
+$$P(Y|do(X=x))=\int Pr(Y|W,X=x)Pr(W)dw$$
+
+
+## Backdoor criterion, intuition (Code)
+```{r, eval=FALSE}
+library(dagitty) #Library to create and analyze causal graphs
+library(ggdag) #library to plot causal graphs
+```    
+```{r, eval=FALSE}
+#Check if W satisfies criterion
+isAdjustmentSet(graphname,"W",exposure="X",outcome="Y")
+#Find variables that satisfy criterion, if they exist
+adjustmentSets(graphname,exposure="X",outcome="Y") 
+```
+
+## Backdoor criterion, intuition
+
+- Blocking path component ensures that adjustment variables account for confounding by causes other than the cause of interest and do not introduce additional bias by inducing new correlations through colliders
+- Non-descendant component avoids "bad controls" which are themselves affected by treatment
+- I will not force you to recall exact definition of d-separation or backdoor criterion
+- Point is that given a causal story, systematic method can recover whether control is sufficient
+    - In `dagitty`, check backdoor criterion between $X$ and $Y$ by
+```{r, echo=FALSE}
+library(dagitty) #Library to create and analyze causal graphs
+suppressWarnings(suppressMessages(library(ggdag))) #library to plot causal graphs
+```    
+```{r, eval=FALSE}
+#Check if W satisfies criterion
+isAdjustmentSet(graphname,"W",exposure="X",outcome="Y")
+#Find variables that satisfy criterion, if they exist
+adjustmentSets(graphname,exposure="X",outcome="Y") 
+```
+
+## Example: finding adjustment sets (Code)
+
+```{r, eval=FALSE}
+complicatedgraph<-dagify(Y~A+C,B~X+Y,A~X,X~C,D~B) #create graph
+#Set position of nodes 
+coords<-list(x=c(X = 0, A = 1, B = 1, C=1, Y=2, D=2),
+     y=c(X = 0, A = 0.1, B=0, C=-0.1, Y = 0, D=0.1)) 
+coords_df<-coords2df(coords)
+coordinates(complicatedgraph)<-coords2list(coords_df)
+
+#Plot causal graph  
+ggdag(complicatedgraph)+theme_dag_blank()
+  +labs(title="Complicated Graph") 
+```
+
+
+## Example: finding adjustment sets
+
+```{r, echo=FALSE}
+complicatedgraph<-dagify(Y~A+C,B~X+Y,A~X,X~C,D~B) #create graph
+#Set position of nodes 
+  coords<-list(x=c(X = 0, A = 1, B = 1, C=1, Y=2, D=2),y=c(X = 0, A = 0.1, B=0, C=-0.1, Y = 0, D=0.1)) 
+  coords_df<-coords2df(coords)
+  coordinates(complicatedgraph)<-coords2list(coords_df)
+ggdag(complicatedgraph)+theme_dag_blank()+labs(title="Complicated Graph") #Plot causal graph
+
+```
+
+## Measuring effect of X on Y
+
+- Go back to education $X$ versus wages $Y$ to get intuition
+- $A$ caused by $X$, causes $Y$: e.g., occupation, experience
+    - Mediators: descendant of $X$, so do not adjust for it
+- $B$ caused by both $X$ and $Y$: e.g., current wealth or lifestyle
+    - Colliders: descendant of $X$, so do not adjust for it
+- $D$ caused by $B$ only: e.g. consequences of wealth
+    - Descendants of collider: still causes bias when adjusted for
+- $C$, causes $X$ and $Y$: e.g. ability, background 
+    - Confounder: must condition on it 
+- Backdoor criterion calculates this automatically    
+```{r}
+adjustmentSets(complicatedgraph,exposure="X",outcome="Y")
+```
+
+## Imperfect control (Code)
+
+```{r, eval=FALSE, fig.height=2}
+confoundgraph<-dagify(Y~X+W,X~W) #create graph
+#Set position of nodes 
+coords<-list(x=c(X = 0, W = 1, Y = 2),
+          y=c(X = 0, W = -0.1, Y = 0)) 
+coords_df<-coords2df(coords)
+coordinates(confoundgraph)<-coords2list(coords_df)
+#Plot causal graph
+ggdag(confoundgraph)+theme_dag_blank() 
+```
+
+## Imperfect control
+- When backdoor criterion fails, OLS will *not* generally give valid estimates of causal effect
+- Why not?
+    - May have unobserved causal factors influencing both Y and X
+- Can see this in confounding setting
+```{r, echo=FALSE, fig.height=2}
+confoundgraph<-dagify(Y~X+W,X~W) #create graph
+#Set position of nodes 
+  coords<-list(x=c(X = 0, W = 1, Y = 2),y=c(X = 0, W = -0.1, Y = 0)) 
+  coords_df<-coords2df(coords)
+  coordinates(confoundgraph)<-coords2list(coords_df)
+ggdag(confoundgraph)+theme_dag_blank() #Plot causal graph
+```
+- Can recover ATE by estimating
+$$Y =\beta_0 +\beta_{1}X +\beta_{2}W + U$$
+$$E[U|X,W]=0$$
+
+## Imperfect Control, ctd
+- Suppose we don't include $W$
+    - Maybe we just forgot about it
+    - Maybe it's not something we can get data about
+- If we omit $W$, regression becomes
+$$Y= \beta_0+\beta_1X +\epsilon$$
+$$\epsilon = \beta_2W+U$$
+- Result is $Cov(X,\epsilon)\neq 0$
+- Estimate of $\beta_1$ is biased: omitted variables bias
+
+## Endogeneity
+- General case where OLS gives inconsistent estimate of parameters
+$$Y=\mathbf{x}^\prime\beta + u$$ 
+$$E[\mathbf{x}u]\neq 0 $$
+- This is saying OLS assumption (4') $E[\mathbf{x}u] = 0$ violated for linear model with causal coefficients
+- Here $\beta$ contains true structural parameter of interest
+    - $u$ NOT just difference between $Y$ and best linear predictor of $Y$
+- Omitted variables are common cause of endogeneity
+    <!-- - Either controls or other $X$ randomly assigned and correlated with $\mathbf{x}$ but not included -->
+- OLS estimate not consistent for $\beta$
+
+<!-- ## Solution -->
+
+<!-- - Don't forget to include control variables! -->
+<!--     - Not always feasible -->
+<!-- - Sometimes, in certain circumstances, have another kind of solution -->
+<!-- - Instead of random $X$, have random $Z$ -->
+
+## An alternative: Instrumental variables (IV)
+- Consider a simple regression with endogeneity
+$$Y=\beta_0+\beta_1X + u$$ 
+$$E[Xu]\neq 0 $$
+- We don't have controls to add to regression to solve this
+- We might have some variables $Z$ that **don't** matter for $Y$, or at least not directly
+- In particular, $Z$ affects $X$ but not $Y$
+- All influence of $Z$ on $Y$ comes via effect on $X$
+    - None through whatever is in $u$
+- Then we may be able to find effect of $X$ by looking only at variation in $X$ which is coming through $Z$ 
+
+## Goal of IV estimation
+
+- $Z$ is randomly assigned, but $X$ isn't 
+- AND $Z$ only has direct effect on $X$, not $Y$
+    - The "Part of $X$ determined by $Z$" is then effectively random
+- Example: Effect of going to a particular school $X$ on wages $Y$
+- Admission to school determined by lottery $Z$
+- Not all admitted students attend: some go to other schools
+    - Reasons determined by *unobserved* personal characteristics $W$
+- $X$ not random, due to missing controls
+- $Z$ *is* random, uncorrelated with $W$
+- We could get effect of $Z$ on $Y$, but really want effect of $X$
+- IV lets us use the randomness of $Z$ to estimate effect of $X$
+
+## Causal graph of IV model (Code)
+
+```{r, eval=FALSE, fig.height=3}
+ivgraph<-dagify(Y~X+W,X~W, X~Z) #create graph
+#Set position of nodes 
+coords<-list(x=c(X = 0, W = 1, Y = 2, Z=-1),
+          y=c(X = 0, W = 0.1, Y = 0, Z=0)) 
+coords_df<-coords2df(coords)
+coordinates(ivgraph)<-coords2list(coords_df)
+#Plot causal graph
+ggdag(ivgraph)+theme_dag_blank()
+  +labs(title="Instrumental Variables") 
+```
+
+
+## Causal graph of IV model
+
+```{r, echo=FALSE, fig.height=3}
+ivgraph<-dagify(Y~X+W,X~W, X~Z) #create graph
+#Set position of nodes 
+  coords<-list(x=c(X = 0, W = 1, Y = 2, Z=-1),y=c(X = 0, W = 0.1, Y = 0, Z=0)) 
+  coords_df<-coords2df(coords)
+  coordinates(ivgraph)<-coords2list(coords_df)
+ggdag(ivgraph)+theme_dag_blank()+labs(title="Instrumental Variables") #Plot causal graph
+```
+
+- No arrows into $Z$
+    - Determined independently
+- Arrow from $Z$ to $X$, but **not** to $Y$
+    - Z has *direct* effect on X but *not* on Y 
+- If $W$ *were* observed, could use control to find effect of $X$ on $Y$
+- If $W$ *not* observed, but $Z$ is, can use instrumental variables estimator
+
+## Finding an instrument
+- Instruments offen the result of a *natural experiment*
+- $X$ maybe determined by many things, 
+    - But one of them acts effectively like an experiment
+- Something like a random number generator somehow influences $X$, among other influences
+- Maybe this is an actual random number generator 
+    - E.g. a lottery, or a coin flip
+- We don't care about effect of coin flip itself on outcome
+    - Want to use it estimate effect of $X$
+- E.g., *Admission* lottery for school allows us to estimate effect of *Enrollment* on outcome (like wages)
+    - Even if enrollment not random
+    - Determined in part by unobserved preference for school
+    - Lottery has no direct effect on wages, but does affect enrollment
+    
+## Estimation in IV Model
+
+- Let $\beta_1$ be true causal effect. Then regression equation
+$$Y=\beta_0+\beta_1X + u$$ 
+has
+$$E[Xu]\neq 0 $$
+
+- $X$ is called the **endogenous regressor**
+- We have another variable $Z$ called the **instrument**
+- It satisfies 2 conditions: **Exogeneity** and **Relevance**
+
+- **Exogeneity**:
+$$Cov(Z,u)=0$$
+
+- **Relevance**:
+$$Cov(Z,X)\neq 0$$
+
+- Let's see how these let us solve the endogeneity problem
+- Then go back to see what they mean
+
+## One more assumption
+- Model
+$$Y=\beta_0+\beta_1X + u$$
+- Add 1 more assumption
+$$E[u]=0$$
+- Assumption is weak
+    - Can always change $\beta_0$ to equal $\beta_0+E[u]$ if not true
+    - If we don't care about $\beta_0$, this is not a problem
+    - IV will still let us estimate $\beta_1$
+    
+## Finding $\beta_1$ using IV
+- Model
+$$Y=\beta_0+\beta_1X + u$$ 
+- Exogeneity
+$$Cov(Z,u)=0$$
+- Relevance
+$$Cov(Z,X)\neq 0$$
+- Mean 0 errors
+$$E[u]=0$$
+
+## Finding $\beta_1$
+- Rewrite Assumptions using model
+- Mean 0 errors
+$$E[Y-\beta_0-\beta_1X]=0$$
+- Exogeneity
+$$Cov(Z,u)=E[Zu]-E[Z]E[u]=E[Zu]=0$$
+- This becomes
+$$E[Z(Y-\beta_0-\beta_1X)]=0$$
+- System of 2 linear equations in 2 unknowns
+
+## Solving the system
+$$E[Y-\beta_0-\beta_1X]=0$$
+$$E[Z(Y-\beta_0-\beta_1X)]=0$$
+
+- This becomes
+$$\beta_0=E[Y]-\beta_1E[X]$$
+
+- Plug in to second equation
+$$E[Z((Y-E[Y])-\beta_1(X-E[X]))]=0$$
+$$\beta_1=\frac{E[Z(Y-E[Y])]}{E[Z(X-E[X])]}$$
+$$\beta_1=\frac{Cov(Z,Y)}{Cov(Z,X)}$$
+
+## IV Estimator
+- We just **identified** the parameter in terms of features of observable distribution
+$$\beta_1=\frac{Cov(Z,Y)}{Cov(Z,X)}$$
+$$\beta_0=E[Y]-\beta_1E[X]$$
+- Suppose we have random sample of n draws of $(X_i,Y_i,Z_i)$
+- We can estimate by replacing expectations with sample averages
+
+$$\hat{\beta}_1^{IV}=\frac{\frac{1}{n}\sum_{i=1}^{n}(Z_i-\bar{Z})(Y_i-\bar{Y})}{\frac{1}{n}\sum_{i=1}^{n}(Z_i-\bar{Z})(X_i-\bar{X})}$$
+$$\hat{\beta}_0^{IV}=\frac{1}{n}\sum_{i=1}^{n}Y_i-\hat{\beta}_1^{IV}\frac{1}{n}\sum_{i=1}^{n}X_i$$
+
+
+## Relevance Condition
+- We assumed **relevance**: $Cov(Z,X)\neq 0$
+- Need this for estimator to have a solution, to define
+$$\beta_1=\frac{Cov(Z,Y)}{Cov(Z,X)}$$
+- In words, instrument needs to be correlated with endogenous regressor
+- This allows us to use $Z$ say something about effect of $X$ 
+
+## Exclusion restriction
+- We assumed **exogeneity** of $Z$: $E[Zu]=0$
+- Sometimes this is called *Exclusion Restriction*
+- In words, $Z$ cannot be correlated with the residual
+    - Even though, by assumption, $X$ is
+- Usually because $Z$ has *no* direct causal effect on $Y$
+- In case of omitted variable bias, means $Z$ is uncorrelated with omitted variable
+- Note difference from strategy of control:
+    - To control, we want to find the omitted variable and include it
+    - For IV, want something totally unrelated to omitted variable
+- Idea: want to find a source of variation in $X$ which is effectively random, even if $X$ in general is determined nonrandomly 
+
+## Reduced Form and First Stage
+- Total effect of $Z$ on $Y$ consistently estimable by regression
+- Regression of $Y$ on $Z$ called **reduced form**
+    - Slope is $\rho = Cov(Y,Z)/Var(Z)$
+    - By exclusion restriction, we know this only comes indirectly, through instrument's effect on $X$
+- Effect of $Z$ on $X$ consistently estimable by regression
+    - Regression of $X$ on $Z$ called **first stage**
+    - Slope is $\pi = Cov(X,Z)/Var(Z)$
+- IV is $$\beta_1=Cov(Y,Z)/Cov(X,Z)= \rho/\pi$$
+
+## IV interpretation
+ - IV adjusts reduced form (quasi)experimental estimate of effect of instrument $Z$ on outcome $Y$ by amount experimental treatment actually affected $X$
+ - Consider 2 cases
+(1) First stage $\pi$ small, but total effect $\rho$ of instrument on outcome big 
+    - Then effect must have come from very large effect of $X$ 
+    - $X$ didn't move much even though outcome did
+(2) First stage $\pi$ big but total effect $\rho$ of instrument on outcome small 
+    - $X$ must have small effect
+    - $X$ moved a lot with the experiment but outcome $Y$ mostly stayed the same
+
+
+## Example: Effect of longer prison sentences on recidivism
+- Example drawn from [Green and Winik (2010, Criminology)]
+- Policy question: how long should prison sentences be? 
+    - Incarceration has many potential costs and benefits, need to know what they are to evaluate.
+- To measure benefits, need measure of outcomes given longer or shorter sentences
+- Outcome variable: $Y$ 
+    - Measure of recidivism for people on trial for a particular crime
+- Variable of interest $X$ 
+    - Length of prison sentence given to offender
+- Ideal experiment
+    - Randomly assign prison sentences to criminals 
+    - Measure recidivism and regress on sentence length
+- But this hasn't been done
+    - Would be unethical
+
+## Endogeneity problem
+- Instead, look at prison sentences assigned the usual way
+    - A judge using sentencing guidelines and discretion
+- Endogeneity problem
+    - People assigned longer prison sentences likely differ from those given shorter sentences
+    - May be more likely to be guilty, 
+    - Or have characteristics that make judge think they are
+    - Or likely to be at risk of recidivism
+- If we could include all variables influencing judge's decision and find functional form replicating their judgment, could control for them
+- This is hard: 
+    - Decisions include component based on perceive probability of reoffending 
+    - Likely to be correlated with actual reoffending
+- Instead, look for instrument
+    - Something affecting sentences which is random
+
+## IV solution
+- In this case, can use one random component of trials: 
+    - Judges assigned randomly to defendants
+- Z is random judge assignment (say, to judge 1 or judge 2)
+- Don't care about effect of judge 1 vs judge 2 per se
+    - Given by reduced form regression of $Y$ on $Z$
+- Clear that $Z$ satisfies exogeneity: $E[Zu]=0$
+    - Random choice of judge is unrelated to defendant characteristics
+- $Z$ satisfies relevance $Cov[ZX]\neq0$ if 1 judge tends to give harsher sentences than the other on average for any given defendant
+    - Maybe judge 2 interprets sentencing guidelines in different way, or just has different temperament or judgment
+- IV finds the difference in recidivism associated with variation in sentence length due to having been randomly assigned a different judge
+
+## IV Results
+- Green and Winik find IV estimates close to 0
+- Mechanically: effect of which judge one assigned to on recidivism rate is extremely small
+- Dividing this effect by the difference in sentences due to the difference in judges, which was non-negligible, suggests that different sentences can't have affected recidivism that much
+
+<!-- ## IV assumptions -->
+<!-- - Assume the following -->
+<!-- - (IV1) Linear Model -->
+<!-- $$Y=\beta_0+\beta_1X + u$$  -->
+<!-- - (IV2) Random sampling: $(Y_i,X_i,Z_i)$ drawn i.i.d. from population satisfying linear model assumptions -->
+<!-- - (IV3) Relevance -->
+<!-- $$Cov(Z,X)\neq 0$$ -->
+<!-- - (IV4(i)) Exogeneity -->
+<!-- $$Cov(Z,u)=0$$ -->
+<!-- - (IV4(ii)) Mean 0 errors -->
+<!-- $$E[u]=0$$ -->
+<!-- - Sometimes also assume  -->
+<!-- (IV5) Homoskedasticity -->
+<!-- $$E[u^2|Z]=\sigma^2$$ ($\sigma^2$ a finite nonzero constant) -->
+
+
+<!-- ## IV asymptotics -->
+<!-- - IV estimator $\hat{\beta}_1^{IV}$ is consistent for $\beta_1$ under (IV1)-(IV4(i)) -->
+<!-- - IV estimator of constant term $\hat{\beta}_0^{IV}$ consistent under (IV1)-(IV4) -->
+<!-- - IV estimator $\hat{\beta}^{IV}$ asymptotically normal under (IV1)-(IV4) -->
+<!-- - Standard errors of IV estimator derived in usual way using CLT under (IV1)-(IV5) -->
+<!-- - Formula is in book, and applied by software (**ivreg** in **AER** library) -->
+<!-- - There is again a different formula if residuals are heteroskedastic: (IV1)-(IV4) hold, but (IV5) doesn't. Can obtain it from **vcovHC** command in **sandwich** library -->
+
+<!-- ## Example application: Estimating a demand curve -->
+<!-- - Quantity demanded $Y$ is causally affected by price $X$ -->
+<!-- - But also other things, including shifts in demand curve -->
+<!-- - Can estimate effect of price on demand if we find shift affecting price, but not correlated to any shifts in demand -->
+<!-- - What we need is something which independently shifts supply curve -->
+<!-- - Instrument $Z$ using, say, random change in tax on item, or cost of inputs to production -->
+<!-- - $Z$ relevant if it changes price -->
+<!-- - $Z$ exogenous if independent of any shifts in demand curve -->
+
+<!-- ## Example: Cigarette demand -->
+
+<!-- - Let's estimate a demand curve for cigarettes across states (1995 data) -->
+<!-- - Use cigarette tax increases as instrument -->
+<!--     - Works if tax changes determined by state fiscal needs unrelated to cigarette demand -->
+<!-- - Price elasticity estimated by IV regression of log sales on log price, using tax difference as instrument -->
+<!-- ```{r, eval=FALSE} -->
+<!-- ivreg(log(packs) ~ log(rprice) | tdiff, data = c1995) -->
+<!-- ``` -->
+<!-- - Decompose into reduced form: effect of tax on quantity demanded, divided by first stage: effect of taxes on prices -->
+<!-- - OLS version of estimate gives correlation of price and quantity, but could come from supply or demand  -->
+
+
+<!-- ```{r, eval=FALSE, echo=FALSE} -->
+<!-- #Load library containing IV command 'ivreg'  -->
+<!-- library(AER)  -->
+<!-- # Load data on cigarette prices and quantities -->
+<!-- data("CigarettesSW") -->
+<!-- #Use real prices as X -->
+<!-- CigarettesSW$rprice <- with(CigarettesSW, price/cpi) -->
+<!-- #Use changes in cigarette tax as  -->
+<!-- # instrument which shifts supply curve -->
+<!-- CigarettesSW$tdiff <- with(CigarettesSW, (taxs - tax)/cpi) -->
+<!-- #data from different states in 1995 -->
+<!-- c1995 <- subset(CigarettesSW, year == "1995") -->
+<!-- ``` -->
+<!-- ```{r, echo=FALSE} -->
+<!-- #Load library containing IV command 'ivreg'  -->
+<!-- suppressWarnings(suppressMessages(library(AER))) -->
+<!-- # Load data on cigarette prices and quantities -->
+<!-- data("CigarettesSW") -->
+<!-- #Use real prices as X -->
+<!-- CigarettesSW$rprice <- with(CigarettesSW, price/cpi) -->
+<!-- #Use changes in cigarette tax as supply curve shifting instrument -->
+<!-- CigarettesSW$tdiff <- with(CigarettesSW, (taxs - tax)/cpi) -->
+<!-- #data from different states in 1995 -->
+<!-- c1995 <- subset(CigarettesSW, year == "1995") -->
+<!-- ``` -->
+
+<!-- ## Results of IV estimates of demand elasticity for cigarettes -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- #To get IV estimate of effect of x on y using -->
+<!-- #  z as instrument syntax is ivreg(y ~ x | z) -->
+<!-- # Effect of log(price) on log(quantity) -->
+<!-- # Elasticity -->
+<!-- fm_ivreg <- ivreg(log(packs) ~ log(rprice)  -->
+<!--                   | tdiff, data = c1995) -->
+<!-- #Obtain (robust) standard errors -->
+<!-- fm_ivreg.results<-coeftest(fm_ivreg,  -->
+<!--          vcov = vcovHC(fm_ivreg, type = "HC0")) -->
+<!-- ``` -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- #OLS estimate of effect of log(price)  -->
+<!--  #on log(quantity)  with no instrument -->
+<!-- fm_ols <- lm(formula= log(packs) ~  -->
+<!--                log(rprice), data = c1995) -->
+<!-- #Obtain (robust) standard errors -->
+<!-- fm_ols.results<-coeftest(fm_ols,  -->
+<!--     vcov = vcovHC(fm_ols, type = "HC0")) -->
+<!-- ``` -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- # First stage: z on x -->
+<!-- firststage<-lm(formula= log(rprice) ~  -->
+<!--                  tdiff, data = c1995) -->
+<!-- firststage.results<-coeftest(firststage,  -->
+<!--     vcov = vcovHC(firststage, type = "HC0")) -->
+<!-- # Reduced form -->
+<!-- reducedform<-lm(formula= log(packs) ~  -->
+<!--                 tdiff, data = c1995) -->
+<!-- reducedform.results<-coeftest(reducedform,  -->
+<!--          vcov = vcovHC(reducedform, type = "HC0")) -->
+<!-- ``` -->
+
+<!-- ```{r, echo=FALSE, results="asis"} -->
+<!-- #Display results in big fancy table -->
+<!-- suppressWarnings(suppressMessages(library(stargazer))) -->
+<!-- stargazer(fm_ols.results,fm_ivreg.results,reducedform.results,firststage.results, -->
+<!--     type="latex", title="Cigarette Demand Elasticity: OLS, IV, Reduced Form, First Stage", -->
+<!--     header=FALSE, size="tiny",  -->
+<!--     column.labels=c("log(packs)","log(packs)","log(packs)","log(price)"), -->
+<!--     omit.table.layout="n") -->
+<!-- ``` -->
+
+
+<!-- ## Results -->
+
+<!-- - OLS says 1% difference in prices associated with 1.2% lower cigarette consumption -->
+<!--     - Not causal effect of changing prices -->
+<!-- - IV says 1% increase in prices (due to change in tax) leads to 1% lower cigarette consumption     -->
+<!-- - Justification: states that saw 1 % point increase in tax saw -->
+<!--     - 3% increase in prices (First stage) -->
+<!--     - 3% decrease in sales (Reduced form) -->
+<!-- - If tax increases effectively random, can interpret both as causal -->
+<!-- - If tax increases affect demand only through prices, ratio is effect of price on quantity -->
+<!-- - IV elasticity $\neq$ OLS estimate: states with higher cig prices also had other characteristics which reduced cigarette sales -->
+
+
+## Conclusions
+
+- Causal graph determines conditional independence relationships
+    - Backdoor criterion describes when control strategy can be used to estimate treatment effect
+- When proper controls not observed or included, regression coefficients have *endogeneity* bias
+- Might still be able to estimate effect if data contains an **instrument**
+    - An instrument is a variable which leads to variation in a treatment $X$ without directly affecting the outcome $Y$ 
+    - With an instrument, can use instrumental variables estimator to measure treatment effect
+
+## Next 2 classes
+
+- More about IV
+- Read Ch 15 in Wooldridge
+- Read Ch 3 in Angrist and Pischke
+
+
+
+
+
+
+

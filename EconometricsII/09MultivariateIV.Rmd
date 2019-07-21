@@ -1,0 +1,714 @@
+---
+title: "Two Stage Least Squares and IV Inference"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+## Today
+
+- Multivariate IV: Two Stage Least Squares
+- Testing IV Assumptions
+
+## Multiple Instruments
+
+- Is there a multivariate version of IV like there is for regression?
+- Yes, but now 2 types of multiple variables
+    - Multiple instruments $Z$
+    - Multiple endogenous regressors
+- To start: multiple instruments
+- Allows us to weaken random assignment of instrument to *conditional random assignment*
+    - Any case where control strategy will let us estimate causal effect of instrument, can do modified IV
+- Deal with constant effects linear model case only
+
+## IV model with multiple instruments
+- Let $Z$ be an $m+1\times 1$ vector of instruments
+- Include constant term $Z_0=1$
+- Regressor of interest, call it $Y_2$, still endogenous scalar (correlated with residual)
+- Allow first $k+1<m+1$ instruments to affect $Y_1$ directly
+    - These act as control variables
+- Still need at least one *excluded* instrument with no direct effect
+- Model becomes
+$$Y_{1i}=\beta_0+\beta_1Y_{2i} + \beta_2Z_{1i} + \beta_3Z_{2i} + ... + \beta_{k+1}Z_{ki} + u_{i}$$
+- Endogeneity means
+$$E[Y_2u]\neq 0 $$
+- For convenience call $X=(1,Y_2,Z_1,\ldots,Z_k)^\prime$
+$$Y_{1i}=X_i^{\prime}\beta+u_i$$
+
+<!-- ## Multivariate IV Model -->
+
+<!-- - Linear model with endogeneity -->
+
+<!-- $$Y_{1i}=\beta_0+\beta_1Y_{2i} + \beta_2Z_{1i} + \beta_3Z_{2i} + ... + \beta_{k+1}Z_{ki} + u_{i}$$  -->
+<!-- $$E[Y_{2i}u_i]\neq 0$$  -->
+
+<!-- - $Y_2$ is **endogenous** regressor -->
+<!-- - More compact notation -->
+<!--     - $X_i=(1,Y_{2i},Z_{1i},\ldots,Z_{ki})^{\prime}$ -->
+<!--     - $Y_{1i}=X_i^{\prime}\beta + u_{i}$ -->
+<!-- - Instruments  -->
+<!-- $Z=(Z_0,Z_1,\ldots,Z_k,Z_{k+1},\ldots,Z_m)^{\prime}$ -->
+<!-- $$E[Z_{i}u_i]=0$$ -->
+<!-- - $(Z_0,Z_1,\ldots,Z_k)$ are **exogenous regressors**, or **included instruments** -->
+<!-- - $(Z_{k+1},\ldots,Z_m)$ are **excluded instruments** -->
+
+## Interpretation: Causal Graph (code)
+
+```{r, eval=FALSE, fig.height=3}
+#Library to create and analyze causal graphs
+library(dagitty) 
+library(ggdag) #library to plot causal graphs
+#create graph
+iv2graph<-dagify(Y1~Y2+Z1+W,Y2~Z1+Z2+W,Z2~Z1) 
+#Set position of nodes 
+  coords<-list(x=c(Y2 = 0, W = 1, Y1 = 2, Z1=-1, Z2=-1),
+          y=c(Y2 = 0, W = 0.1, Y1 = 0, Z1=0.1,Z2=0)) 
+  coords_df<-coords2df(coords)
+  coordinates(iv2graph)<-coords2list(coords_df)
+  #Plot causal graph
+ggdag(iv2graph)+theme_dag_blank()+labs(title="Multivariate IV") 
+```   
+
+## Interpretation: Causal Graph
+
+```{r, echo=FALSE, fig.height=3}
+#Library to create and analyze causal graphs
+library(dagitty) 
+suppressWarnings(suppressMessages(library(ggdag))) #library to plot causal graphs
+iv2graph<-dagify(Y1~Y2+Z1+W,Y2~Z1+Z2+W,Z2~Z1) #create graph
+#Set position of nodes 
+  coords<-list(x=c(Y2 = 0, W = 1, Y1 = 2, Z1=-1, Z2=-1),y=c(Y2 = 0, W = 0.1, Y1 = 0, Z1=0.1,Z2=0)) 
+  coords_df<-coords2df(coords)
+  coordinates(iv2graph)<-coords2list(coords_df)
+ggdag(iv2graph)+theme_dag_blank()+labs(title="Multivariate IV") #Plot causal graph
+
+```   
+
+- Want effect of **endogenous regressor** $Y2$ on outcome $Y1$
+    - Unobserved confounder $W$ prevents using regression
+    - Even when adjusting for observed confounders $Z1$
+- **Excluded instruments** $Z2$ directly affect $Y2$ but *not* $Y1$    
+- By adjusting for **included instruments** $Z1$, effect of excluded instrument $Z2$ on $Y2$ can be estimated
+- Effect of $Z2$ on $Y1$ can also be estimated by controlling for $Z1$
+- Like univariate IV, but now *conditional* random assignment
+- Can have multiple included instruments $Z1$ or excluded instruments $Z2$
+
+## IV assumptions
+- Exclusion restriction is now 
+    - $E[Z_ju]= 0$ for all instruments $j=0\ldots m$
+- Let's look at special case where there is exactly one instrument not included in the stuctural equation, $m=k+1$
+- Model and exogeneity give us system of k+2 equations in k+2 unknowns
+$$E[Z_{ji}(Y_{1i}-\beta_0-\beta_1Y_{2i}-\beta_2Z_{1i} - ... - \beta_{k+1}Z_{ki})]=0\ \forall j=0\ldots m$$
+- Estimate by sample means in place of expectations
+- Multivariate IV estimator
+- Exactly standard IV in case where k=0 (no controls)
+- Relevance condition now says that this system has a unique solution
+    - Requires $Z$ to be related to $Y_2$
+
+
+## Many excluded instruments
+- If $m>k+1$, exclusion restictions give more equations than unknowns
+- Model said to be **overidentified**
+- Can drop any subset of Zs to just use $k+2$ of them
+    - So long as relevance still holds
+- Or use any $k+2$ *linear combinations* of $Z$
+- Let $\tilde{Z}$ be vector of $k+2$ linear combinations of elements of $Z$
+    - Use subsets or weighted averages of instruments
+- Then $$E[\tilde{Z}_i(Y_{1i}-X_i^{\prime}\beta)]=0$$ holds
+- Solving for $\beta$ and replacing mean with sample average gives $\hat{\beta}^{IV}$
+
+
+## Example: Incarceration and crime
+
+- Suppose we have $m+1$ judges, and an indicator for each
+- $Y_1$ is recidivism, $Y_2$ is sentence length
+- With no controls, multivariate IV is just univariate IV with a particular pair of judges as IV
+- Can use linear combinations to get more precise estimates: compare average of judges who give lots of time to average of those who give little
+- With controls, get effect of incarceration on crime conditioning on (exogenous) characteristics
+- Adding controls can also help ensure instrument uncorrelated with residual
+    - Include any omitted variable which is correlated with instrument and affects outcome
+    - E.g., if judges assigned randomly conditional on district, and district correlated with crime, include district as an included instrument
+
+## Finding the "right" linear combination
+
+- Intuitively, by combining the multiple valid IV estimators, should get better estimate (at least if model right)
+- Do this by choosing "right" linear combination of instruments
+- Under some assumptions, there is a choice which gives smallest variance
+- Called **Two Stage Least Squares**
+- First, Regress $Y_2$ on $Z$ to get predicted value $\hat{Y}_2=\phi_0 +\phi_1Z_1+\phi_2 Z_2+...\phi_mZ_m$
+- Use this and $Z_0\ldots Z_k$ as k+2 elements of $\tilde{Z}$
+
+## Implementing 2SLS
+
+- Equivalent to regressing $Y_2$ on $Z$ to get predicted value $\hat{Y}_2=\phi_0 +\phi_1Z_1+\phi_2 Z_2+...\phi_mZ_m$
+- Then replacing $Y_2$ with $\hat{Y}_2$ in structural function and running regression
+$$Y_{1i}=\beta_0+\beta_1\hat{Y}_{2i} + \beta_2Z_{1i} + \beta_3Z_{2i} + ... + \beta_{k+1}Z_{ki} + u_{i}$$
+- Denote matrix of regressors here $\hat{X}_i$
+- Coefficient on $\hat{Y}_{2i}$ is $\hat{\beta}_1^{2SLS}$
+- Need at least one excluded instrument with non-zero first stage coefficient for $\hat{Y}_{2i}$ to not be a linear combination of other regressors
+    - This is relevance or no multicollinearity condition   
+- Caveat: Don't do this in R by running OLS twice!
+    - Why? Standard errors will be wrong
+    - Don't take into account first stage uncertainty
+    - Use $ivreg$ command in package $AER$
+
+<!-- ## Two Stage Least Squares intuition -->
+
+<!-- - Another interpretation of simple IV -->
+<!-- - Let $\hat{X}_i$ be predicted value of $X$ in first stage regression $X_i=\phi_0+\phi_1 Z_i+e_i$ -->
+<!-- - Regress $Y_i$ on $\hat{X}_i$ -->
+<!-- - Coefficient is $\frac{Cov(\hat{X}_i,Y_i)}{Var(\hat{X}_i)}$ -->
+<!-- $$=\frac{Cov(\phi_0+\phi_1 Z_i,Y_i)}{Var(\phi_0+\phi_1 Z_i)} $$ -->
+<!-- $$=\frac{\phi_1 Cov(Z_i,Y_i)}{\phi_1^2Var(Z_i)} $$ -->
+<!-- $$=\frac{Cov(Z_i,Y_i)/Var(Z_i)}{\phi_1} $$ -->
+<!-- $$=\frac{\text{Reduced form}}{\text{First Stage}} $$ -->
+<!-- $$=\beta^{IV}_1$$ -->
+
+## 2SLS assumptions
+- (2SLS1) Linear Model
+$$Y_{1i}=\beta_0+\beta_1Y_{2i} + \beta_2Z_{1i} + \beta_3Z_{2i} + ... + \beta_{k+1}Z_{ki} + u_{i}$$
+- (2SLS2) Random sampling: $(Y_{1i},Y_{2i},Z_i)$ drawn i.i.d. from population satisfying linear model assumptions
+- (2SLS3) Relevance
+    - Need at least as many instruments correlated with $X$ as parameters
+- (2SLS4) Exogeneity
+$$E[Z_{ij}u_i]=0\ \forall j=1\ldots m+1$$
+- To perform inference, sometimes assume
+(2SLS5) Homoskedasticity
+$$E[u^2|Z]=\sigma^2$$ ($\sigma^2$ a finite nonzero constant)
+
+## Results
+- Under (1-4), 2SLS consistent
+- Relevance condition more complicated
+- Necessary conditions:
+    - At least one instrument is not included as a control: $m+1>k$
+    - First stage regression of $Y_2$ on $Z$ has nonzero coefficient on an excluded regressor
+    - Otherwise it is a linear combination of included $Z$, and so there is multicollinearity
+- Under (1-4), asymptotically normal inference is possible
+- Under (1-5), 2SLS is also choice of linear combination of instruments with smallest asymptotic variance
+- As usual, can use Robust SEs if (5) fails
+
+<!-- ## 2SLS inference -->
+
+<!-- - Test values of individual coefficients using a Z test -->
+<!-- - Test multiple coefficients with a Wald test -->
+<!-- - Can also test some model assumptions (command is $diagnostics=TRUE$ option in $summary$ after $ivreg$) -->
+<!--     - Relevance -->
+<!--     - Endogeneity -->
+<!--     - Exclusion restrictions -->
+
+<!-- ## Example: Cigarette Demand with controls -->
+<!-- - Predict cigarette demand controlling for income -->
+<!-- - Use same data as last class -->
+<!-- - $Y_1$ log Quantity Demanded -->
+<!-- - $Y_2$ log Price -->
+<!-- - $Z_1$ (included) income level -->
+<!-- - $Z_2$ (excluded) state cigarette tax rates -->
+<!-- $$Y_1=\beta_0+\beta_1Y_2+\beta_2Z_1 + u$$ -->
+<!-- - To run 2SLS, use $ivreg$ in $AER$ library, with syntax -->
+<!-- - **ivreg(y1 ~ y2 + z1 + ... + zk | z1 + ... + zm)** -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- #Load library containing IV command 'ivreg' -->
+<!-- suppressWarnings(suppressMessages(library(AER))) -->
+<!-- # Load data on cigarette prices and quantities -->
+<!-- data("CigarettesSW") -->
+<!-- #Use real prices as X -->
+<!-- CigarettesSW$rprice <- with(CigarettesSW, price/cpi) -->
+<!-- #Use changes in cigarette tax as supply curve shifting instrument -->
+<!-- CigarettesSW$tdiff <- with(CigarettesSW, (taxs - tax)/cpi) -->
+<!-- #data from different states in 1995 -->
+<!-- c1995 <- subset(CigarettesSW, year == "1995") -->
+<!-- ``` -->
+
+<!-- ## Results -->
+<!-- ```{r, echo=FALSE,results="asis"} -->
+<!-- #To get IV estimate of effect of x on y using -->
+<!-- #  z as instrument syntax is ivreg(y1 ~ y2 + z1 + ... + zk | z1 + ... + zm) -->
+<!-- # Effect of log(price) on log(quantity) controlling for income -->
+<!-- # Elasticity -->
+<!-- fm_ivreg <- ivreg(log(packs) ~ log(rprice) + income -->
+<!--                   | tdiff + income, data = c1995) -->
+<!-- #Obtain (robust) standard errors -->
+<!-- ivresults<-coeftest(fm_ivreg, -->
+<!--          vcov = vcovHC(fm_ivreg, type = "HC0")) -->
+<!-- suppressWarnings(suppressMessages(library(stargazer))) -->
+<!-- stargazer(ivresults,type="latex",header=FALSE, -->
+<!--     title="IV estimate of demand, controlling for income", -->
+<!--     column.labels="log(packs)", -->
+<!--     omit.table.layout="n") -->
+
+<!-- ``` -->
+
+<!-- ## Endogeneity Problem -->
+
+<!-- - Care about effect of $Y_2$ on $Y_1$ -->
+<!-- - $Y_2$ correlated with variables which directly affect $Y_1$ -->
+<!-- - Two ways to solve omitted variables problem -->
+<!--     - Control: include the  omitted variables -->
+<!--     - Instrumental Variables: find source of variation uncorrelated with omitted variables -->
+<!-- - 2SLS allows combining the two strategies: -->
+<!--     - Control for determinants of $Y_2$ by including $(Z_0,Z_1,\ldots,Z_k)$ -->
+<!--     - Find omitted instruments $(Z_{k+1},\ldots,Z_m)$ conditionally uncorrelated with remaining omitted variables -->
+<!-- - Idea: component of $Y_2$ predicted by omitted instruments is randomly assigned conditional on controls -->
+
+
+## Example: Cigarette Demand with controls (Code)
+
+```{r, eval=FALSE}
+#Load library containing IV command 'ivreg' 
+library(AER)
+# Load data on cigarette prices and quantities
+data("CigarettesSW")
+#Use real prices as X
+CigarettesSW$rprice <- with(CigarettesSW, 
+                            price/cpi)
+#Use changes in cigarette tax 
+# as supply curve shifting instrument
+CigarettesSW$tdiff <- with(CigarettesSW, 
+                           (taxs - tax)/cpi)
+#data from different states in 1995
+c1995 <- subset(CigarettesSW, 
+                year == "1995")
+```
+
+## Example: Cigarette Demand with controls
+- Predict cigarette demand controlling for income
+    - Income may affect sales, but also state tax policy
+- Use same data as last class
+- $Y_1$ log Quantity Demanded
+- $Y_2$ log Price
+- $Z_1$ (included) income level
+- $Z_2$ (excluded) state cigarette tax rates
+$$Y_1=\beta_0+\beta_1Y_2+\beta_2Z_1 + u$$
+- To run 2SLS, use $ivreg$ in $AER$ library, with syntax 
+- **ivreg(y1 ~ y2 + z1 + ... + zk | z1 + ... + zm)**
+
+```{r, echo=FALSE}
+#Load library containing IV command 'ivreg' 
+suppressWarnings(suppressMessages(library(AER)))
+# Load data on cigarette prices and quantities
+data("CigarettesSW")
+#Use real prices as X
+CigarettesSW$rprice <- with(CigarettesSW, price/cpi)
+#Use changes in cigarette tax as supply curve shifting instrument
+CigarettesSW$tdiff <- with(CigarettesSW, (taxs - tax)/cpi)
+#data from different states in 1995
+c1995 <- subset(CigarettesSW, year == "1995")
+```
+
+## Results (Code 1)
+```{r, eval=FALSE,results="asis"}
+#To get IV estimate of effect of x on y using
+#  z as instrument syntax is 
+# ivreg(y1 ~ y2 + z1 + ... + zk | z1 + ... + zm)
+# Effect of log(price) on log(quantity) 
+# controlling for income
+# Elasticity
+fm_ivreg <- ivreg(log(packs) ~ log(rprice) + income 
+                  | tdiff + income, data = c1995)
+#Obtain (robust) standard errors
+ivresults<-coeftest(fm_ivreg, 
+         vcov = vcovHC(fm_ivreg, type = "HC0"))
+```
+
+## Results (Code 2)
+```{r, eval=FALSE}
+#Compare to simple IV (no controls), 
+#first stage, and reduced form
+fm_ols<-lm(log(packs) ~ log(rprice) + income,
+           data=c1995)
+fm_simpleIV<-ivreg(log(packs) ~ log(rprice) 
+                  | tdiff, data = c1995)
+fm_firststage<-lm(log(rprice)~tdiff + income,
+                  data = c1995)
+fm_reducedform<-lm(log(packs)~tdiff + income,
+                   data = c1995)
+```
+
+## Results (Code 3)
+```{r, eval=FALSE}
+#Obtain robust standard errors for each
+fm_ols.coef<-coeftest(fm_ols, 
+    vcov = vcovHC(fm_ols, type = "HC0"))
+fm_simpleIV.coef<-coeftest(fm_simpleIV, 
+    vcov = vcovHC(fm_simpleIV, type = "HC0"))
+fm_firststage.coef<-coeftest(fm_firststage, 
+    vcov = vcovHC(fm_firststage, type = "HC0"))
+fm_reducedform.coef<-coeftest(fm_reducedform, 
+    vcov = vcovHC(fm_reducedform, type = "HC0"))
+```
+
+## Results (Code 4)
+```{r, eval=FALSE}
+library(stargazer)
+stargazer(fm_simpleIV.coef,ivresults,fm_ols.coef,
+    type="html",header=FALSE,no.space=TRUE,
+    title="2SLS, OLS, Simple IV",
+    column.labels=c("Simple IV"), # "2SLS","OLS",
+    omit.table.layout="nl")
+```    
+
+
+## Results
+```{r, echo=FALSE,results="asis"}
+#To get IV estimate of effect of x on y using
+#  z as instrument syntax is ivreg(y1 ~ y2 + z1 + ... + zk | z1 + ... + zm)
+# Effect of log(price) on log(quantity) controlling for income
+# Elasticity
+fm_ivreg <- ivreg(log(packs) ~ log(rprice) + income 
+                  | tdiff + income, data = c1995)
+#Obtain (robust) standard errors
+ivresults<-coeftest(fm_ivreg, 
+         vcov = vcovHC(fm_ivreg, type = "HC0"))
+
+#Compare to simple IV (no controls), first stage, and reduced form
+fm_ols<-lm(log(packs) ~ log(rprice) + income, data=c1995)
+fm_simpleIV<-ivreg(log(packs) ~ log(rprice) 
+                  | tdiff, data = c1995)
+fm_firststage<-lm(log(rprice)~tdiff + income,  data = c1995)
+fm_reducedform<-lm(log(packs)~tdiff + income,  data = c1995)
+
+#Obtain robust standard errors for each
+fm_ols.coef<-coeftest(fm_ols, 
+         vcov = vcovHC(fm_ols, type = "HC0"))
+fm_simpleIV.coef<-coeftest(fm_simpleIV, 
+         vcov = vcovHC(fm_simpleIV, type = "HC0"))
+fm_firststage.coef<-coeftest(fm_firststage, 
+         vcov = vcovHC(fm_firststage, type = "HC0"))
+fm_reducedform.coef<-coeftest(fm_reducedform, 
+         vcov = vcovHC(fm_reducedform, type = "HC0"))
+
+suppressWarnings(suppressMessages(library(stargazer)))
+stargazer(ivresults,fm_ols.coef,fm_simpleIV.coef,
+    type="html",header=FALSE,no.space=TRUE,
+    title="2SLS, OLS, Simple IV",
+    column.labels=c("2SLS","OLS","Simple IV"), 
+    omit.table.layout="nl")
+```    
+
+## 2SLS vs First Stage and Reduced Form (Code)
+
+```{r, eval=FALSE,results="asis"}
+stargazer(ivresults,fm_firststage.coef,fm_reducedform.coef,
+    type="html",header=FALSE,no.space=TRUE,
+    title="2SLS, First Stage, and Reduced Form",
+    column.labels=c("log(packs)",
+                    "log(rprice)",
+                    "log(packs)"), 
+    omit.table.layout="n")
+```
+
+## 2SLS vs First Stage and Reduced Form
+
+```{r, echo=FALSE,results="asis"}
+stargazer(ivresults,fm_firststage.coef,fm_reducedform.coef,
+    type="html",header=FALSE,no.space=TRUE,
+    title="2SLS, First Stage, and Reduced Form",
+    column.labels=c("log(packs)","log(rprice)", "log(packs)"), 
+    omit.table.layout="n")
+```
+
+<!-- ## Two Stage Least Squares -->
+
+<!-- - A procedure to consistently estimate  -->
+<!-- - $Y_{1i}=X_i^\prime\beta + u_{i}$ -->
+<!-- - First Stage -->
+<!--     - Run regression $Y_{2i}=\phi_0+\phi_1Z_{1i}+\ldots+\phi_kZ_{ki}+\phi_{k+1}Z_{ki}+\ldots+\phi_{m}Z_{mi} + e_i = Z_i^\prime\phi+e_i$ by OLS -->
+<!--     - Compute **predicted value** $\hat{Y}_{2i}=Z_i^\prime\hat{\phi}$ -->
+<!-- - Second Stage -->
+<!--     - Run regression $Y_{1i}=\beta_0+\beta_1\hat{Y}_{2i} + \beta_2Z_{1i} + \beta_3Z_{2i} + ... + \beta_{k+1}Z_{ki} + u_{i}$ by OLS -->
+<!--     - Second stage coefficients are called **Two Stage Least Squares** estimator or **2SLS** -->
+<!--     - Need at least one excluded instrument with non-zero first stage coefficient for $\hat{Y}_{2i}$ to not be a linear combination of other regressors -->
+<!--     - This is relevance or no multicollinearity condition    -->
+    
+<!-- ## Why 2SLS works: Simple Case -->
+
+<!-- - Let's see what 2SLS does in simple IV model -->
+<!-- $$Y_1=\beta_0+\beta_1Y_2 + u$$ -->
+<!-- $$E[Z_1u]=0$$ -->
+<!-- - Let $\hat{Y}_{2i}$ be predicted value of $X$ in first stage regression $$Y_{2i}=\phi_0+\phi_1 Z_i+e_i$$ -->
+
+
+<!-- ## 2SLS with one variable  -->
+
+<!-- - Regress $Y_{1i}$ on $\hat{Y}_{2i}^{true}=\phi_0+\phi_1 Z_i$  -->
+<!--     - Predicted value with true first stage coefficients -->
+<!-- - Coefficient has limit $\frac{Cov(\hat{Y}_{2i}^{true},Y_{1i})}{Var(\hat{Y}_{2i}^{true})}$ -->
+<!-- $$=\frac{Cov(\phi_0+\phi_1 Z_i,Y_{1i})}{Var(\phi_0+\phi_1 Z_i)} $$ -->
+<!-- $$=\frac{\phi_1 Cov(Z_i,Y_{1i})}{\phi_1^2Var(Z_i)} $$ -->
+<!-- $$=\frac{Cov(Z_i,Y_{1i})/Var(Z_i)}{\phi_1} $$ -->
+<!-- $$=\frac{\text{Reduced form}}{\text{First Stage}} $$ -->
+<!-- $$=\beta^{IV}_1$$ -->
+
+<!-- ## Intuition -->
+
+<!-- - $Y_{2i}= Z_i^{\prime}\phi + e_i$ composed of 2 parts -->
+<!-- - Endogeneity problem $E[u_iY_{2i}]\neq 0$ -->
+<!-- - First stage computes $\hat{Y}_{2i}$ estimate of $Z_i^\prime\phi$ -->
+<!--     - This is the component of endogenous variable predictable by $Z$ -->
+<!--     - By assumption, $E[Zu]=0$, so $E[u_i\hat{Y}_{2i}]=E[u_iZ_i^\prime\phi]=0$ also -->
+<!-- - $e_i$, remaining part, has $E[e_iu_i]\neq 0$ -->
+<!--     - This is source of endogeneity -->
+<!-- - 2SLS "uses the exogenous variation in the endogenous variable to measure its effect on the outcome"  -->
+
+
+## Multiple endogenous variables
+- Linear model with endogeneity
+$$Y_{1i}=\beta_0+\beta_1Y_{2i} + \beta_2Y_{3i} + \ldots + \beta_{\ell}Y_{\ell i} + \beta_{\ell+1}Z_{1i} + ... + \beta_{k+\ell}Z_{ki} + u_{i}$$ 
+
+- $Y_{-1}=(Y_2\ldots Y_\ell)$ are **endogenous** regressors
+
+$$E[Y_{-1i}u_i]\neq 0$$ 
+
+- More compact notation
+    - $X_i=(1,Y_{2i},\ldots,Y_{\ell i},Z_{1i},\ldots,Z_{ki})^{\prime}$
+    - $Y_{1i}=X_i^{\prime}\beta + u_{i}$
+- Instruments 
+$Z=(Z_0,Z_1,\ldots,Z_k,Z_{k+1},\ldots,Z_m)^{\prime}$
+$$E[Z_{i}u_i]=0$$
+- $(Z_0,Z_1,\ldots,Z_k)$ are **exogenous regressors**, or **included instruments**
+- $(Z_{k+1},\ldots,Z_m)$ are **excluded instruments**
+
+
+## Alternate Representation of 2SLS
+
+- Consider one endogenous regressor case
+- Can interpret first stage as regressing ALL variables in $X$ on $Z$
+    - $Y_{2i}= Z_i^\prime\phi_{Y_2}+e_i$
+    - $Z_{0i}= Z_i^\prime\phi_{Z_0}+e_i$
+    - $\ldots$
+    - $Z_{ki}= Z_i^\prime\phi_{Z_k}+e_i$
+    
+- Then in second stage $\hat{X}_i=(\hat{Z}_{0i},\hat{Y}_{2i},\hat{Z}_{1i},\ldots,\hat{Z}_{ki})$
+
+- Note that $\hat{Z}_{ji}=Z_{ji}$ since $Z$ predicts itself perfectly
+- So this yields exactly the same predictor
+- We can do this also in multiple endogenous variables case
+
+## Full 2SLS
+
+- First stage
+    - Regress each element of $X_i$ on $Z_i$ by OLS 
+    - Compute predicted values $\hat{X}_i=(\hat{Z}_{0i},\hat{Y}_{2i},\ldots,\hat{Y}_{\ell i},\hat{Z}_{1i},\ldots,\hat{Z}_{ki})^\prime$
+
+- Second stage
+    - Regress $Y_{1i}$ on $\hat{X}_i$ by OLS
+    - Need at least $\ell-1$ excluded instruments with nonzero coefficients in at least some first stage regressions to avoid multicolinearity
+     - Second stage coefficients are **Two Stage Least Squares** estimator 
+
+## 2SLS assumptions
+
+- (2SLS1) Linear Model
+$$Y_{1i}=\beta_0+\beta_1Y_{2i} + \beta_2Y_{3i} + \ldots + \beta_{\ell}Y_{\ell i} + \beta_{\ell+1}Z_{1i} + ... + \beta_{k+\ell}Z_{ki} + u_{i}$$ 
+- (2SLS2) Random sampling: $(Y_{1i},\ldots,Y_{\ell i},Z_i)$ drawn i.i.d. from population satisfying linear model assumptions
+- (2SLS3) Relevance
+    - There are no exact linear relationships among the variables in $\hat{X}_i=(1,\hat{Y}_{2i},\ldots,\hat{Y}_{\ell i},Z_{1i},\ldots,Z_{ki})$ 
+- (2SLS4) Exogeneity
+$$E[Z_{ij}u_i]=0\ \forall j=1\ldots m+1$$
+- Sometimes also assume 
+(2SLS5) Homoskedasticity
+$$E[u^2|Z]=\sigma^2$$ ($\sigma^2$ a finite nonzero constant)
+
+## Results
+
+- Under (1-4), 2SLS consistent 
+- Relevance condition more complicated
+- Necessary conditions: 
+    - At least $\ell-1$ instruments not included as a control: $m\geq k+\ell$
+    - First stage regressions of $Y_{-1}$ on $Z$ have at least $\ell$ nonzero coefficients on excluded regressor
+    - Otherwise it is a linear combination of included $Z$, and so there is multicollinearity in second stage
+- Under (1-5), asymptotically normal inference is possible
+- Under (1-5), 2SLS is also choice of linear combination of instruments with smallest asymptotic variance
+- As usual, inference possible under heteroskedasticity (5 false)
+- Unlike OLS, 2SLS not necessarily unbiased
+
+## 2SLS inference
+
+- Test values of individual coefficients using a Z test
+- Test multiple coefficients with a Wald test
+- Can also test some model assumptions (command is $diagnostics=TRUE$ option in $summary$ after $ivreg$)
+    - Relevance
+    - Endogeneity
+    - Exclusion restrictions
+    
+## Failure of relevance
+- What happens if (IV3) $Cov(Z,X)\neq 0$ or (2SLS3) fails or is close to failing?
+- $\hat{\beta}_1^{IV}$ gives division by 0, or close to it
+- 2SLS estimator can't solve system of equations
+- Irrelevant instrument gives undefined limit
+    - $Z$ just doesn't have any effect
+- If $Z$ irrelevant or nearly so, IV involves division by something close to 0 and variable, so huge and sometimes positive, sometimes negative
+- Results in large standard errors and bias, finite-sample distribution with many outliers (infinite variance) 
+- If only one endogenous regressor, can test it using F test in first stage regression of $X$ on $Z$
+- Rule of thumb (Homoskedastic 1 variable case): F<10, estimate may be unreliable, even if n large
+    - Instruments are "weak"
+
+## Testing endogeneity
+- With # excluded instruments= # endogenous regressors, exclusion restriction not testable
+    - Regardless of true joint distribution of $(Y,Z)$, can always find $\beta$ satisfying the moment conditions
+- If we believe IV assumptions (exclusion and relevance), we can at least test whether IV is doing any good
+- If $E[Y_{-1}u]=0$, so $Y_{-1}$ exogenous, IV and OLS will both give consistent estimates
+- But IV estimator will have larger variance, since instrument uses only part of variation in $Y_{-1}$ to find $\beta$
+- (Durbin-Wu-)Hausman test uses difference between IV and OLS to test null that IV not needed against alternative that it is.
+
+## Testing IV Assumptions: Exclusion
+- With multiple excluded instruments, can compare IV estimate computed using different subsets of $Z$
+- If they differ more than expected due to sampling variation, something in assumptions is wrong
+- Either (at least one) exclusion restriction $E[Z_j u]=0$ is wrong
+- Or constant effects assumption is wrong
+- In LATE setting, different IV's will result in different groups of compliers
+- 2SLS assumptions valid for linear model only if  treatment effect on all subgroups identical
+- Can test by Sargan (or J) test: essentially a Wald test of the exclusion restrictions
+- Not rejecting does NOT mean model assumptions all valid
+- Use $diagnostics=TRUE$ option in $summary$ after ivreg: gives Sargan test, Hausman test, and F test for weak instruments
+
+<!-- ## Another exclusion test -->
+
+<!-- - Suppose you have a population for which you somehow know IV Z has 0 effect on the endogenous regressor -->
+<!-- - Then exogeneity requires that the reduced form regression of $Y_1$ on $Z$ have 0 coefficient -->
+<!-- - Idea: $Z$ must only affect $Y_1$ through $Y_{-1}$, so if first stage 0, $Z$ should be completely unrelated to outcome -->
+<!-- - Not super useful test because if first stage 0, you can't estimate IV -->
+<!-- - But if you have two separate populations that you believe are comparable *except* the first stage, then you can compare results -->
+
+<!-- ## Sources of endogeneity -->
+
+<!-- $$E[Y_{-1i}u_i]\neq 0$$ -->
+
+<!-- - One reason: Omitted Variables -->
+<!-- - Another: Simultaneity -->
+<!--     - Causality runs in "wrong" direction -->
+<!--     - $Y_2$ causes $Y_1$, but $Y_1$ also causes $Y_2$ -->
+<!--     - Economic equilibria: system of variables mutually determined -->
+<!--     - Ex. 1: Supply and demand -->
+<!--     - Ex. 2:  Game theory -->
+
+
+<!-- ## Simultaneous equations systems -->
+
+<!-- - Represent by system of structural equations -->
+<!-- $$Y_1=\beta_{11}Y_2+\beta_{12}Z_1+u_{1}$$ -->
+<!-- $$Y_2=\beta_{21}Y_1+\beta_{22}Z_2+u_{2}$$ -->
+
+<!-- - E.g. Supply and demand -->
+<!--     - $Y_1$ is price -->
+<!--     - $Y_2$ is quantity -->
+<!--     - Equation 1 is supply curve: as quantity sold increases, ask a higher price -->
+<!--     - Equation 2 is demand curve: as price goes up, demand less quantity -->
+<!--     - $Z_1$ are forces shifting supply curve: e.g., price of inputs -->
+<!--     - $Z_2$ are forces shifting demand curve: e.g. prices of substitutes -->
+<!--     - $u_1,u_2$ are unobserved supply/demand shifters -->
+
+<!-- ## Simultaneity Bias -->
+
+<!-- - Substitute equation 1 in equation 2 -->
+<!-- $$Y_2=\beta_{21}(\beta_{11}Y_2+\beta_{12}Z_1+u_{1})+\beta_{22}Z_2+u_{2}$$ -->
+<!-- - Solve for **reduced form** for $Y_2$ in terms of $Z$ -->
+<!-- $$Y_2=\frac{1}{1-\beta_{11}\beta_{21}}(\beta_{21}\beta_{12}Z_1+\beta_{22}Z_2+\beta_{11}u_{2}+u_{1})$$ -->
+<!-- - Valid if $\beta_{11}\beta_{21}\neq 1$ -->
+<!-- - Now consider estimating equation 1 by OLS -->
+
+<!-- $$Y_1=\beta_{11}Y_2+\beta_{12}Z_1+u_{1}$$ -->
+
+<!-- - $Y_2$ contains $u_1$ and so is correlated with $u_1$ -->
+
+<!-- ## Handling simultaneity bias -->
+
+<!-- - Similar to omitted variables, in that unobserved demand shifts directly affect quantity and also price -->
+<!-- - Difference is that simultaneity means any term which shifts demand will affect quantity sold in addition to price, so we can't use control strategy -->
+<!--     - If there is any variation  in $u_1$ at all, it will be correlated with $Y_2$ -->
+<!-- - But we CAN isolate variation due only to observed supply shifts $Z_2$, and so estimate by 2SLS so long as $Z_2$ only affects supply and not demand -->
+
+<!-- ## General simultaneous systems -->
+
+<!-- - Can have a system with $\ell$ equations and $\ell$ endogenous variables -->
+<!-- $$Y_1=\beta_{11}Y_2+\ldots+\beta_{1\ell}Y_{\ell}+Z_1^\prime\beta_{1\ell+1}+u_{1}$$ -->
+<!-- $$Y_2=\beta_{21}Y_1+\beta_{22}Y_3+\ldots+\beta_{2\ell}Y_{\ell}+Z_2^\prime\beta_{2\ell+1}+u_{2}$$ -->
+<!-- $$\ldots$$ -->
+<!-- $$Y_{\ell}=\beta_{\ell 1}Y_1 + \beta_{\ell 2}Y_2 +\ldots+ \beta_{\ell\ell}Y_{\ell-1} -->
+<!-- +Z_{\ell}^\prime\beta_{\ell \ell+1} +u_{\ell}$$ -->
+
+<!-- - Represent full set of causal relationships between $(Y_1,\ldots,Y_\ell)$ and also effect of exogenous variables $Z$ not determined inside the system -->
+<!-- - $Z_1^\prime$ through $Z_{\ell}^\prime$ may be vectors containing shared elements if one variable affects multiple variables -->
+
+
+<!-- ## Reduced form in simultaneous equation models -->
+
+<!-- - Can solve for reduced form of all $Y$ variables as functions of only $Z$ variables under some restrictions on coefficients  -->
+<!-- - Need a unique solution to this system of equations, otherwise model not complete description of process generating data -->
+<!-- - E.g., if supply and demand curves don't touch, model no longer well defined -->
+<!-- - If supply and demand curves exactly overlap, price and quantity could take multiple values: need more info to describe system -->
+<!-- - If model complete and well defined, can calculate probability law of variables inside the system in terms of external, or exogenous, disturbances to system -->
+
+<!-- ## Estimation of simultaneous equations models -->
+
+<!-- - Can  estimate one equation in system by 2SLS estimation if reduced form exists and there are terms $Z$ that enter into other equations but not directly into this one -->
+<!-- - Need at least as many excluded $Z$ terms as included endogenous variables $Y$ to estimate any one equation consistently -->
+<!-- - May only be able to estimate some equations in system -->
+<!-- - Execute in R equation by equation using **ivreg**, or a command to do all at once is **systemfit** in **systemfit** library -->
+<!-- - If all equations estimable, there is a weighted estimator, like GLS, that estimates all equations, called 3SLS (**method="3SLS"** option in systemfit) -->
+<!-- - Like GLS, more efficient in homoskedastic, well-specified case, but otherwise not -->
+
+<!-- ## Measurement Error -->
+<!-- - One more source of endogeneity -->
+<!-- - $X^{*}$ is assigned randomly, but we don't observe it directly -->
+<!-- - Instead observe noisy proxy $X=X^{*}+\epsilon$ -->
+<!--     - $\epsilon\perp X^{*}$ is nonsystematic error in measurement process -->
+<!--     - Maybe survey taker sometimes writes numbers slightly off -->
+<!--     - Maybe instrument used to measure sometimes picks up unrelated noise -->
+<!-- - We care about coefficient of $Y=\beta_0+\beta_1X^{*} + e$ -->
+<!-- - How bad is it to estimate instead regression of $Y$ on $X$? -->
+
+<!-- ## Measurement-error bias -->
+
+<!-- - OLS Estimate is $$\beta_{OLS}=\frac{Cov(X,Y)}{Var(X)}$$ -->
+<!-- - True object of interest is $$\beta=\frac{Cov(X^*,Y)}{Var(X^*)}$$ -->
+<!-- $$\beta_{OLS}=\frac{Cov(X^{*}+\epsilon,Y)}{Var(X^{*}+\epsilon)}$$ -->
+<!-- $$=\frac{Cov(X^{*},Y)+Cov(\epsilon,Y)}{Var(X^{*})+Var(\epsilon)}$$ -->
+<!-- - By randomness of error, $Cov(\epsilon,Y)=0$ -->
+<!-- $$=\frac{Cov(X^{*},Y)}{Var(X^{*})+Var(\epsilon)}$$ -->
+<!-- - $\left|\beta_{OLS}\right|<\left|\beta\right|$  -->
+<!-- - Magnitude smaller since divided by larger number -->
+
+<!-- ## Intuition -->
+<!-- - **Attenuation bias**  -->
+<!-- - Measurement error makes OLS estimate smaller than true effect -->
+<!-- - Limiting case: $X$ is pure noise: no information about $X^{*}$ at all -->
+<!--     - Then $Y$ is unrelated to $X$ -->
+<!--     - Coefficient becomes 0 -->
+<!-- - Equivalent to a form of endogeneity -->
+<!-- - $Y= \beta_0 +\beta_1 X^{*} + e = \beta_0 + \beta_1 (X-\epsilon) + e = \beta_0 + \beta_1 X-\beta_1\epsilon + e = \beta_0 + \beta_1 X+u$ -->
+<!-- - Here $u=e-\beta_1\epsilon$, $E[Xu]=E[X^{*} +\epsilon,e-\beta_1\epsilon]=-\beta_1 E[\epsilon^2]\neq 0$ -->
+
+
+<!-- ## Solving Measurement error bias -->
+
+<!-- - If we have an IV correlated with $X^*$ but uncorrelated with the measurement error in it, we can estimate effect by IV -->
+<!-- - Special case: 2 noisy measurements: $X_1=X^{*}+ \epsilon_1$, $X_2=X^{*}+\epsilon_2$ $\epsilon_1\perp\epsilon_2$ -->
+<!-- - $Cov(X_1,X_2)=Var(X^{*})\neq 0$ and $Cov(X_2,Y-X_1\beta_1)=0$, since measurement errors are independent -->
+<!-- - Example: if survey-takers sometimes misrecord a response, survey same households twice, use one survey as IV for other -->
+<!-- - Compare alternate strategy: take 2 noisy measurements and average -->
+<!--     - Variance of measurement error decreases, but doesn't disapper: OLS still inconsistent -->
+<!--     - Unlike IV which gives estimate which gives consistent estimator even if error variance large -->
+
+## Conclusions
+
+<!-- - Omitted variables or simultaneity can cause endogeneity -->
+- Multivariate IV model permits use of conditionally random instrument to generate conditionally random variation in endogenous regressor
+- 2SLS can be used to estimate
+    - First stage OLS of $X$ on $Z$ 
+    - Second stage OLS of $Y1$ on $\hat{X}$ 
+- Requires exclusion and relevance, which can (sometimes) be tested
+    - Relevance condition testable by first stage F test, 
+    - Validity testable if more excluded instruments than endogenous variables
+    - Endogeneity testable if IV valid
+- Next class
+    - More use cases for IV
+    - Begin Panel Data
+  
+
+
+
+
+
+

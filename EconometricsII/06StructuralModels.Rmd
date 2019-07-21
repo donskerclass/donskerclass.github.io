@@ -407,85 +407,85 @@ ggdag(collidergraph)+theme_dag_blank()+labs(title="Collider structure") #Plot ca
     - $P(Y|do(X=x))=P(Y|X=x)=P(Y)$ not equal to $\int P(Y|X,W=w)P(w)dw$
 - Commonality with mediator case: $W$ is a *descendant* of $X$    
 
-## d-separation in general graphs
+<!-- ## d-separation in general graphs -->
 
-- Want rules for arbitrary graphs describing when control is sufficient to recover causal effect
-    - First, define rule describing what conditioning implies for independence
-    
-- When does conditioning on set of nodes $W$ imply for two disjoint sets of nodes $X$ $Y$ that $X\perp Y|W$?
-- We say a (non-directed) path from $X_i$ to $Y_j$ is **blocked** by $W$ if it contains either
-    - A collider which is *not* in $W$ and of which $W$ is *not* a descendant
-    - A non-collider which *is* in $W$
-- We say $X$ and $Y$ are **d-separated** (by $W$) if all paths between $X$ and $Y$ are blocked
-- **Theorem** (Pearl, 2009): $X\perp Y|W$ if and only if $X$ and $Y$ are d-separated by $W$
+<!-- - Want rules for arbitrary graphs describing when control is sufficient to recover causal effect -->
+<!--     - First, define rule describing what conditioning implies for independence -->
 
-## Backdoor Criterion
+<!-- - When does conditioning on set of nodes $W$ imply for two disjoint sets of nodes $X$ $Y$ that $X\perp Y|W$? -->
+<!-- - We say a (non-directed) path from $X_i$ to $Y_j$ is **blocked** by $W$ if it contains either -->
+<!--     - A collider which is *not* in $W$ and of which $W$ is *not* a descendant -->
+<!--     - A non-collider which *is* in $W$ -->
+<!-- - We say $X$ and $Y$ are **d-separated** (by $W$) if all paths between $X$ and $Y$ are blocked -->
+<!-- - **Theorem** (Pearl, 2009): $X\perp Y|W$ if and only if $X$ and $Y$ are d-separated by $W$ -->
 
-- Using d-separation, can define a complete criterion for when control recovers $P(Y|do(X=x))$
-- A set of variables $W$ satisfies **Backdoor Criterion** between $X$ and $Y$ if
-    - No node in $W$ is a descendant of $X$
-    - $W$ blocks every path between $X$ and $Y$ that contains an edge directed into $X$ 
-- **Theorem** (Pearl, 2009): If $W$ satisfies the backdoor criterion between $X$ and $Y$, the adjustment formula recovers the causal effect of $X$ on $Y$
-$$P(Y|do(X=x))=\int Pr(Y|W,X=x)Pr(W)dw$$
+<!-- ## Backdoor Criterion -->
 
-## Backdoor criterion, intuition
+<!-- - Using d-separation, can define a complete criterion for when control recovers $P(Y|do(X=x))$ -->
+<!-- - A set of variables $W$ satisfies **Backdoor Criterion** between $X$ and $Y$ if -->
+<!--     - No node in $W$ is a descendant of $X$ -->
+<!--     - $W$ blocks every path between $X$ and $Y$ that contains an edge directed into $X$  -->
+<!-- - **Theorem** (Pearl, 2009): If $W$ satisfies the backdoor criterion between $X$ and $Y$, the adjustment formula recovers the causal effect of $X$ on $Y$ -->
+<!-- $$P(Y|do(X=x))=\int Pr(Y|W,X=x)Pr(W)dw$$ -->
 
-- Blocking path component ensures that adjustment variables account for confounding by causes other than the cause of interest and do not introduce additional bias by inducing new correlations through colliders
-- Non-descendant component avoids "bad controls" which are themselves affected by treatment
-- I will not force you to recall exact definition of d-separation or backdoor criterion
-- Point is that given a causal story, systematic method can recover whether control is sufficient
-    - In `dagitty`, check backdoor criterion between $X$ and $Y$ by
-```{r, eval=FALSE}
-#Check if W satisfies criterion
-isAdjustmentSet(graphname,"W",exposure="X",outcome="Y")
-#Find variables that satisfy criterion, if they exist
-adjustmentSets(graphname,exposure="X",outcome="Y") 
-```
+<!-- ## Backdoor criterion, intuition -->
 
-## Example: finding adjustment sets (Code)
+<!-- - Blocking path component ensures that adjustment variables account for confounding by causes other than the cause of interest and do not introduce additional bias by inducing new correlations through colliders -->
+<!-- - Non-descendant component avoids "bad controls" which are themselves affected by treatment -->
+<!-- - I will not force you to recall exact definition of d-separation or backdoor criterion -->
+<!-- - Point is that given a causal story, systematic method can recover whether control is sufficient -->
+<!--     - In `dagitty`, check backdoor criterion between $X$ and $Y$ by -->
+<!-- ```{r, eval=FALSE} -->
+<!-- #Check if W satisfies criterion -->
+<!-- isAdjustmentSet(graphname,"W",exposure="X",outcome="Y") -->
+<!-- #Find variables that satisfy criterion, if they exist -->
+<!-- adjustmentSets(graphname,exposure="X",outcome="Y")  -->
+<!-- ``` -->
 
-```{r, eval=FALSE}
-#create graph
-complicatedgraph<-dagify(Y~A+C,B~X+Y,A~X,X~C,D~B) 
-#Set position of nodes 
-coords<-list(x=c(X = 0, A = 1, B = 1, C=1, Y=2, D=2),
-    y=c(X = 0, A = 0.1, B=0, C=-0.1, Y = 0, D=0.1)) 
-coords_df<-coords2df(coords)
-coordinates(complicatedgraph)<-coords2list(coords_df)
+<!-- ## Example: finding adjustment sets (Code) -->
 
-#Plot causal graph
-ggdag(complicatedgraph)+theme_dag_blank()+
- labs(title="Complicated Graph")
+<!-- ```{r, eval=FALSE} -->
+<!-- #create graph -->
+<!-- complicatedgraph<-dagify(Y~A+C,B~X+Y,A~X,X~C,D~B)  -->
+<!-- #Set position of nodes  -->
+<!-- coords<-list(x=c(X = 0, A = 1, B = 1, C=1, Y=2, D=2), -->
+<!--     y=c(X = 0, A = 0.1, B=0, C=-0.1, Y = 0, D=0.1))  -->
+<!-- coords_df<-coords2df(coords) -->
+<!-- coordinates(complicatedgraph)<-coords2list(coords_df) -->
 
-```
+<!-- #Plot causal graph -->
+<!-- ggdag(complicatedgraph)+theme_dag_blank()+ -->
+<!--  labs(title="Complicated Graph") -->
 
-## Example: finding adjustment sets
+<!-- ``` -->
 
-```{r, echo=FALSE}
-complicatedgraph<-dagify(Y~A+C,B~X+Y,A~X,X~C,D~B) #create graph
-#Set position of nodes 
-  coords<-list(x=c(X = 0, A = 1, B = 1, C=1, Y=2, D=2),y=c(X = 0, A = 0.1, B=0, C=-0.1, Y = 0, D=0.1)) 
-  coords_df<-coords2df(coords)
-  coordinates(complicatedgraph)<-coords2list(coords_df)
-ggdag(complicatedgraph)+theme_dag_blank()+labs(title="Complicated Graph") #Plot causal graph
+<!-- ## Example: finding adjustment sets -->
 
-```
+<!-- ```{r, echo=FALSE} -->
+<!-- complicatedgraph<-dagify(Y~A+C,B~X+Y,A~X,X~C,D~B) #create graph -->
+<!-- #Set position of nodes  -->
+<!--   coords<-list(x=c(X = 0, A = 1, B = 1, C=1, Y=2, D=2),y=c(X = 0, A = 0.1, B=0, C=-0.1, Y = 0, D=0.1))  -->
+<!--   coords_df<-coords2df(coords) -->
+<!--   coordinates(complicatedgraph)<-coords2list(coords_df) -->
+<!-- ggdag(complicatedgraph)+theme_dag_blank()+labs(title="Complicated Graph") #Plot causal graph -->
 
-## Measuring effect of X on Y
+<!-- ``` -->
 
-- Go back to education $X$ versus wages $Y$ to get intuition
-- $A$ caused by $X$, causes $Y$: e.g., occupation, experience
-    - Mediators: descendant of $X$, so do not adjust for it
-- $B$ caused by both $X$ and $Y$: e.g., current wealth or lifestyle
-    - Colliders: descendant of $X$, so do not adjust for it
-- $D$ caused by $B$ only: e.g. consequences of wealth
-    - Descendants of collider: still causes bias when adjusted for
-- $C$, causes $X$ and $Y$: e.g. ability, background 
-    - Confounder: must condition on it 
-- Backdoor criterion calculates this automatically    
-```{r}
-adjustmentSets(complicatedgraph,exposure="X",outcome="Y")
-```
+<!-- ## Measuring effect of X on Y -->
+
+<!-- - Go back to education $X$ versus wages $Y$ to get intuition -->
+<!-- - $A$ caused by $X$, causes $Y$: e.g., occupation, experience -->
+<!--     - Mediators: descendant of $X$, so do not adjust for it -->
+<!-- - $B$ caused by both $X$ and $Y$: e.g., current wealth or lifestyle -->
+<!--     - Colliders: descendant of $X$, so do not adjust for it -->
+<!-- - $D$ caused by $B$ only: e.g. consequences of wealth -->
+<!--     - Descendants of collider: still causes bias when adjusted for -->
+<!-- - $C$, causes $X$ and $Y$: e.g. ability, background  -->
+<!--     - Confounder: must condition on it  -->
+<!-- - Backdoor criterion calculates this automatically     -->
+<!-- ```{r} -->
+<!-- adjustmentSets(complicatedgraph,exposure="X",outcome="Y") -->
+<!-- ``` -->
 
 <!--## Example: School admissions
 
