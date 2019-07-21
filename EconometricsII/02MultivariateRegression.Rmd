@@ -1,0 +1,526 @@
+---
+title: "Multivariate Regression"
+author: "73-374 Econometrics II"
+output: 
+  html_document:
+    code_folding: show
+---
+
+## Multivariate Regression
+
+- Last class we covered univariate regression
+- Today, multivariate regression and how it's used
+
+## Wages vs Education Again (code)
+```{r, eval=FALSE}
+# Obtain access to data sets used in our textbook
+library(foreign) 
+#Load library to make pretty table
+suppressWarnings(suppressMessages(library(stargazer))) 
+# Import data set of education and wages
+wage1<-read.dta(
+  "http://fmwww.bc.edu/ec-p/data/wooldridge/wage1.dta")
+# Regress log wage on years of education 
+wageregoutput <- lm(formula = lwage ~ educ, data = wage1)
+
+# Scatter plot with regression line
+plot(wage1$educ,wage1$lwage, xlab = "Years of Education",
+      ylab = "Log Wage", main = "Wage vs Education")
+abline(wageregoutput,col="red")
+
+```
+
+
+## Wages vs Education Again
+```{r, echo=FALSE}
+# Obtain access to data sets used in our textbook
+library(foreign) 
+#Load library to make pretty table
+suppressWarnings(suppressMessages(library(stargazer))) 
+# Import data set of education and wages
+wage1<-read.dta(
+  "http://fmwww.bc.edu/ec-p/data/wooldridge/wage1.dta")
+# Regress log wage on years of education 
+wageregoutput <- lm(formula = lwage ~ educ, data = wage1)
+
+# Scatter plot with regression line
+plot(wage1$educ,wage1$lwage, xlab = "Years of Education",
+      ylab = "Log Wage", main = "Wage vs Education")
+abline(wageregoutput,col="red")
+
+```
+
+## Results Table (Code)
+```{r, eval=FALSE, results="asis"}
+
+stargazer(wageregoutput,header=FALSE,
+    type="html",
+    omit.stat=c("adj.rsq"),
+    font.size="tiny", 
+    title="Regression of Log Wage on Years of Education")
+
+```
+
+## Results Table
+```{r, echo=FALSE, results="asis"}
+
+stargazer(wageregoutput,header=FALSE,type="html",omit.stat=c("adj.rsq"),font.size="tiny", title="Regression of Log Wage on Years of Education")
+
+```
+
+
+## Additional predictors
+
+- Time in school alone not the only characteristic that might be related to pay
+- What else might be related to wages?
+- Maybe people with different amounts of work experience also have different wages, at any given level of education
+- Want to know how wages relate to BOTH characteristics, together
+- Data set contains log wages, years of education, and years of experience for sample of workers
+
+## Wages vs Education and Experience (Code)
+
+```{r, eval=FALSE}
+# Install 3d plot package if not installed yet
+install.packages("scatterplot3d",
+        repos = "http://cran.us.r-project.org")
+library(scatterplot3d)
+#Plot 3d Scatter
+scatterplot3d(wage1$educ,wage1$exper,wage1$lwage,
+    color="red", 
+    main="Log Wages vs Education and Experience",
+    xlab="Years of Education",
+    ylab="Years of Work Experience",
+    zlab="Log Wage")
+
+```
+
+## Wages vs Education and Experience
+
+```{r, echo=FALSE}
+# Install 3d plot package if not installed yet
+# install.packages("scatterplot3d",repos = "http://cran.us.r-project.org")
+suppressWarnings(suppressMessages(library(scatterplot3d)))
+#Plot 3d Scatter
+scatterplot3d(wage1$educ,wage1$exper,wage1$lwage,color="red", main="Log Wages vs Education and Experience",xlab="Years of Education",ylab="Years of Work Experience",zlab="Log Wage")
+
+```
+
+
+## Data
+
+- Let ${(y_i,\mathbf{x}_i^\prime):i=1 \ldots n}$ where $\mathbf{x}_{i}=(1,x_{1i},x_{2i},x_{3i},\ldots,x_{ki})^\prime$ is a $k+1 \times 1$ vector be a sample of measured attributes from a population.
+- All variables should be real numbers
+- $y_i$ is called the outcome variable, or dependent variable
+- $\mathbf{x}_{i}$ are called the regressors, or predictors, or covariates
+- Goal of regression: find a (linear) relationship between $y_i$ and $\mathbf{x}_i$ of form
+$$y=\beta_0+\beta_{1}x_{1}+\beta_{2}x_{2}+...+\beta_{k}x_{k}+u$$
+- $1$ goes with constant term: allows an affine relationship 
+
+
+## What is multivariate regression for?
+
+- Prediction
+    - We have a bunch of data on $\mathbf{x}$, want to use it to guess $y$
+- Data description
+    - We are interested in some features of the joint distribution of $\mathbf{x}$ and $y$, believe regression estimator informative about those features
+- Model estimation and evaluation
+    - We believe in model implying linear relationship between $\mathbf{x}$ and $y$, want to learn this relationship
+    
+## Ordinary Least Squares Estimator (OLS)
+- $\hat{\mathbf{\beta}}=(\hat{\beta}_0,\hat{\beta}_1,\hat{\beta}_2,\ldots,\hat{\beta}_k)^\prime:\ k+1 \times 1$ 
+- Minimizes the sample sum of squared differences b/w linear predictor $$\mathbf{x}_{i}^\prime\hat{\mathbf{\beta}}=\hat{\beta}_0+\hat{\beta}_{1}x_{1i}+\hat{\beta}_{2}x_{2i}+\ldots+\hat{\beta}_{k}x_{ki}$$
+and observed outcome $y_i$
+- Exact definition
+$$\hat{\beta}=\underset{\mathbf{\beta}}{\arg\min} \sum_{i=1}^{n}(y_i-\mathbf{x}_{i}^\prime\mathbf{\beta})^2$$
+ 
+## Regression in Wage Example
+
+- Regress y = log wage on $\mathbf{x}=$ (constant, years education, experience) 
+- Finds the values $\beta_{0}$, $\beta_{1}$, $\beta_{2}$ that give a linear function of education and experience which is closest to the observed log wage over collection of data points
+- R command
+```{r, eval=FALSE}
+wageregression2 <- lm(formula = 
+                lwage ~ educ + exper, data = wage1)
+```
+
+## Wages vs education & experience: Regression Results (code)
+```{r, eval=FALSE, results="asis"}
+# Regress log wage on years of education and experience
+wageregression2 <- lm(formula = lwage ~ educ + exper, 
+                    data = wage1)
+#Load library to make pretty table
+library(stargazer) 
+stargazer(wageregression2,header=FALSE,report="vc",
+      type="html",
+      omit.stat=c("all"),omit.table.layout="n",
+      font.size="small",
+      title="Log Wage vs Years of Education, 
+      Years of Experience")
+```
+
+    
+
+## Wages vs education & experience: Regression Results
+```{r, echo=FALSE, results="asis"}
+# Regress log wage on years of education and experience
+wageregression2 <- lm(formula = lwage ~ educ + exper, data = wage1)
+#Load library to make pretty table
+suppressWarnings(suppressMessages(library(stargazer))) 
+stargazer(wageregression2,header=FALSE,report="vc",type="html",omit.stat=c("all"),omit.table.layout="n",font.size="small", title="Log Wage vs Years of Education, Years of Experience")
+```
+- At a given level of education, 1 year of experience is associated with 1% higher wages
+- At a given level of experience, 1 year of education is associated with 9.8% higher wages
+    
+
+## Wages vs education & experience: Regression Visualization (Code)
+
+```{r, eval=FALSE}
+# Plot data on 3D Scatterplot 
+s3d<-scatterplot3d(wage1$educ,wage1$exper,wage1$lwage,
+    color="red", 
+    main="Log Wages vs Education and Experience, 
+    with Best Fit Plane",
+    xlab="Years of Education",
+    ylab="Years of Work Experience",
+    zlab="Log Wage")
+# Add regression plane to plot
+s3d$plane3d(wageregression2, 
+            lty.box = "solid")
+```
+
+## Wages vs education & experience: Regression Visualization
+
+```{r, echo=FALSE}
+# Plot data on 3D Scatterplot 
+s3d<-scatterplot3d(wage1$educ,wage1$exper,wage1$lwage,color="red", main="Log Wages vs Education and Experience, with Best Fit Plane",xlab="Years of Education",ylab="Years of Work Experience",zlab="Log Wage")
+# Add regression plane to plot
+s3d$plane3d(wageregression2, lty.box = "solid")
+```
+
+## Ways to derive an estimator
+- Why did we choose this least squares estimator rather than another to learn from data?
+- 3 ways to derive an estimator 
+- Correspond to 3 data analysis goals
+1. Empirical Risk Minimization
+2. Method of Moments
+3. Maximum Likelihood Estimation
+
+## Interpretations of OLS, 1: Empirical risk minimizer
+
+- Suppose our goal is prediction of $y$ using $\mathbf{x}$
+- Suppose we believe a good prediction is one that on average is close (in Euclidean distance) to y
+- Pick a predictor that minimizes this loss in sample
+- If law of large numbers holds, and cases we want to predict drawn from same distribution, in sample loss at a given predictor
+$$\frac{1}{n}\sum_{i=1}^n(y_i-\mathbf{x}_i^{\prime}\mathbf{\beta})^2$$
+should be close to out of sample loss 
+$$E(y_i-\mathbf{x}_i^{\prime}\mathbf{\beta})^2$$
+- Takes more work (and assumptions) to show smallest in sample loss also good out of sample, but idea often works 
+   
+## Interpretations of OLS, 2: Method of moments  
+   
+- Now suppose we are willing to make some more assumptions about distribution
+1. In population, $y=\beta_0+\beta_{1}x_{1}+\beta_{2}x_{2}+\ldots+\beta_{k}x_{k}+u$
+2. ${(y_i,\mathbf{x}_i^\prime):i=1 \ldots n}$ are independent random sample of observations following (1)
+3. $E(u_{i}x_{ji})=0$ for $j=0\ldots k$
+
+- Last condition, called "exogeneity" defines $u$, the *residual* as part of $y$ not correlated with regressors
+- Method of moments defines $\beta$ as the value approximately satisfying this condition
+- Gives us exactly the OLS estimator
+
+## Formula for Estimator
+
+- Differentiating sum of squares with respect to $\beta_0$ through $\beta_k$  gives first order conditions for minimum
+$$\frac{1}{n}\sum_{i=1}^{n}(y_i-\mathbf{x}_{i}^\prime\hat{\mathbf{\beta}})=0$$
+$$\frac{1}{n}\sum_{i=1}^{n}(y_i-\mathbf{x}_{i}^\prime\hat{\mathbf{\beta}})x_{1i}=0$$
+$$\frac{1}{n}\sum_{i=1}^{n}(y_i-\mathbf{x}_{i}^\prime\hat{\mathbf{\beta}})x_{2i}=0$$
+$$\vdots$$
+$$\frac{1}{n}\sum_{i=1}^{n}(y_i-\mathbf{x}_{i}^\prime\hat{\mathbf{\beta}})x_{ki}=0$$
+- A system of $k+1$ linear equations in $k+1$ unknowns
+
+## Method of Moments
+
+- Replace expectation with sample average
+- Estimate parameters by values which satisfy moment equations in sample
+- Works because $\frac{1}{n}\sum_{i=1}^{n}z_i \approx E(z_{i})$, by LLN and CLT
+
+- $E(u_{i}x_{ij})=E(y_i-\mathbf{x}_{i}^\prime\mathbf{\beta})x_{ji}=0$ for $j=0\ldots k$
+- Replacing $E$ with $\frac{1}{n}\sum_{i=1}^{n}$ and $\mathbf{\beta}$ by $\hat{\mathbf{\beta}}$  
+- Obtain exactly the first order conditions defining OLS
+- Assumes linearity, but only weak conditions on residual
+
+## Interpretations of OLS, 3: Maximum likelihood estimator 
+
+- MLE idea: estimate distribution by finding parameter values under which the probability density of observing the data set that was actually observed was highest
+- Suppose we think $z_i,\ i=1 \ldots n$ drawn i.i.d. from density $f(z,\theta)$ with unknown parameter $\theta$
+- MLE solves $$\hat{\theta}_{\text{MLE}}=\underset{\theta}{\arg\max}\Pi_{i}^{n}f(z,\theta) $$
+- Will see more about MLE later in the class: has very nice properties if we believe our model of the density
+
+## MLE view
+- Suppose $y_i-\mathbf{x}_i^\prime\beta\stackrel{\text{i.i.d}}{\sim}N(0,\sigma^2)$ for some $(\beta,\sigma^2)$
+- Then OLS estimator of $\beta$ coincides with maximum likelihood estimator
+- Tells us that, at least under strong assumptions, OLS should be good estimator
+
+## Assumptions used for Linear Models
+
+- If true relationship is linear in $\mathbf{x}$, $\hat{\beta}$ will uncover it 
+- What assumptions are needed for this to be true?
+- Update univariate regression assumptions for this case
+1. In population, $y=\beta_0+\beta_{1}x_{1}+\beta_{2}x_{2}+\ldots+\beta_{k}x_{k}+u$
+2. ${(y_i,\mathbf{x}_i^\prime):i=1 \ldots n}$ are independent random sample of observations following 1
+3. There are no exact linear relationships among the variables $x_1 \ldots x_k$
+4. $E(u|\mathbf{x})=0$
+5. $Var(u|x)=\sigma^2$ a constant $>0$
+- Sometimes replace (4) by slightly weaker 
+- (4'): $E(u_{i}x_{ij})=0$ for $j=0\ldots k$
+- or add
+6. $u \sim N(0,\sigma^2)$
+
+## Estimator Properties
+
+- Under (3) alone
+    - Unique value and exact formula for $\mathbf{\hat{\beta}}$ exists 
+    - Solution to system of linear equations: formula in bonus slides, but requires linear algebra (matrix inverse)
+- Under Assumptions (1-3) and (4')
+    - OLS is consistent: $Pr(\Vert\hat{\beta}-\beta\Vert>e)\rightarrow 0$ for all $e>0$
+- Under Assumptions (1-4)    
+    - OLS is unbiased: $E(\hat{\beta})=\beta$
+- Under (1-5), we can derive the sample variance of $\hat{\beta}$ and show its *efficiency* 
+- Gauss-Markov theorem (see Wooldridge Thm 3.4): Under (1-5), any estimator of $\beta$ which is unbiased and linear in y has sample variance at least as large as that of $\hat{\beta}$
+- Additionally, (1-5) imply $\hat{\beta}$ is asymptotically normal
+
+
+## Asymptotic Properties and Distribution
+
+- Exact formula shows $\hat{\beta}$ is a sample average
+- Unbiasedness means $E(\hat{\beta})=\beta$, and law of large numbers implies sample averages converge to their expectations
+    - This implies consistency under (1-4), under (4') still use LLN but show bias goes to 0 eventually
+- Under (1-5), (conditional) variance $Var(\hat{\beta}|\mathbf{x})=$ $E(\hat{\beta}^2|\mathbf{x})-E(\hat{\beta}|\mathbf{x})^2$  has a known formula (in bonus slides)
+- Using CLT and sample average form, also obtain 
+$$\sqrt{n}(\hat{\beta}-\beta)\overset{d}{\rightarrow} N(0,\Sigma)$$
+where $\Sigma=\text{plim}Var(\sqrt{n}(\hat{\beta}-\beta)|\mathbf{x})$
+- Multivariate normal distribution
+    - $\sqrt{n}(\hat{\beta}_{j}-\beta_{j})$ (approximately) normal for each $j$ 
+    - Variance $\Sigma_{jj}$ and covariances $\Sigma_{ab}$ between coefs $a$ and $b$
+- This lets us build confidence intervals and tests
+
+## Inference: single parameter
+- For any one $\beta_j$, the distribution is approximately normal 
+- We can estimate $\Sigma$ by $\hat{\Sigma}$
+    - Replace expectation  by mean and $\beta$ by $\hat{\beta}$ 
+- Level $1-\alpha$ confidence interval for $\beta_j$ is then $$(\hat{\beta}_j-\frac{z_{1-\alpha/2}}{\sqrt{n}}\hat{\Sigma}_{jj}^{\frac{1}{2}},\hat{\beta}_j+\frac{z_{1-\alpha/2}}{\sqrt{n}}\hat{\Sigma}_{jj}^{\frac{1}{2}})$$
+where $z_{1-\alpha/2}$ satisfies $Pr(Z<z_{1-\alpha/2})=1-\alpha/2$ when $Z\sim N(0,1)$
+- Common to use quantile of $t_{n-k-1}$ distribution instead, which is exact under (6)
+- Doesn't hurt to do this even if (6) false, since for large n approximately the same, and normality is large n approximation anyway
+
+## Inference: multiple parameters
+
+- Often want to test hypotheses about multiple coefficients
+    - e.g. $H_0$: $\beta_1=\beta_2=0$, $H_1$: $\beta_1 \neq 0$ or $\beta_2 \neq 0$
+- F test: run regression without restrictions, then run with restriction
+$$F=\frac{(\sum_{i=1}^{n}\hat{u}_{i,\text{restricted}}^2- \sum_{i=1}^{n}\hat{u}_{i,\text{unrestricted}}^2)/q}{\sum_{i=1}^{n}\hat{u}_{i,\text{unrestricted}}^2/n-k-1}$$
+    - k is number of included variables in unrestricted regression
+    - q is number of restrictions (count equal signs in $H_0$)
+- Under (1-5) and $H_0$, $F\overset{d}{\rightarrow}\chi^2_q$ asymptotically
+- Under (1-6) and $H_0$, $F\sim F_{q,n-k-1}$ in finite samples
+    - Again, doesn't hurt to use this as approximation
+
+## Performing tests in R
+- t tests of univariate hypothesis $\beta_j=0$ produced automatically by summary command
+- Similarly F test of $\beta_j=0$ for all $j=1 \ldots k$ is produced
+```{r, eval=FALSE}
+summary(wageregression2)
+```
+- Multivariate tests of other hypotheses can be run using "CAR" library
+
+## Output (Code)
+```{r, eval=FALSE,results='asis'}
+#Display Table
+stargazer(wageregression2,header=FALSE,
+          type="html",
+    font.size="tiny", 
+    title="Log Wage vs Years of Education, 
+    Years of Experience")
+```
+
+## Output (Cleaned Up)
+```{r, echo=FALSE,results='asis'}
+stargazer(wageregression2,header=FALSE,type="html",font.size="tiny", title="Log Wage vs Years of Education, Years of Experience")
+```
+
+## Variable choice
+
+- In practice, which regressors *should* we include?
+- Is it better to include experience as a regressor?
+- Depends on goal of regression!
+- If prediction, whatever set yields least error (may not be set leading to least error in sample, due to sampling variability)
+- If structure, we want to know particular $\beta_j$ in context of a model including some "true" set
+- Regardless of "truth," can always ask what is difference between estimates when a variable is or is not included
+
+## How does adding experience change education coefficient? (Code 1)
+
+```{r, eval=FALSE, results="asis"}
+#Run short regression without experience directly
+wageregression1<-lm(formula = lwage ~ educ, data = wage1)
+betatilde1<-wageregression1$coefficients[2]
+
+#Run regression of omitted variable on included variable
+deltareg<-lm(formula = exper ~ educ, data = wage1)
+
+##Display Table with all results
+stargazer(wageregression1,wageregression2,deltareg,type="html",
+        header=FALSE,report="vc",omit.stat=c("all"),
+        omit.table.layout="n",font.size="small", 
+        title="Included and Excluded Experience")
+```
+
+## How does adding experience change education coefficient? (Code 2)
+
+```{r, eval=FALSE, results="asis"}
+#Construct short regression coefficient 
+#from formula on next slide
+delta1<-deltareg$coefficients[2]
+betahat1<-wageregression2$coefficients[2] 
+betahat2<-wageregression2$coefficients[3] 
+omittedformula<-betahat1+betahat2*delta1
+```
+
+## How does adding experience change education coefficient?
+
+```{r, echo=FALSE, results="asis"}
+#Run short regression without experience directly
+wageregression1<-lm(formula = lwage ~ educ, data = wage1)
+betatilde1<-wageregression1$coefficients[2]
+
+#Run regression of omitted variable on included variable
+deltareg<-lm(formula = exper ~ educ, data = wage1)
+
+##Display Table with all results
+stargazer(wageregression1,wageregression2,deltareg,header=FALSE,type="html",report="vc",omit.stat=c("all"),omit.table.layout="n",font.size="small", title="Included and Excluded Experience")
+
+#Construct short regression coefficient from formula on next slide
+delta1<-deltareg$coefficients[2]
+betahat1<-wageregression2$coefficients[2] 
+betahat2<-wageregression2$coefficients[3] 
+omittedformula<-betahat1+betahat2*delta1
+```
+
+## Omitted variables formula
+
+- Consider regression of $y$ on $x_0,x_1,\ldots,x_k$ to get estimate $\hat{\beta}$ 
+- What are results if we instead regress $y$ on $x_0,x_1,\ldots,x_{k-1}$ to get $\tilde{\beta}$, omitting $x_k$
+- Maybe because we don't observe $x_k$ in our data set
+- Let $\tilde{\delta}_j$, $j=0\ldots k-1$ denote the coefficients in a regression of $x_k$ on $x_0,x_1,\ldots,x_{k-1}$
+- Then we can write $\tilde{\beta}_j$ as $$\tilde{\beta}_j=\hat{\beta}_j+\hat{\beta}_{k}\tilde{\delta}_{j}$$
+- In words, if a variable is omitted, the coefficients in the "short" regression equal the coefficient in the long regression plus the effect of the omitted variable on the outcome times the partial effect of the omitted variable on the included regressor
+- Difference disappears if either excluded regressor had 0 partial correlation with the included regressor or had no partial correlation with the outcome
+
+## Bias?
+
+- Note that if (1-3) and (4') hold the long regression, they also hold in the short regression, for different values of $\beta$, and so both are consistent for some linear function
+- If we have reason to be interested in the linear function corresponding to the long regression, omitted variables mean that we will not get a valid estimator if we are missing some variable and it is linked to the outcome and to the regressor of interest
+- Under (1-4) for the long regression, obtain $E(\tilde{\beta}_j|\mathbf{x})=\beta_j+\beta_{k}\tilde{\delta}_{j}$ and so this is called "omitted variables bias"
+- If we know sign of $\beta_k$ and $\tilde{\delta}_j$, we may be able to find sign of this bias even without data on $x_k$, and so get a lower or upper bound on the parameter in the long regression using the data for the short regression
+
+## Interpretation
+
+- Apply $\tilde{\beta}_j=\hat{\beta}_j+\hat{\beta}_{k}\tilde{\delta}_{j}$ to wage regression
+    - `r betatilde1` = `r betahat1` + `r betahat2` * `r delta1`
+- Omitting experience from wage regression reduces estimated relationship of education with wages
+- Reason: people who spend more time in school have less work experience, and work experience is positively associated with wages
+- If we want to compare wages of people with similar levels of work experience and different education levels, we get larger differences than if experience not kept constant
+- Not clear at all that this is the comparison we want to make
+    - If you decide to spend one more year in school rather than working, you will have one more year of education, but will have less work experience than if you hadn't decided to stay in school
+    - Much more on this idea next week
+
+## More on (3): Multicollinearity 
+- Finding a single $\hat{\beta}$ requires that system have a unique solution
+- This fails if any regressor can be written as linear combination of some other subset of regressors
+- E.g. $x_{1i}=a*x_{2i}+b*x_{3i}$ for all $i$
+- Then if $$(\beta_{1},\beta_{2},\beta_{3})$$ solve the minimization problem, so does $$(\beta_1+c,\beta_2-c*a,\beta_3-c*b)$$ for any $c$
+
+## Interpreting multicollinearity
+- Information in variables is redundant
+    - Usually happens if one variable is *defined* in terms of another
+    - E.g. $x_1=1\text{\{A is true\}}$, $x_2=1\text{\{A is false\}}$
+    - Logically, always have $x_1=1, x_2=0$ or $x_1=0, x_2=1$
+    - Not even sensible to ask what would happen if A is both true and false or neither
+- First example of *failure of identification*
+- Is it a problem?
+    - Maybe not: Predicted value $\mathbf{x}_{i}^{\prime}\hat{\beta}$ the same no matter which solution chosen
+    - Maybe yes: if we want to predict what would happen if $\mathbf{x}$ took on a value not along the combination and this is sensible to ask, we simply have a data set which can't tell us the answer: need better data
+    
+## Handling multicollinearity in practice
+
+- Let's see how software handles it
+- Generate random $xa$, $xb$ 
+- Make a 3rd variable $xc$ with
+    $$xc=3*xa+2*xb$$ 
+- Use random $u$ to generate
+  $$y=1*xa+2*xb+3*xc+u$$
+- If we run regression of $y$ on $xa$, $xb$, and $xc$, what will happen?
+
+## Output (Code)
+```{r, eval=FALSE}
+#Initialize random number generator
+set.seed(42)
+#Draw 100 standard normal random variables
+xa<-rnorm(100) 
+xb<-rnorm(100) #Draw 100 more
+#Define 3rd variable as linear combination of first 2
+xc<-3*xa-2*xb  
+#define y as linear function in all variables + noise
+y<-1*xa+2*xb+3*xc+rnorm(100) 
+#Regress y on our 3 redundant variables
+(multireg <-lm(y~xa+xb+xc)) 
+```
+
+## Output
+```{r, echo=FALSE}
+#Initialize random number generator
+set.seed(42)
+#Draw 100 standard normal random variables
+xa<-rnorm(100) 
+xb<-rnorm(100) #Draw 100 more
+#Define 3rd variable as linear combination of first 2
+xc<-3*xa-2*xb  
+#define y as linear function in all variables + noise
+y<-1*xa+2*xb+3*xc+rnorm(100) 
+#Regress y on our 3 redundant variables
+(multireg <-lm(y~xa+xb+xc)) 
+```
+- We see R simply drops one variable 
+    - Coefficient set to 0
+- In this case the last: choice is arbitrary
+- Can always do this: pick one element of identified set
+- Sometimes this is reasonable, sometimes not
+
+## Next Time
+
+- Nonlinearity and misspecification
+
+
+## (Advanced) Explicit formula for $\hat{\beta}$
+
+- Additional material for linear algebra buffs
+- Rewrite first order conditions in vector form
+$$\sum_{i=1}^{n}\mathbf{x}_{i}y_i=\sum_{i=1}^{n}\mathbf{x}_{i}\mathbf{x}_{i}^\prime\hat{\mathbf{\beta}}$$
+- $\sum_{i=1}^{n}\mathbf{x}_{i}\mathbf{x}_{i}^\prime$ is a $k+1\times k+1$ matrix
+- Solve system by multiplying both sides by its inverse (if possible)
+$$\hat{\mathbf{\beta}}:= (\sum_{i=1}^{n}\mathbf{x}_{i}\mathbf{x}_{i}^\prime)^{-1}\sum_{i=1}^{n}\mathbf{x}_{i}y_i$$
+
+## (Advanced) Proof of unbiasedness
+
+- By 1 and formula for $\hat{\beta}$
+$$\hat{\beta}=(\sum_{i=1}^{n}\mathbf{x}_{i}\mathbf{x}_{i}^\prime)^{-1}\sum_{i=1}^{n}\mathbf{x}_{i}(\mathbf{x}_{i}^\prime\beta+u_i)$$
+$$\hat{\beta}=\beta + (\sum_{i=1}^{n}\mathbf{x}_{i}\mathbf{x}_{i}^\prime)^{-1}\sum_{i=1}^{n}\mathbf{x}_{i}u_i$$
+- Use Law of Iterated Expectations $E(z)=E(E(z|\mathbf{x}))$ for any $z$ and fact that $E(f(\mathbf{x})z|\mathbf{x})=f(\mathbf{x})E(z|\mathbf{x})$ for any function $f$
+$$E(\hat{\beta})=E(E(\hat{\beta}|\mathbf{x}))=\beta + E((\sum_{i=1}^{n}\mathbf{x}_{i}\mathbf{x}_{i}^\prime)^{-1}\sum_{i=1}^{n}\mathbf{x}_{i}E(u_i|\mathbf{x}))=\beta$$
+
+## (Advanced) Exact and Asymptotic Variance Formulas
+
+- A similar but more tedious argument using conditional variances shows
+$$Var(\hat{\beta}|\mathbf{x})=\sigma^{2}(\sum_{i=1}^{n}\mathbf{x}_{i}\mathbf{x}_{i}^\prime)^{-1}$$
+- Under (1-5) a (not so easy) argument via the central limit theorem shows
+$$\sqrt{n}(\hat{\beta}-\beta)\overset{d}{\rightarrow} N(0,\Sigma)$$
+where $\Sigma:=\sigma^{2}E(\mathbf{x}_{i}\mathbf{x}_i^\prime)^{-1}=\text{plim}Var(\sqrt{n}(\hat{\beta}-\beta)|\mathbf{x})$
+- An estimator of this variance is $\hat{\Sigma}=\frac{1}{n-k-1}\sum_{i=1}^{n}\hat{u}_i^{2}(\frac{1}{n}\sum_{i=1}^{n}(\mathbf{x}_{i}\mathbf{x}_i^\prime))^{-1}$ where $\hat{u}_i=y_i-\mathbf{x}_{i}^{\prime}\hat{\beta}$ is the sample residual

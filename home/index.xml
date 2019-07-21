@@ -7,7 +7,7 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
-    <lastBuildDate>Sun, 15 Oct 2017 00:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Sun, 15 Oct 2017 00:00:00 -0400</lastBuildDate>
     
 	<atom:link href="/home/index.xml" rel="self" type="application/rss+xml" />
     
@@ -15,7 +15,7 @@
     <item>
       <title>Academic</title>
       <link>/home/hero/</link>
-      <pubDate>Sun, 15 Oct 2017 00:00:00 +0200</pubDate>
+      <pubDate>Sun, 15 Oct 2017 00:00:00 -0400</pubDate>
       
       <guid>/home/hero/</guid>
       <description>The highly flexible website framework for Hugo with an extensible plugin mechanism. Create a beautifully simple site in under 10 minutes 🚀 Latest release  
@@ -25,7 +25,7 @@
     <item>
       <title></title>
       <link>/home/about/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
       
       <guid>/home/about/</guid>
       <description>About In my research I use insights from nonparametric and functional data analysis to devise new, rigorously guaranteed methods for solving dynamic economic models with infinite dimensional uncertainty and apply these methods to understand the dynamics of economic heterogeneity in a variety of contexts.</description>
@@ -34,7 +34,7 @@
     <item>
       <title>Selected Publications</title>
       <link>/home/publications_selected/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
       
       <guid>/home/publications_selected/</guid>
       <description></description>
@@ -43,7 +43,7 @@
     <item>
       <title>Research</title>
       <link>/home/publications/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
       
       <guid>/home/publications/</guid>
       <description></description>
@@ -52,7 +52,7 @@
     <item>
       <title>Recent &amp; Upcoming Talks</title>
       <link>/home/talks/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
       
       <guid>/home/talks/</guid>
       <description></description>
@@ -61,7 +61,7 @@
     <item>
       <title>Teaching</title>
       <link>/home/teaching/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
       
       <guid>/home/teaching/</guid>
       <description>I teach the following courses at Carnegie Mellon:
@@ -71,7 +71,7 @@
     <item>
       <title>Projects</title>
       <link>/home/projects/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
       
       <guid>/home/projects/</guid>
       <description></description>
@@ -80,7 +80,7 @@
     <item>
       <title>Curriculum Vitae</title>
       <link>/home/cv/</link>
-      <pubDate>Tue, 15 May 2018 00:00:00 +0200</pubDate>
+      <pubDate>Tue, 15 May 2018 00:00:00 -0400</pubDate>
       
       <guid>/home/cv/</guid>
       <description>PDF</description>
@@ -89,7 +89,7 @@
     <item>
       <title>Blog</title>
       <link>/home/posts/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
       
       <guid>/home/posts/</guid>
       <description></description>
@@ -98,7 +98,7 @@
     <item>
       <title>Tags</title>
       <link>/home/tags/</link>
-      <pubDate>Wed, 20 Sep 2017 00:00:00 +0200</pubDate>
+      <pubDate>Wed, 20 Sep 2017 00:00:00 -0400</pubDate>
       
       <guid>/home/tags/</guid>
       <description></description>
@@ -107,7 +107,7 @@
     <item>
       <title>Contact</title>
       <link>/home/contact/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
       
       <guid>/home/contact/</guid>
       <description></description>

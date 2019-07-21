@@ -1,0 +1,497 @@
+---
+title: "Misspecification in Linear Models"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+## Linear models 
+- Last class: multivariate regression under standard assumptions
+- Today: More on those assumptions
+    - Estimation
+    - Interpretation
+
+
+## "Well-specified" linear models
+- Recall "standard" assumptions
+1. In population, $y=\beta_0+\beta_{1}x_{1}+\beta_{2}x_{2}+\ldots+\beta_{k}x_{k}+u$
+2. ${(y_i,\mathbf{x}_i^\prime):i=1 \ldots n}$ are independent random sample of observations following 1
+3. There are no exact linear relationships among the variables $x_0 \ldots x_k$
+4. $E(u|\mathbf{x})=0$
+5. $Var(u|x)=\sigma^2$ a constant $>0$
+- Sometimes people replace (4) by slightly weaker 
+- (4'): $E(u_{i}x_{ij})=0$ for $j=0\ldots k$
+- or add
+6. $u \sim N(0,\sigma^2)$
+
+## What we can say under different subsets
+- Properties of $\hat{\beta}$ from OLS under different assumptions
+- (1-6): finite sample $t$ and $F$ distributions
+- (1-5): asymptotic normal distributions, asymptotic efficiency (smallest asymptotic variance), finite sample efficiency (Gauss Markov: best linear unbiased estimator)
+- (1-4): unbiasedness
+- (1-3), (4'): consistency (for unique $\beta$ that solves moment equations)
+- (1-2), (4'): convergence to some (arbitrary) element of *set* of $\beta$ that solve moment equations
+
+## What more can we say, under what assumptions
+- We will hold off on (2) until later class
+- (1) is not an assumption at all unless we say something about u: otherwise, it is just a definition of u
+- (3), no multicollinearity, simply asks that $x_j$ variables not redundant
+    - Handled automatically by dropping a one of redundant set
+- Today
+    - Meaning of form $y=\beta_0+\beta_1x_1+\ldots\beta_kx_k+u$
+    - Understanding (4): linearity of conditional expectation function 
+    - Interpretation of OLS given (1-3), (4')
+- Next time?    
+    - Inference under (1-3) (4')
+        
+   
+## Multivariate Wage regression, (Code)
+```{r, eval=FALSE,results='asis'}
+# Obtain access to data sets used in our textbook
+library(foreign) 
+#Load library to make pretty table
+library(stargazer)
+# Import data set of education and wages
+wage1<-read.dta(
+  "http://fmwww.bc.edu/ec-p/data/wooldridge/wage1.dta")
+# Regress log wage on years of education and experience
+wageregression2 <- lm(formula = lwage ~ educ + exper, 
+                      data = wage1)
+# Make table
+stargazer(wageregression2,header=FALSE,
+  type="html",        
+  font.size="tiny", 
+  title="Log Wage vs Years of Education, 
+  Years of Experience")
+```
+
+
+## Multivariate Wage regression, again
+```{r, echo=FALSE,results='asis'}
+# Obtain access to data sets used in our textbook
+library(foreign) 
+#Load library to make pretty table
+suppressWarnings(suppressMessages(library(stargazer))) 
+# Import data set of education and wages
+wage1<-read.dta(
+  "http://fmwww.bc.edu/ec-p/data/wooldridge/wage1.dta")
+# Regress log wage on years of education and experience
+wageregression2 <- lm(formula = lwage ~ educ + exper, data = wage1)
+# Make table
+stargazer(wageregression2,header=FALSE,type="html",font.size="tiny", title="Log Wage vs Years of Education, Years of Experience")
+```
+
+## Note on performing tests in R
+- t tests of univariate hypothesis $\beta_j=0$ produced automatically by summary command
+- Similarly F test of $\beta_j=0$ for all $j=\mathbf{1} \ldots k$ produced by
+```{r, eval=FALSE}
+summary(wageregression2)
+```
+- Multivariate tests of other hypotheses can be run using "CAR" library
+- Tests answer *statistical* question of whether parameter distinguishable from null value given observed data, assuming we believe the model
+
+## Variable choice
+
+- Model assumption is that $y=\beta_0+\beta_1x_1+\ldots+\beta_kx_k+u$
+- How do we know which regressors to include?
+- Is it better to include experience as a regressor?
+- Depends on goal of regression!
+    - If prediction, whatever set yields least error (may not be set leading to least error in sample, due to sampling variability)
+    - If structure, we want to know particular $\beta_j$ in context of a model including some "true" set
+- Regardless of "truth," can always ask what is difference between estimates when a variable is or is not included
+
+## How does adding experience change education coefficient? (code 1)
+
+```{r, eval=FALSE, results="asis"}
+#Run short regression without experience directly
+wageregression1<-lm(formula = lwage ~ educ, data = wage1)
+betatilde1<-wageregression1$coefficients[2]
+
+#Run regression of omitted variable on included variable
+deltareg<-lm(formula = exper ~ educ, data = wage1)
+
+##Display Table with all results
+stargazer(wageregression1,wageregression2,deltareg,
+          type="html",
+    header=FALSE, report="vc",
+    omit.stat=c("all"),omit.table.layout="n",
+    font.size="small", 
+    title="Included and Excluded Experience")
+```
+
+## How does adding experience change education coefficient? (code 2)
+
+```{r, eval=FALSE, results="asis"}
+#Construct short regression coefficient 
+# from formula on next slide
+delta1<-deltareg$coefficients[2]
+betahat1<-wageregression2$coefficients[2] 
+betahat2<-wageregression2$coefficients[3] 
+omittedformula<-betahat1+betahat2*delta1
+```
+
+## How does adding experience change education coefficient?
+
+```{r, echo=FALSE, results="asis"}
+#Run short regression without experience directly
+wageregression1<-lm(formula = lwage ~ educ, data = wage1)
+betatilde1<-wageregression1$coefficients[2]
+
+#Run regression of omitted variable on included variable
+deltareg<-lm(formula = exper ~ educ, data = wage1)
+
+##Display Table with all results
+stargazer(wageregression1,wageregression2,deltareg,header=FALSE,type="html",report="vc",omit.stat=c("all"),omit.table.layout="n",font.size="small", title="Included and Excluded Experience")
+
+#Construct short regression coefficient from formula on next slide
+delta1<-deltareg$coefficients[2]
+betahat1<-wageregression2$coefficients[2] 
+betahat2<-wageregression2$coefficients[3] 
+omittedformula<-betahat1+betahat2*delta1
+```
+
+## Omitted variables formula
+
+- Consider regression of $y$ on $x_0,x_1,\ldots,x_k$ to get estimate $\hat{\beta}$ 
+- What are results if we instead regress $y$ on $x_0,x_1,\ldots,x_{k-1}$ to get $\tilde{\beta}$, omitting $x_k$
+- Maybe because we don't observe $x_k$ in our data set
+- Let $\tilde{\delta}_j$, $j=0\ldots k-1$ denote the coefficients in a regression of $x_k$ on $x_0,x_1,\ldots,x_{k-1}$
+- Then we can write $\tilde{\beta}_j$ as $$\tilde{\beta}_j=\hat{\beta}_j+\hat{\beta}_{k}\tilde{\delta}_{j}$$
+- In words, if a variable is omitted, the coefficients in the "short" regression equal the coefficient in the long regression plus the effect of the omitted variable on the outcome times the partial effect of the omitted variable on the included regressor
+- Difference disappears if either excluded regressor had 0 partial correlation with the included regressor or had no partial correlation with the outcome
+
+## Bias?
+
+- If (1-3) and (4') hold the long regression, they also hold in the short regression, for different values of $\beta$, and so both are consistent for *some* linear function
+- If we have reason to be interested in the linear function corresponding to the long regression, omitted variables mean that we will not get a valid estimator if we are missing some variable and it is linked to the outcome and to the regressor of interest
+- Under (1-4) for the long regression, obtain $E(\tilde{\beta}_j|\mathbf{x})=\beta_j+\beta_{k}\delta_{j}$ and so this is called "omitted variables bias"
+- If we know sign of $\beta_k$ and $\delta_j$, we may be able to find sign of this bias even without data on $x_k$, and so get a lower or upper bound on the parameter in the long regression using the data for the short regression
+
+## Interpretation
+
+- Apply $\tilde{\beta}_j=\hat{\beta}_j+\hat{\beta}_{k}\tilde{\delta}_{j}$ to wage regression
+    - `r betatilde1` = `r betahat1` + `r betahat2` * `r delta1`
+- Omitting experience from wage regression reduces estimated relationship of education with wages
+- Reason: people who spend more time in school have less work experience, and work experience is positively associated with wages
+- If we want to compare wages of people with similar levels of work experience and different education levels, we get larger differences than if experience not kept constant
+- Not clear at all that this is the comparison we want to make
+    - If you decide to spend one more year in school rather than working, you will have one more year of education, but will have less work experience than if you hadn't decided to stay in school
+
+
+## Nonlinearities
+
+- OLS estimator is linear in $\beta$
+- But we can model nonlinear functions by allowing $\mathbf{x}$ (or $y$) to include nonlinear transformations of the data
+- For this reason, linearity assumption not as strong as it looks
+- Saw this already: use of log wage instead of wage in dollars
+- Multiple regression allows formulas like polynomials:
+    - $\beta_0+\beta_{1}x_{i}+\beta_{2}x_{i}^{2}+\ldots$
+- Let's see if this seems like a good idea in our wages case
+
+## Residual plot
+
+- Under assumption (4), $E(u|x)=0$, so there should be no systematic relationship between $x$ and $u$
+- Can see if difference of $y$ from predicted value $\mathbf{x}_{i}^{\prime}\hat{\beta}$ exhibits systematic patterns by comparing residuals to predictors
+- Let's check this implication of linearity in our wage data
+- Is $E[lwage|educ,exper] = \beta_{0}+\beta_{1}educ+\beta_{2}exper$ an accurate description of conditional mean?
+
+## Regression residuals (Code)
+```{r,eval=FALSE}
+#Plot residuals
+plot(wage1$exper,wageregression2$residuals, 
+     ylab="Regression Residuals",
+     xlab="Years of Experience", main="Residual Plot")
+```
+
+## Regression residuals appear to be predictable from experience
+```{r,echo=FALSE}
+# Obtain access to data sets used in our textbook
+library(foreign) 
+# Import data set of education and wages
+wage1<-read.dta(
+  "http://fmwww.bc.edu/ec-p/data/wooldridge/wage1.dta")
+# Regress log wage on years of education and experience
+wageregression2 <- lm(formula = lwage ~ educ + exper, data = wage1)
+#Plot residuals
+plot(wage1$exper,wageregression2$residuals, 
+     ylab="Regression Residuals",
+     xlab="Years of Experience", main="Residual Plot")
+```
+
+## A nonlinear prediction (Code)
+
+```{r, eval=FALSE, results="asis"}
+#Add a nonlinear transform of experience to x
+wage1$exper2<-(wage1$exper)^2
+#Run the augmented regression
+wageregression3 <- lm(formula = 
+        lwage ~ educ + exper + expersq, data = wage1)
+#Display output of regression
+stargazer(wageregression3,header=FALSE,
+          type="html",
+    single.row=TRUE,omit.stat=c("adj.rsq","ser"),
+    font.size="tiny", 
+    title="Log Wage vs Years of Education,
+    Years of Experience")
+```
+
+
+## A nonlinear prediction
+- Given pattern in the residuals, this suggests we might get a more accurate prediction using a nonlinear function
+- Add $exper^2$ as an additional regressor
+```{r, echo=FALSE, results="asis"}
+#Add a nonlinear transform of experience to x
+#wage1$exper2<-(wage1$exper)^2
+#Run the augmented regression
+wageregression3 <- lm(formula = lwage ~ educ + exper + expersq, data = wage1)
+#Import Library to display tables
+suppressWarnings(suppressMessages(library(stargazer))) 
+#Display output of regression
+stargazer(wageregression3,header=FALSE,type="html",single.row=TRUE,omit.stat=c("adj.rsq","ser"),font.size="tiny", title="Log Wage vs Years of Education, Years of Experience")
+```
+
+## Residuals now show no easily discernible pattern (Code)
+```{r, eval=FALSE}
+plot(wage1$exper,wageregression3$residuals, 
+     ylab="Augmented Regression Residuals",
+     xlab="Years of Experience",main="Residual Plot")
+```
+
+
+## Residuals now show no easily discernible pattern
+```{r, echo=FALSE}
+plot(wage1$exper,wageregression3$residuals, 
+     ylab="Augmented Regression Residuals",
+     xlab="Years of Experience",main="Residual Plot")
+```
+
+## Inference with nonlinear predictors
+
+- Suppose we want to know if experience helps predict wage
+- Because we include experience *and* its square, marginal effect of experience is
+$$\frac{\partial}{dexper}E[lwage|educ,exper]=\beta_2 +2\beta_{3}exper$$
+- To test null hypothesis of no relationship, run F test of $\beta_2=\beta_3=0$
+- R command, in "car" library
+```{r,eval=FALSE}
+linearHypothesis(wageregression3,
+                 c("exper = 0","expersq = 0"))
+```
+
+## Results of F test (Code 1)
+
+```{r,eval=FALSE}
+library(car)  #A library for performing tests
+#F test that coefficients on experience 
+# and experience^2 both 0 
+linearHypothesis(wageregression3,
+                 c("exper = 0","expersq = 0"))
+```
+
+## Results of F test (Code 2)
+```{r, eval=FALSE}
+#Manual construction
+#Run restricted regression
+restrictedreg<-lm(formula = lwage ~ educ, data = wage1)
+#Restricted residual sum of squares
+RSS_r<-sum((restrictedreg$residuals)^2)
+#Unrestricted residual sum of squares
+RSS_u<-sum((wageregression3$residuals)^2)
+#Difference in degrees of freedom
+q<-restrictedreg$df-wageregression3$df 
+#Formula
+(Fstat<-((RSS_r-RSS_u)/q)/(RSS_u/wageregression3$df))
+#p value: reject H0 if small
+(pvalue<-1-pf(Fstat,q,wageregression3$df))
+```
+
+## Results of F test
+
+```{r,echo=FALSE}
+suppressWarnings(suppressMessages(library(car)))  #A library for performing tests
+#F test that coefficients on experience and experience^2 both 0 
+linearHypothesis(wageregression3,c("exper = 0","expersq = 0"))
+```
+
+```{r, echo=FALSE,eval=FALSE}
+#Manual construction
+#Run restricted regression
+restrictedreg<-lm(formula = lwage ~ educ, data = wage1)
+#Restricted residual sum of squares
+RSS_r<-sum((restrictedreg$residuals)^2)
+#Unrestricted residual sum of squares
+RSS_u<-sum((wageregression3$residuals)^2)
+#Difference in degrees of freedom
+q<-restrictedreg$df-wageregression3$df 
+#Formula
+(Fstat<-((RSS_r-RSS_u)/q)/(RSS_u/wageregression3$df))
+#p value: reject H0 if small
+(pvalue<-1-pf(Fstat,q,wageregression3$df))
+```
+
+
+
+## Meaning of OLS estimate without linearity 
+- Under (1) we define $y=\mathbf{x}^\prime\beta+u$
+- (4') seems to impose restriction on u: $E(u\mathbf{x})=0$
+- What is this restriction saying?
+- In fact, nothing: can always define a $\beta$ so that it holds
+- For any joint distribution of $(y_i,\mathbf{x}_i)$ satisfying (3) 
+$$\beta=E(\mathbf{x}_i\mathbf{x}_{i}^{\prime})^{-1}E(\mathbf{x_i}y_i)$$
+- $\hat{\beta}$ Under (2) and (3) is a consistent estimator of this quantity
+$$\text{plim}\hat{\beta}=\beta$$
+
+## But why should we care?
+- We might want to use $\mathbf{x}$ to predict $y$
+- OLS estimand solves 
+$$\beta=\underset{\beta\in\mathbb{R}^{k+1}}{\arg\min}E[(y-\mathbf{x}^{\prime}\beta)^{2}]$$
+- In words, $\beta$ gives best *linear* predictor of $y$ in terms of mean squared error (MSE), and $\hat\beta$ converges to this
+- Asymptotic analogue of Gauss Markov theorem
+
+## Why care about *linear* predictors?
+- Good question: let's consider arbitrary nonlinear predictors
+$$f^{*}(\mathbf{x})=\underset{f(\mathbf{x})}{\arg\min}E[(y-f(\mathbf{x}))^{2}]$$
+- What is the best function for predicting?
+- It turns out, $f^{*}(\mathbf{x})=E[y|\mathbf{x}]$
+    - (Proof on board or code slides)
+    
+## Proof
+
+$$E[(y-f(\mathbf{x}))^{2}]=E[y^2-2yf(\mathbf{x})+f(\mathbf{x})^2]$$
+$$=E[E[y^2-2yf(\mathbf{x})+f(\mathbf{x})^2|\mathbf{x}]]$$
+$$=E[E[y^2|\mathbf{x}]-2E[y|\mathbf{x}]f(\mathbf{x})+f(\mathbf{x})^2]$$
+
+- Take F.O.C. w.r.t. $f(\mathbf{x})$ to get
+
+$$0=-2E[y|\mathbf{x}]+2f(\mathbf{x})\ \forall\mathbf{x}$$
+$$f(\mathbf{x})=E[y|\mathbf{x}]$$
+    
+
+## Conditional expectation functions
+- We call $E[y|\mathbf{x}]$ the conditional expectation function, **c.e.f.**
+- It gives average value of $y$ at any value of $\mathbf{x}$
+- The c.e.f. is not required to be linear
+- Under assumption (4), we have $E[y|\mathbf{x}]=\mathbf{x}^\prime\beta$
+    - Linear c.e.f.  
+- If we believe this, OLS is not just best linear predictor, but best of any predictor
+- Not entirely crazy to think this is reasonable if $\mathbf{x}$ chosen carefully
+
+## Useful special case: discrete $\mathbf{x}$
+- Suppose data is divided among a finite # of (mutually exclusive and exhaustive) groups, say $j=1\ldots J$ 
+- Then, if we choose $\mathbf{x}$ to be $(1\{j=1\},1\{j=2\},\ldots,1\{j=J\})^\prime$
+- Then $\beta_k=E[y|j=k]$ for any $k=1\ldots J$
+- e.g. $y$ is wage of workers, who live in one of J regions, then OLS gives average wage in each region
+- Here, c.e.f. must be linear
+- This is called saturated regression
+
+## When c.e.f. isn't linear
+- In general, even if, say, some polynomial terms are included, c.e.f. may be not quite linear in included terms
+    - Say you have a quadratic but c.e.f. is cubic, or worse, a sine wave
+- OLS predictor no longer gives c.e.f.
+- How does it relate to c.e.f?
+- $\mathbf{x}^{\prime}\beta$ gives best linear approximation to c.e.f.
+- In math, (Proof on board or code slides)
+
+$$\beta=\underset{\beta\in\mathbb{R}^{k+1}}{\arg\min}E[(y-\mathbf{x}^{\prime}\beta)^{2}]=\underset{\beta\in\mathbb{R}^{k+1}}{\arg\min}E[(E[y|\mathbf{x}]-\mathbf{x}^{\prime}\beta)^{2}]$$
+
+## Proof
+$$E[(y-\mathbf{x}^{\prime}\beta)^{2}]=E[(y-E[y|\mathbf{x}]+E[y|\mathbf{x}]-\mathbf{x}^{\prime}\beta)^{2}]$$
+$$=E[(y-E[y|\mathbf{x}])^{2}+2*(y-E[y|\mathbf{x}])(E[y|\mathbf{x}]-\mathbf{x}^{\prime}\beta)+(E[y|\mathbf{x}]-\mathbf{x}^{\prime}\beta)^{2}]$$
+$$=E[(y-E[y|\mathbf{x}])^{2}+(E[y|\mathbf{x}]-\mathbf{x}^{\prime}\beta)^{2}]$$
+
+- because $E[y-E[y|\mathbf{x}]|x]=0$ and so $y-E[y|\mathbf{x}]$ is uncorrelated with any function of $\mathbf{x}$
+
+## What does this look like? (Code)
+```{r,eval=FALSE}
+#Initialize random number generator
+set.seed(20)
+#Generate some data from a nonlinear relationship
+x1<-rnorm(500,mean = 3, sd=5)
+trueerror<-rnorm(500) #Residual from true relationship
+#Not same as OLS residual
+#A nonlinear relationship: E[y|x]=2*sin(x)
+y1<-2*sin(x1)+trueerror 
+# Run a regression in which c.e.f. not linear in x
+#Include a polynomial terms to allow nonlinearity
+misspecifiedregression<-lm(y1 ~ x1 + I(x1^2) + I(x1^3))
+```
+
+## What does this look like?
+```{r,echo=FALSE}
+#Initialize random number generator
+set.seed(20)
+#Generate some data from a nonlinear relationship
+x1<-rnorm(500,mean = 3, sd=5)
+trueerror<-rnorm(500) #Residual from true relationship
+#Not same as OLS residual
+#A nonlinear relationship: E[y|x]=2*sin(x)
+y1<-2*sin(x1)+trueerror 
+# Run a regression in which c.e.f. not linear in x
+#Include a polynomial terms to allow nonlinearity
+misspecifiedregression<-lm(y1 ~ x1 + I(x1^2) + I(x1^3))
+```
+- Simulate some data from a nonlinear relationship
+$$y=2*sin(x)+u$$
+$$u\sim N(0,1)$$
+- Run a linear regression using nonlinear functions
+    - Fit relationship
+$$y = \beta_{0}+ \beta_{1}x + \beta_{2}x^2 + \beta_{3}x^3+e$$
+
+## Plot prediction and c.e.f. (Code)
+```{r, eval=FALSE}
+#Generate x values at which to evaluate functions
+xinterval<-seq(from=min(x1),to = max(x1),length.out=1000)
+new<-data.frame(x1=xinterval)
+#Calculate $x'\hat{\beta}$ using predict command
+pred<-predict(misspecifiedregression,new)
+#plot Data, O.L.S. predictions, and c.e.f.
+plot(x1,y1, xlab = "x", ylab="y", 
+     main="Data, CEF, and OLS Predicted Values")
+points(xinterval,pred, col = "red") #OLS Predictions
+points(xinterval,2*sin(xinterval), col = "blue") #True CEF
+```
+
+## Plot prediction and c.e.f.
+```{r, echo=FALSE}
+#Generate x values at which to evaluate functions
+xinterval<-seq(from=min(x1),to = max(x1),length.out=1000)
+new<-data.frame(x1=xinterval)
+#Calculate $x'\hat{\beta}$ using predict command
+pred<-predict(misspecifiedregression,new)
+#plot Data, O.L.S. predictions, and c.e.f.
+plot(x1,y1, xlab = "x", ylab="y", 
+     main="Data, CEF, and OLS Predicted Values")
+points(xinterval,pred, col = "red") #OLS Predictions
+points(xinterval,2*sin(xinterval), col = "blue") #True CEF
+```
+
+## What to make of OLS
+- Clearly, doesn't do a great job of recovering a "wiggly" CEF
+    - Even with nonlinear terms
+- But, does an okay job on average over $\mathbf{x}$
+    - By construction, about as likely to be wrong above as to be wrong below
+- If this is our goal, or we truly believe c.e.f. not too wiggly, OLS maybe okay
+
+
+## Conclusions
+
+- Omitted variables formula describes how changing which variables are included changes the coefficients
+- OLS can be used for any data distribution
+    - So long as what you want to know is best linear fit to conditional expectation given included variables
+- When conditional expectation *is* linear, OLS estimates it consistently  
+- Reminder: Conditional expectation is just another feature of joint distribution: whether it is what you want depends on structure and design
+
+## Next time
+- Problem Set 2
+- Inference for best linear predictor: heteroskedasticity
+- What we mean by structure: experiments, causality
+    - Read Angrist & Pischke Ch. 1
+
+
+
+
+
+
+
+
+    

@@ -1,0 +1,529 @@
+---
+title: "Structural Models"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+## Today
+
+- Using structural models to perform causal inference
+- Represent structural relationships between variables using
+    - Systems of equations
+    - Causal Diagrams
+- Structural models have implications for conditional independence
+    - Use these to justify causal interpretation of regression
+
+
+## Review of Control
+
+- Last class, covered causal inference using *control*
+- **Conditionally random assignment** is key condition
+    $$Y^x\perp X|W$$
+- If true, average causal effect is identified by the formula
+$$E(Y^x)=\int E(Y|X=x,W=w)P(w)dw$$
+
+- If conditional expectation function is linear, $E(Y|X=x,W=w)$ recovered by coefficient $\beta_1$ in regression
+$$Y=\beta_0+\beta_1X+\gamma W+e$$
+- Big question: when is conditional random assignment a reasonable assumption
+    - Answer: relies on *causal model* of variables, expressed as system of equations
+    
+## Structural Equations
+
+- A **structural equation** represents the effect of variables that directly cause an outcome
+- Describes a model of how a variable is generated, and how it would change if other variables were changed
+- $Y=f(X,U)$, $U\perp X$ is *structural* if 
+$$P(Y|do(X=x))=P(f(x,U))$$
+- Assuming linear structural form, i.e., for $U\perp X$, 
+$$Y=\beta_0 + \beta_1X_1+\beta_2X_2+\beta_3X_3+\ldots+U$$
+    - *Each* coefficient $\beta_j$ gives the direct causal effect of $X_j$ on $Y$
+- A structural equation is distinct from a regression equation
+    - Regression equation is what you estimate
+        - Can always run, given data
+    - Structural equation is model of the world
+        - May or may not be same as what you run
+
+
+## Structural Equation Models
+
+- A structural equation *model* (**SEM**) describes full set of causal relationships between variables in a system
+- Each **endogenous** variable $Y_1,Y_2,\ldots,Y_p$ described by structural equation 
+$$Y_1=f_1(Y_2,\ldots,Y_p,U_1)$$
+$$Y_2=f_2(Y_1,Y_3,\ldots,Y_p,U_2)$$
+$$\vdots$$
+$$Y_p=f_p(Y_1,Y_2,\ldots,Y_{p-1},U_p)$$
+- Each structural equation contains only direct causes
+    - Variables $Y_j$ with no effect are *excluded*
+- Variables $U$ are **exogenous**
+    - Not caused by any variable $Y$ in system
+    
+## Causal Graphs (Code)
+
+```{r, eval=FALSE, fig.height=2}
+#Library to create and analyze causal graphs
+library(dagitty) 
+library(ggdag) #library to plot causal graphs
+yxdag<-dagify(Y~X) #create graph with arrow from X to Y
+#Set position of nodes so they lie on a straight line
+  coords<-list(x=c(X = 0, Y = 1),y=c(X = 0, Y = 0)) 
+  coords_df<-coords2df(coords)
+  coordinates(yxdag)<-coords2list(coords_df)
+#Plot causal graph
+ggdag(yxdag)+theme_dag_blank()+
+  labs(title="X causes Y",
+  subtitle="X is a parent of Y, Y is a child of X") 
+```
+
+    
+
+## Causal Graphs
+
+- A structural equation model can be represented as a graph
+    - Variables are **nodes**: box or circle
+    - Direct causal effects are (directed) **edges**: lines with arrows indicating direction
+    - Nodes at source of arrow are called **parents**, nodes at ends are **children**
+- Simplest example: structural equation model
+    - $Y=f_1(X,U_y)$ $X=f_2(U_2)$ 
+- Graph by R packages `dagitty` and `ggdag`
+```{r, echo=FALSE, fig.height=2}
+library(dagitty) #Library to create and analyze causal graphs
+suppressWarnings(suppressMessages(library(ggdag))) #library to plot causal graphs
+yxdag<-dagify(Y~X) #create graph with arrow from X to Y
+#Set position of nodes so they lie on a straight line
+  coords<-list(x=c(X = 0, Y = 1),y=c(X = 0, Y = 0)) 
+  coords_df<-coords2df(coords)
+  coordinates(yxdag)<-coords2list(coords_df)
+ggdag(yxdag)+theme_dag_blank()+labs(title="X causes Y",subtitle="X is a parent of Y, Y is a child of X") #Plot causal graph
+```
+- $U_1,U_2$ not shown explicitly: $X$ and $Y$ are variables of interest, with exogenous random variation caused by $U_1,U_2$
+
+
+## Implications of strucutural equations models
+
+- To go from an SEM to distribution of data, *solve* the system of equations
+    - Find endogenous variables $Y$ as function of only exogenous variables $U$
+    - Known distribution of $U$ then gives joint distribution of $Y$
+- Today, restrict interest to **acyclic** structural models
+    - Causal graph does not contain path along directed edges from a variable to itself
+    - Variables do not cause themselves
+    - Further, assume $(U_1,\ldots,U_p)$ are *mutually independent*
+- For acyclic models, solve by 
+    - Start with variables with no incoming arrows
+    - Substitute variable in direction of arrows for its structural equation
+    - Repeat until no endogenous variable appears on lefthand side
+- Resulting model is called the **reduced form**
+
+## Example: Solving a structural model (Code) 
+
+```{r, eval=FALSE, fig.height=3.5}
+examplegraph<-dagify(Y3~Y2,Y4~Y3+Y2,Y2~Y1) #create graph
+#Set position of nodes 
+coords<-list(x=c(Y1 = 0, Y2 = 1, Y3 = 2, Y4 = 3),
+         y=c(Y1 = 0, Y2 = 0, Y3 = -0.1, Y4 = 0)) 
+coords_df<-coords2df(coords)
+coordinates(examplegraph)<-coords2list(coords_df)
+
+#Plot causal graph  
+ggdag(examplegraph)+theme_dag_blank()
+  +labs(title="Y1 causes Y2, 
+        Y2 causes Y3, Y3 and Y2 cause Y4") 
+```
+
+
+## Example: Solving a structural model 
+- $Y_1=f_1(U_1)$, $Y_2=f_2(Y_1,U_2)$, $Y_3=f_3(Y_2,U_3)$, $Y_4=f_4(Y_3,Y_2,U_4)$
+```{r, echo=FALSE, fig.height=3.5}
+examplegraph<-dagify(Y3~Y2,Y4~Y3+Y2,Y2~Y1) #create graph
+#Set position of nodes 
+  coords<-list(x=c(Y1 = 0, Y2 = 1, Y3 = 2, Y4 = 3),y=c(Y1 = 0, Y2 = 0, Y3 = -0.1, Y4 = 0)) 
+  coords_df<-coords2df(coords)
+  coordinates(examplegraph)<-coords2list(coords_df)
+ggdag(examplegraph)+theme_dag_blank()+labs(title="Y1 causes Y2, Y2 causes Y3, Y3 and Y2 cause Y4") #Plot causal graph
+```
+
+- To solve, start at $Y_1$, replace in $Y_2$ to get
+    - $Y_1=f_1(U_1)$, $Y_2=f_2(f_1(U_1),U_2)$
+- Then substitute out for $Y_2$
+    - $Y_3=f_3(f_2(f_1(U_1),U_2),U_3)$, $Y_4=f_4(Y_3,f_2(f_1(U_1),U_2),U_4)$
+- Substitute out for $Y_3$ to get reduced form   
+    - $Y_4=f_4(f_3(f_2(f_1(U_1),U_2),U_3),f_2(f_1(U_1),U_2),U_4)$
+
+## Interpreting a structural equation model
+
+- Solving an acyclic structural model gives joint distribution of endogenous variables
+- What properties does the joint distribution have?
+    - **Causal Markov property**: 
+    - Conditional on its parents, a variable is independent of any variable that is not a *descendant*
+    - $Y_k$ is a **descendant** of $Y_j$ if there is a  path along directed edges from $Y_j$ to $Y_k$
+- Causal Markov Property completely defines implications of causal graph
+    - Absence of an edge means conditional independence   
+- In above example, applying this rule gives the following conditional indepencies
+```{r}
+impliedConditionalIndependencies(examplegraph)
+```
+    
+<!--Why? Y_2 is parent of Y3, Y_1 is not a descendant of Y_3, but Y_4 is:-->    
+
+
+## Every SEM tells a story
+
+- Omitted edges imply conditional independence
+    - Only remove edge if you *know* there is *no* direct effect
+- Direction of edges describe direction of effect  
+- **Total effect** includes indirect effect through other variables
+    - In linear additive case, effect along directed path from X to Y is product of SEM coefficients
+    - Total effect is sum of effects along all directed paths
+- Example fitting above graph 
+    - $Y4$ is wages, $Y3$ is social connections, $Y2$ is education, $Y1$ is a randomly assigned admissions decision
+- Story says wages determined by social connections and education, and education affects social connections, and admission affects education but has no direct effect on other variables except through it
+- Use model to make assumptions clear, and if we believe them, determine which effects we can estimate
+    
+
+
+<!--Add a story with plausible variables describing meaning of example SEM :-->
+
+<!-- ## Linear Version of Above      -->
+
+<!-- - $Y_1=U_1$, $Y_2=\beta_{0}+\beta_{1}Y_1+U_2$,  -->
+<!-- - $Y_3=\gamma_{0}+\gamma_{1}Y_2+U_3$ -->
+<!-- - $Y_4=\delta_{0}+\delta_{1}Y_3+\delta_{2}Y_2+U_4$ -->
+
+<!-- - Solutions -->
+<!-- $$Y_1=U_1$$ -->
+<!-- $$Y_2=\beta_{0}+\beta_{1}U_1+U_2$$ -->
+<!-- $$Y_3=\gamma_{0}+\gamma_{1}\beta_{0}+\gamma_{1}\beta_{1}U_1+\gamma_{1}U_2+U_3$$ -->
+<!-- $$Y_4=(\delta_{0}+\delta_{1}\gamma_{0}+\delta_{1}\gamma_{1}\beta_{0}+\delta_{2}\beta_{0})+$$ -->
+<!-- $$(\delta_{1}\gamma_{1}\beta_{1}+\delta_{2}\beta_{1})U_1+(\delta_{1}\gamma_{1}+\delta_{2})U_2+\delta_{1}U_3+U_4$$ -->
+
+<!-- - Coefficient on $U_j$ in $Y_k$ represents total causal effect of independent disturbance to $Y_j$ on $Y_k$ -->
+
+## "Do" operation and causal interventions
+
+- The effect of a causal intervention can be explicitly calculated in an SEM using the **Do** operation
+- **Do $Y_j=y$** describes action of setting a variable $Y_j$ to a specific value $y$
+    - Remove equation $Y_j=f_j(...)$ and replace by $Y_j=y$
+    - Solve new SEM to get distribution of any variable $P(Y_k|do(Y_j=y))$
+- Equivalently, on causal graph
+    - Delete all directed edges pointing in to node $Y_j$
+    - New graph describes all relationships in world where $Y_j$ has been changed
+- In potential outcomes notation, $Y_k^{Y_j=y}$ is distribution of $Y_k$ in the perturbed SEM   
+- A "Causal effect" describes what world would be like if instead of its usual value, some variable were changed
+- SEM allows calculating distribution of both observed and potential outcomes
+    - Can use relationship to identify causal effects
+
+## Example: Experiments (Code)
+
+
+```{r, eval=FALSE, fig.height=1.5}
+#Set position of nodes so they lie on a straight line
+  coords<-list(x=c(X = 0, Y = 1),y=c(X = 0, Y = 0)) 
+  coords_df<-coords2df(coords)
+  coordinates(yxdag)<-coords2list(coords_df)
+ggdag(yxdag)+theme_dag_blank() #Plot causal graph
+```
+
+## Example: Experiments
+
+- In an experiment, $X$ is set (randomly) by experimenter, so has no incoming edges
+    - $X=f_1(U_1)$
+- Outcome of interest $Y$ has only $X$ and $U_2$, variables independent of $X$ as inputs 
+    - $Y=f_2(X,U_2)$
+- Causal graph is therefore
+
+```{r, echo=FALSE, fig.height=1.5}
+#Set position of nodes so they lie on a straight line
+  coords<-list(x=c(X = 0, Y = 1),y=c(X = 0, Y = 0)) 
+  coords_df<-coords2df(coords)
+  coordinates(yxdag)<-coords2list(coords_df)
+ggdag(yxdag)+theme_dag_blank() #Plot causal graph
+```
+
+- $Do(X=x)$ deletes all incoming edges to X
+    - There are none, so graph is unchanged
+    - Using perturbed graph $P(Y|do(X=x))=P(f_2(x,U_2))$
+    - In original graph $P(Y|X=x)=P(f_2(X,U_2)|X=x)=P(f_2(x,U_2))$ by $U_1\perp U_2$
+- Result: $P(Y|do(X=x))=P(Y|X=x)$
+    - Exactly as derived in potential outcomes framework
+
+
+<!--Structural model and corresponding graph:-->
+
+<!--Example 2: Multivariate Experiments:-->
+
+## Example 2: Confounding (Code 1)
+
+```{r, eval=FALSE, fig.height=3}
+confoundgraph<-dagify(Y~X+W,X~W) #create graph
+#Set position of nodes 
+coords<-list(x=c(X = 0, W = 1, Y = 2),
+        y=c(X = 0, W = -0.1, Y = 0)) 
+coords_df<-coords2df(coords)
+coordinates(confoundgraph)<-coords2list(coords_df)
+#Plot causal graph
+ggdag(confoundgraph)+theme_dag_blank()
+  labs(title="Confounding of effect of X on Y by W") 
+```
+
+## Example 2: Confounding (Code 2)
+
+```{r, eval=FALSE, fig.height=3}
+perturbedgraph<-dagify(Y~x+W) #create graph
+#Set position of nodes 
+coords<-list(x=c(x = 0, W = 1, Y = 2),
+            y=c(x = 0, W = -0.1, Y = 0)) 
+coords_df<-coords2df(coords)
+coordinates(perturbedgraph)<-coords2list(coords_df)
+
+#Plot causal graph  
+ggdag(perturbedgraph)+theme_dag_blank()+
+  labs(title="Perturbed Graph") 
+```
+
+## Example 2: Confounding
+
+```{r, echo=FALSE, fig.height=3}
+confoundgraph<-dagify(Y~X+W,X~W) #create graph
+#Set position of nodes 
+  coords<-list(x=c(X = 0, W = 1, Y = 2),y=c(X = 0, W = -0.1, Y = 0)) 
+  coords_df<-coords2df(coords)
+  coordinates(confoundgraph)<-coords2list(coords_df)
+ggdag(confoundgraph)+theme_dag_blank()+labs(title="Confounding of effect of X on Y by W") #Plot causal graph
+```
+
+- Suppose we care about effect of X on Y 
+    - But W causes both X and Y
+- Recover $P(Y=y|do(X=x))$ by constructing perturbed graph
+
+```{r, echo=FALSE, fig.height=3}
+perturbedgraph<-dagify(Y~x+W) #create graph
+#Set position of nodes 
+  coords<-list(x=c(x = 0, W = 1, Y = 2),y=c(x = 0, W = -0.1, Y = 0)) 
+  coords_df<-coords2df(coords)
+  coordinates(perturbedgraph)<-coords2list(coords_df)
+ggdag(perturbedgraph)+theme_dag_blank()+labs(title="Perturbed Graph") #Plot causal graph
+```
+
+## Recovering the adjustment formula using causal graphs
+
+- Causal Markov property in perturbed graph implies
+$$Pr(Y=y,W=w,X=x|do(X=x))=$$
+$$Pr(Y=y|W=w,X=x,do(X=x))Pr(W=w|do(X=x))\cdot$$
+$$Pr(X=x|do(X=x))$$
+- Using that conditional laws are unchanged in perturbed graph
+$$=Pr(Y=y|W=w,X=x)Pr(W=w)$$
+- Object of interest $P(Y=y|do(X=x))=$
+$$\int\int Pr(Y=y|W=w,X=x,do(X=x))Pr(W=w|do(X=x))\cdot$$
+$$Pr(X=x|do(X=x))dwdx$$
+- Substitute in to get adjustment formula: $P(Y=y|do(X=x))=$
+$$\int Pr(Y=y|W=w,X=x)Pr(W=w)dw$$
+
+## What have we learned so far?
+
+- Introduced notation for Stuctural Equations, causal graphs
+- Recover same results as in potential outcomes framework for experiments, adjustment
+    - This is general: just different notation for same model
+- So why bother, aside from pretty pictures?
+    - Sometimes, relationship between variables takes different form
+    - Rules of structural equation models can handle many new results
+    - May require complicated algebra, but can be automated
+- Next, show a few graphs representing alternative situations
+
+<!--Example 4: Unobserved Confounding:-->
+
+## Mediators
+
+```{r, eval=FALSE, fig.height=1.5}
+mediatorgraph<-dagify(Y~W,W~X) #create graph
+#Set position of nodes 
+coords<-list(x=c(X = 0, W = 1, Y = 2),
+          y=c(X = 0, W = 0, Y = 0)) 
+coords_df<-coords2df(coords)
+coordinates(mediatorgraph)<-coords2list(coords_df)
+
+#Plot causal graph
+ggdag(mediatorgraph)+theme_dag_blank()+
+  labs(title="Mediator structure") 
+```
+
+## Mediators
+
+```{r, echo=FALSE, fig.height=1.5}
+mediatorgraph<-dagify(Y~W,W~X) #create graph
+#Set position of nodes 
+  coords<-list(x=c(X = 0, W = 1, Y = 2),y=c(X = 0, W = 0, Y = 0)) 
+  coords_df<-coords2df(coords)
+  coordinates(mediatorgraph)<-coords2list(coords_df)
+ggdag(mediatorgraph)+theme_dag_blank()+labs(title="Mediator structure") #Plot causal graph
+```
+
+- Sometimes we have access to variables $W$ called **mediators**
+    - Caused by treatment $X$ and also affect outcome
+    - Executioner shoots (X) Bullet hits (W) Prisoner dies (Y)
+- $P(Y|do(X=x))$ asks what is outcome when $X$ happens: $=P(Y|X=x)$
+- $W$ is correlated with $X$ and $Y$, but **don't** want to control for it
+    - Adjustment formula gives 0 effect of $X$ on $Y$ if $W$ controlled for
+    - $\int P(Y|X,W=w)P(w)dw=\int P(Y|W)P(W=w)dw=P(Y)\neq P(Y|do(X=x))$
+- Conditional on being hit by a bullet, being shot at has no relationship with death
+    - Changing $X$ does affect $Y$, but indirectly through $W$
+- For confounders, control *removes* bias, for mediators *causes* it
+    - Knowledge of causal model tells us how to interpret regression
+
+## Colliders (Code)
+
+```{r, eval=FALSE, fig.height=1.5}
+collidergraph<-dagify(W~Y,W~X) #create graph
+#Set position of nodes 
+coords<-list(x=c(X = 0, W = 1, Y = 2),
+               y=c(X = 0, W = 0, Y = 0)) 
+coords_df<-coords2df(coords)
+coordinates(collidergraph)<-coords2list(coords_df)
+  
+#Plot causal graph  
+ggdag(collidergraph)+theme_dag_blank()+
+  labs(title="Collider structure") 
+```
+
+## Colliders
+
+```{r, echo=FALSE, fig.height=1.5}
+collidergraph<-dagify(W~Y,W~X) #create graph
+#Set position of nodes 
+  coords<-list(x=c(X = 0, W = 1, Y = 2),y=c(X = 0, W = 0, Y = 0)) 
+  coords_df<-coords2df(coords)
+  coordinates(collidergraph)<-coords2list(coords_df)
+ggdag(collidergraph)+theme_dag_blank()+labs(title="Collider structure") #Plot causal graph
+```
+
+- A **collider** $W$ is caused by both $X$ and $Y$
+  - Grades $X$ and wealth $Y$ both help college admission $W$
+- Unconditionally, $X\perp Y$ 
+    - *But*, conditional on $W$, $X$ and $Y$ are dependent
+    - Knowing $W$, $X$ is informative about $Y$
+- Among college students, those with rich family did not need high grades to get in.
+    - Observing rich family, can infer that likelihood of high grades was lower
+    - True even if in full population, grades and wealth independent
+- Controlling for collider in regression of $Y$ on $X$ causes bias
+    - $P(Y|do(X=x))=P(Y|X=x)=P(Y)$ not equal to $\int P(Y|X,W=w)P(w)dw$
+- Commonality with mediator case: $W$ is a *descendant* of $X$    
+
+## d-separation in general graphs
+
+- Want rules for arbitrary graphs describing when control is sufficient to recover causal effect
+    - First, define rule describing what conditioning implies for independence
+    
+- When does conditioning on set of nodes $W$ imply for two disjoint sets of nodes $X$ $Y$ that $X\perp Y|W$?
+- We say a (non-directed) path from $X_i$ to $Y_j$ is **blocked** by $W$ if it contains either
+    - A collider which is *not* in $W$ and of which $W$ is *not* a descendant
+    - A non-collider which *is* in $W$
+- We say $X$ and $Y$ are **d-separated** (by $W$) if all paths between $X$ and $Y$ are blocked
+- **Theorem** (Pearl, 2009): $X\perp Y|W$ if and only if $X$ and $Y$ are d-separated by $W$
+
+## Backdoor Criterion
+
+- Using d-separation, can define a complete criterion for when control recovers $P(Y|do(X=x))$
+- A set of variables $W$ satisfies **Backdoor Criterion** between $X$ and $Y$ if
+    - No node in $W$ is a descendant of $X$
+    - $W$ blocks every path between $X$ and $Y$ that contains an edge directed into $X$ 
+- **Theorem** (Pearl, 2009): If $W$ satisfies the backdoor criterion between $X$ and $Y$, the adjustment formula recovers the causal effect of $X$ on $Y$
+$$P(Y|do(X=x))=\int Pr(Y|W,X=x)Pr(W)dw$$
+
+## Backdoor criterion, intuition
+
+- Blocking path component ensures that adjustment variables account for confounding by causes other than the cause of interest and do not introduce additional bias by inducing new correlations through colliders
+- Non-descendant component avoids "bad controls" which are themselves affected by treatment
+- I will not force you to recall exact definition of d-separation or backdoor criterion
+- Point is that given a causal story, systematic method can recover whether control is sufficient
+    - In `dagitty`, check backdoor criterion between $X$ and $Y$ by
+```{r, eval=FALSE}
+#Check if W satisfies criterion
+isAdjustmentSet(graphname,"W",exposure="X",outcome="Y")
+#Find variables that satisfy criterion, if they exist
+adjustmentSets(graphname,exposure="X",outcome="Y") 
+```
+
+## Example: finding adjustment sets (Code)
+
+```{r, eval=FALSE}
+#create graph
+complicatedgraph<-dagify(Y~A+C,B~X+Y,A~X,X~C,D~B) 
+#Set position of nodes 
+coords<-list(x=c(X = 0, A = 1, B = 1, C=1, Y=2, D=2),
+    y=c(X = 0, A = 0.1, B=0, C=-0.1, Y = 0, D=0.1)) 
+coords_df<-coords2df(coords)
+coordinates(complicatedgraph)<-coords2list(coords_df)
+
+#Plot causal graph
+ggdag(complicatedgraph)+theme_dag_blank()+
+ labs(title="Complicated Graph")
+
+```
+
+## Example: finding adjustment sets
+
+```{r, echo=FALSE}
+complicatedgraph<-dagify(Y~A+C,B~X+Y,A~X,X~C,D~B) #create graph
+#Set position of nodes 
+  coords<-list(x=c(X = 0, A = 1, B = 1, C=1, Y=2, D=2),y=c(X = 0, A = 0.1, B=0, C=-0.1, Y = 0, D=0.1)) 
+  coords_df<-coords2df(coords)
+  coordinates(complicatedgraph)<-coords2list(coords_df)
+ggdag(complicatedgraph)+theme_dag_blank()+labs(title="Complicated Graph") #Plot causal graph
+
+```
+
+## Measuring effect of X on Y
+
+- Go back to education $X$ versus wages $Y$ to get intuition
+- $A$ caused by $X$, causes $Y$: e.g., occupation, experience
+    - Mediators: descendant of $X$, so do not adjust for it
+- $B$ caused by both $X$ and $Y$: e.g., current wealth or lifestyle
+    - Colliders: descendant of $X$, so do not adjust for it
+- $D$ caused by $B$ only: e.g. consequences of wealth
+    - Descendants of collider: still causes bias when adjusted for
+- $C$, causes $X$ and $Y$: e.g. ability, background 
+    - Confounder: must condition on it 
+- Backdoor criterion calculates this automatically    
+```{r}
+adjustmentSets(complicatedgraph,exposure="X",outcome="Y")
+```
+
+<!--## Example: School admissions
+
+## Backdoor paths, continued
+
+Formal definition
+
+## Backdoor criterion
+
+## Mediators
+
+## "Bad Control"
+
+## Example: Discrimination.:-->
+
+## Summary
+
+- Structural Equations Models describe full set of causal relationships between variables in a system
+- Causal graphs represent structural equations models and the conditional independencies they imply
+- Causal effects represented by "Do" operation, which asks what happens in a new graph where treatment is fixed rather than assigned by existing mechanism
+- SEMs can describe situations like experiments and control, but also mediation, colliders, and more complicated structures
+- Working through the implications of causal graphs yield rules to describe when adjustment by regression measures a causal effect
+
+
+## References
+
+- Short introduction
+    - Kelleher, Adam. (2016) "A Technical Primer on Causality" <https://medium.com/@akelleh/a-technical-primer-on-causality-181db2575e41>
+- Longer introduction
+    - Nielsen, Michael. (2012) "If correlation doesn't imply causation, then what does?" <http://www.michaelnielsen.org/ddi/if-correlation-doesnt-imply-causation-then-what-does/>
+- Monograph: original primary source for this material.
+    - Pearl, Judea. (2009) Causality: Models, Reasoning, and Inference. 2nd ed. Cambridge UP.
+- Software: R packages to analyze and display causal graphs
+```{r, eval=FALSE}
+    install.packages("dagitty")
+    install.packages("ggdag") 
+```    
+
+
+
+

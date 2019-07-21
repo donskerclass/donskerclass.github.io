@@ -1,0 +1,514 @@
+---
+title: "Causality"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+## Causality again
+
+- Last class, discussed causal models and experiments 
+- Potential outcomes $Y^x$ describe how $Y$ would be if $X$ changed to $x$
+- Can always observe $Y=Y^X$, what happened given observed $X$
+- With experiment, can learn distribution of $Y^x$, $P(Y|do(X=x))$
+    - Assigning $X$ at random implies $P(Y|do(X=x))=P(Y|X)$
+- Today: 
+    - Inference in experiments
+    - What to do with non-experimental data    
+    
+## Experimental Data
+
+- Increasingly, substantial amount of economic data from experiments
+(1) Field experiments: assign social program at random
+    + JPAL runs hundreds of economic experiments all around the world
+(2) Businesses experiment with design, marketing, customer interactions
+    + Called "A/B tests" by tech companies
+    + Microsoft, Amazon, Facebook, Google conduct over 10,000 each/year [^1]
+    
+[^1]: Kohavi and Thomke (2017), Harvard Business Review 
+
+## Problems with nonexperimental data
+
+- Consider comparing average outcomes between two groups
+$$E[Y_i|X_i=1]-E[Y_i|X_i=0]=E[Y_i^1|X_i=1]-E[Y_{i}^{0}|X_i=0]$$
+Add and subtract $E[Y_i^0|X_i=1]$
+$$=\stackrel{\text{ATT}}{E[Y_i^1-Y_i^0|X_i=1]}+\stackrel{\text{"selection bias"}}{(E[Y_i^0|X_i=1]-E[Y_i^0|X_i=0])}$$
+
+- First term is **ATT** "average treatment effect on the treated"
+    - For those assigned to treatment group, causal effect of the treatment
+    - May differ from ATE if treatment assigned to groups for whom efficacy differs
+- Second term is **selection bias**
+    - Difference in baseline outcome levels between group selected for treatment and group not selected
+    - Nonzero if treatment and control group systematically differ in ways relevant to the outcome
+
+## Example: Job Training and Earnings
+- US runs many job training programs for low skill workers
+- Goal is to get them back from bad economic situation to find higher-paying work
+- Is training effective? Hard to tell
+$$E[\text{earnings|training}]-E[\text{earnings|no training}]=$$
+$$E[\text{earnings change|do(training),trained}]+$$
+$$(E[\text{untrained earnings|trained}]-E[\text{untrained earnings|not trained}])$$
+- Want to know effectiveness of program
+- First term gives this, at least for participants
+- Problem is, second term is probably very negative
+    - People get job training because they have a bad job, or no job at all
+    - On average, those who get training are those with lower untrained earnings    
+    
+## Experiments and treatment effects
+
+- Suppose treatment assigned randomly: $(Y_i^0,Y_i^1) \perp X_i$
+- Independence means conditional distributions same as unconditional
+- Selection bias now $$E[Y_i^0|X_i=1]-E[Y_i^0|X_i=0]=E[Y_i^0]-E[Y_i^0]=0$$
+- ATT now $$E[Y_i^1-Y_i^0|X_i=1]=E[Y_i^1-Y_i^0]=\text{ATE}$$
+- By L.L.N. Difference in means consistently estimates ATE for randomized experiments
+- In small samples, estimate not exact
+    - May have drawn sample where unobseved variables differ between treatment and control groups
+
+## Random coefficients
+- Write potential outcomes model in more familiar form
+$$Y_i=Y_i^0+(Y_i^1-Y_i^0)X_i$$
+- Define $\beta_{0,i}=Y_i^0$, $\beta_{1,i}=Y_i^1-Y_i^0$, then
+$$Y_i=\beta_{0,i}+\beta_{1,i}X_i$$
+- Slope is treatment effect, intercept is value if not treated
+- Result is a linear model with *random coefficients*
+- Like linear model, but slope terms no longer constant
+
+## Relating to standard linear model
+- Taking averages, can write as 
+    - $\beta_{0,i}:=\bar{\beta}_0+e_{0i}$ 
+    - $\beta_{1,i}:=\bar{\beta}_1+e_{1i}$
+    - $E[e_{0i}]=E[e_{1i}]=0$
+- Random coefficients model becomes
+$$Y_i=\bar{\beta}_0+\bar{\beta}_1X_i+e_{0i}+X_ie_{1i}$$
+- A standard linear model with heteroskedastic errors
+- Slope coefficient $\bar{\beta}_1$ is ATE
+- *Endogeneity*: under nonrandom assignment, residual may be correlated with $X_i$
+
+## Estimation
+- If X assigned randomly, $X_i\perp e_{0i}$ (no selection bias) and $X_i\perp e_{1i}$ (treatment effect independent of treatment assignment)
+- Model becomes standard linear model satisfying Assumptions (1-4)
+- $\hat{\beta}_1$ OLS estimator same as difference in means
+- Heteroskedasticity has meaningful interpretation
+    - Residual $e_{0i}+X_ie_{1i}$ has variance which depends on $X$ so long as $e_{1i}\neq 0$ 
+    - "Heterogeneous treatment effects"
+- OLS with robust standard errors gives valid inference on ATE for experimental data
+- Equivalent to two-sample t-test on difference in means with unequal variances
+
+## Example: National Supported Work Program Experiment (Code 1)
+
+```{r, eval=FALSE}
+#Load package containing data set 
+#see sekhon.berkeley.edu/matching/ for info
+#If not installed, run following command
+install.packages("Matching",
+ repos = "http://cran.us.r-project.org", 
+ dependencies=TRUE)
+library(Matching)
+data(lalonde) #Load data set
+library(sandwich) #Robust SEs
+library(lmtest) #testing with robust SEs
+    
+# Show treatment unrelated to covariates
+balancereg<-lm(formula = treat ~ age + educ + black + 
+          hisp + married + nodegr + re74 + re75 +
+          u74 + u75, data = lalonde)
+```
+
+## Example: National Supported Work Program Experiment (Code 2)
+
+```{r,eval=FALSE}
+#Build robust standard errors
+balancereg.vcov<-vcovHC(balancereg, type="HC0")
+#Conduct Wald test that coefs jointly 0
+#using asymptotic Chi-squared distribution
+jointtest<-waldtest(balancereg, 
+  vcov=vcovHC(balancereg,type="HC0"), test = "Chisq")
+```
+
+## Example: National Supported Work Program Experiment
+
+- National Supported Work Program (analyzed in Lalonde 1986, Dehejia & Wahba 1998)
+- Take group of low earnings workers, randomly assign to on the job training ($X=1$) or no intervention ($X=0$)
+- Compare post program earnings for treated and untreated workers
+- Can see it is uncorrelated with **observable** characteristics by regressing tratment on pre-treatment covariates 
+- A Wald test that all coefficients 0 tests a null which is *implied by* independence
+```{r, echo=FALSE}
+#Load package containing data set 
+#see sekhon.berkeley.edu/matching/ for info
+#If not installed, run following command
+#install.packages("Matching",repos = "http://cran.us.r-project.org", dependencies=TRUE)
+suppressWarnings(suppressMessages(library(Matching)))
+data(lalonde)
+suppressWarnings(suppressMessages(library(sandwich))) #Robust SEs
+suppressWarnings(suppressMessages(library(lmtest))) #testing with robust SEs
+    
+# Show treatment unrelated to covariates
+balancereg<-lm(formula = treat ~ age + educ + black + 
+                hisp + married + nodegr + re74 + re75 +
+                u74 + u75, data = lalonde)
+#Build robust standard errors
+balancereg.vcov<-vcovHC(balancereg, type="HC0")
+#Conduct Wald test that coefs jointly 0
+#using asymptotic Chi-squared distribution
+```
+```{r,eval=FALSE}
+jointtest<-waldtest(balancereg, 
+  vcov=vcovHC(balancereg,type="HC0"), test = "Chisq")
+```
+
+## Results
+
+```{r,echo=FALSE}
+(jointtest<-waldtest(balancereg, 
+          vcov=vcovHC(balancereg,type="HC0"), test = "Chisq"))
+```
+
+- Non-rejection (at 1% level) reassuring
+- Note that point of experiment is that treatment independent of *all* characteristics, observed and unobserved
+- These tests can't be used to *verify* experiment assumption
+
+## Estimating treatment effect (Code)
+
+```{r, eval=FALSE,results="asis"}
+#Run simple regression of outcome (Real earnings in 78) 
+# on treatment in program
+experiment<-lm(formula = re78 ~ treat, data = lalonde)
+#Construct Robust SEs, test significance of causal effect
+experiment.vcov<-vcovHC(experiment, type="HC0")
+experiment.output<-coeftest(experiment,
+      df=Inf,vcov. = experiment.vcov)
+library(stargazer) #Display table of results
+stargazer(experiment.output,type="html",style="all",
+      header=FALSE,omit.table.layout="ldn",
+      title="Job Training and 1978 Real Wages")
+```
+
+## Estimating treatment effect
+
+- Setting is experimental, with binary treatment
+- Run OLS regression of earnings on training, with robust SEs
+- Coefficient has interpretation as Average Treatment Effect
+```{r, echo=FALSE,results="asis"}
+#Run simple regression of outcome (Real earnings in 78) 
+# on treatment in program
+experiment<-lm(formula = re78 ~ treat, data = lalonde)
+#Construct Robust SEs, test significance of causal effect
+experiment.vcov<-vcovHC(experiment, type="HC0")
+experiment.output<-coeftest(experiment,
+      df=Inf,vcov. = experiment.vcov)
+suppressMessages(suppressWarnings(library(stargazer)))
+stargazer(experiment.output,type="html",style="all",header=FALSE,omit.table.layout="ldn",title="Job Training and 1978 Real Wages")
+```
+
+
+## Interpretation
+
+- Strong and significant coefficient on treatment
+    - Treated earn $1800 more annually on average
+- Treatment effect $\bar{\beta}_1$ large relative to SE
+    - Unlikely difference due to sampling error
+-  Also large relative to intercept 
+    -  $\bar{\beta}_0$: average earnings of workers conditional on no training
+- Experimental design suggests this difference is causal 
+- If you took more workers from same population and put them in same program, they would also earn about $1800/year more on average
+
+
+## Observational Data and Natural Experiments
+
+- For many questions, no experiment run
+    - Too costly or unethical, or just not run
+- Instead have **observational data** from observed economic process
+- Key to experimental setup is *random assignment*
+    - Someone or *something* set $X$ independently of other determinants of $Y$
+- Doesn't have to be conscious 
+    - Could be random natural event or capricious policymaker
+- If this happen have **natural experiment**
+    - Can again interpret effect causally
+- Rare, but useful to exploit when it does happen
+
+<!-- ##  Linear models and causality -->
+
+<!-- - Suppose we have randomly assigned a (possibly multivariate) treatment $X$ -->
+<!-- - Under random assignment $P(Y|do(X))=P(Y|X)$ -->
+<!-- - Consider target parameter $E[Y|do(X)]$ -->
+<!-- - Can estimate by $E[Y|X]$ -->
+<!-- - If data and sample satisfy regression assumptions (1-4) have $$E[Y|X]=X^\prime\beta$$ -->
+<!-- - c.e.f. is now structural function, consistently estimable by OLS -->
+<!-- - Even if c.e.f. nonlinear, OLS gives best linear approximation of causal effect -->
+
+<!-- ## Multivariate treatments -->
+
+<!-- - Consider case where multivariate $X$ assigned randomly and linearity holds -->
+<!-- $$Y=\beta_0+\beta_1X_1+\beta_2X_2+\ldots+\beta_{k}X_{k}+u$$ -->
+<!-- - Even if interest is in single coefficient, w.l.o.g. $\beta_1$, it is important to include all covariates $X_{i2}\ldots X_{ik}$ in the regression -->
+<!-- - If a covariate $X_k$ is omitted, regression becomes  -->
+<!-- $$Y=\beta_0+\beta_1X_1+\beta_2X_2+\ldots+\beta_{k-1}X_{k-1}+U$$ -->
+<!--     - $U=X_k\beta_k+u$ is the residual from the regression -->
+<!-- - If $X_1$ and $X_k$ (partially) correlated, and $\beta_k\neq 0$, OLS estimate biased -->
+<!-- - Assumptions (1-3),(4') hold for short regression for some set of coefficients, but these are not measures of true causal effects -->
+
+## Control
+
+- In practice, rare in  observational data that relevant variable affecting $Y$ randomly assigned
+- Instead, have many $X_{ij}$ determined by a variety of mechanisms with causal links between them
+- Today: convenient special cases where regression suffices
+    - Next class: some more general theory
+
+
+## Controlling for covariates
+- New setup 
+    - $Y$ is outcome of interest
+    - $X$ is treatment
+    - $W$ are **pre-treatment covariates** 
+- $W$ may cause both X and Y, but are not caused by them
+- If we observe *all* the $W$ that determine assignment of treatment and might themselves affect $Y$, can still learn about effects of $X$
+- Instead of random assignment $Y^x\perp X$, we can weaken to **conditionally random assignment**
+$$Y^x\perp X|W$$
+
+
+## Example: Consumer Credit 
+
+- Effect of obtaining mortgage loan $X$ on consumer spending $Y$
+- People who can get credit would likely have very different spending habits than those who can't, even in world where they didn't get loan
+    - "Selection Bias": $E[Y^0|X=1]-E[Y^0|X=0]\neq 0$
+- But, if we have electronic loan application data, info on form, $W$, contains all characteristics that determine treatment $X$  
+- Any variation in loan approval comes from bank decisions, made without knowledge of other individual characteristics and so independent of them
+- Result: $Y^x\perp X|W$
+    - Conditional on loan data, there should be no relationship between consumer characteristics and what spending would be if given or not given loan
+- Given $W$, approval is "effectively" randomly assigned    
+
+## Identifying Treatment Effects $P(Y|do(x))$
+
+- Assume $Y^x\perp X|W$, and go through same identification argument as in experiment case
+$$P(Y|X=x,W=w)=P(Y^X|X=x,W=w)$$
+$$=P(Y^x|X=x,W=w)$$
+$$=P(Y^x|W=w)=P(Y|do(X),observe(W=w))$$
+- By causal consistency, conditioning, and conditional independence
+- Result: recover distribution of *conditional* outcome Y, in situations where $W$ is observed
+- To get unconditional effect $P(Y^x)$, integrate over w 
+$$=\int P(Y^x|W=w) P(w)dw=\int P(Y|X=x,W=w)P(w)dw$$
+<!-- - So, recover causal effect of treatment, for units with observed $W$, by conditioning on both -->
+<!-- - E.g., observed conditional distribution of spending, given loan approval $X$ and having put information $W$ on form is conditional distibution of spending, if bank made choice to approve or not -->
+
+
+## Estimating Treatment Effects
+
+- Result says we can recover causal effects if we know $P(Y|X,W)$
+- We have tool for estimating conditional expectations
+    - Multivariate regression!
+- Impose linear model on P(Y|X,W)
+$$E[Y|X,W]=X\beta_1+W^\prime\beta_2$$
+- If c.e.f. correctly specified, $\beta_1$ is *causal effect* of $X$ on $Y$, given $W$ observed
+- Need to regress $Y$ on $X$ AND $W$
+    - Get unbiased estimate of causal effect
+- In this linear additive case, **treatment effect** is slope $\beta_1$
+- In this case, omitting $W$, or some component of it, from regression would cause bias in estimate of $\beta_1$
+- This is called "confounding" or "omitted variable bias"
+
+## Omitted variables again
+
+- Unbiased estimation requires correct specification of conditional expectation function
+- Suggests including appropriate functional forms and all possible elements of $W$ important here
+- We now have causal interpretation of omitted variables formula
+- Suppose $E[Y|X,W]=\beta_0+\beta_1X+\beta_2W$
+- Regression of $Y$ on $X$ alone gives $\tilde{\beta}_0+\tilde{\beta}_1X$
+- Regression of $W$ on $X$ gives $\delta_0+\delta_1X$
+- Omitted variables formula says $\tilde{\beta}_1=\beta_1+\beta_2*\delta_1$
+- Omitted variables bias occurs when both
+    (1) confounder correlated with outcome ($\beta_2\neq 0$)
+    (2) confounder correlated with treatment
+- Error precisely corresponds to selection bias: causal effect of treatment is to take unit with same characteristics and change status, but if units who get or don't get treatment differ in some way that affects the outcome, comparison reflects both the treatment effect and the difference in the units selected     
+
+## Covariates in binary treatment framework
+- Random assignment $(Y_i^0,Y_i^1) \perp X_i$ relaxed to 
+$$(Y_i^0,Y_i^1) \perp X_i | W_i$$
+-  Outcome is $Y_i=Y^0_i+(Y^1_i-Y^0_i)X_i$, with expectation 
+$$E[Y_i|X_i,W_i]=E[Y^0_{i}|W_i]+E[Y^1_i-Y^0_i|W_i]X_i$$
+- Assume a linear CEF for $Y^0_i$: $Y^0_{i}=\bar{\beta}_0+\gamma W +e_{0i}$ with $E[e_{0i}|W]=0$
+- If treatment effect independent of controls, have 
+$$Y^1_i-Y^0_i=\bar{\beta}_1+e_{1i}$$
+- Result is random coefficients linear regression, with ATE=$\bar{\beta}_1$
+$$Y_i=\bar{\beta}_0+\bar{\beta}_1X_i+\gamma W_i+e_{0i}+X_ie_{1i}$$
+- Under these conditions, OLS with robust SEs recovers average treatment effect
+
+## Heterogeneous treatment effects
+
+- In general, causal effect may vary with $W$ 
+- Loan increases spending more for consumers with some characteristics than others
+- In structural representation, this means $W_i$ correlated with $e_{1i}$
+- When $W$ added to regression, it is now correlated with residual
+- Assume linear CEF
+$$Y^1_i-Y^0_i=\bar{\beta}_1+\delta W_i+e_{1i}$$ 
+structural formula now 
+$$Y_i=\bar{\beta}_0+\bar{\beta}_1X_i+\gamma W_i+\delta W_i\times X_i+e_{0i}+X_ie_{1i}$$
+- Use linear regression again, with interaction terms (and robust SEs)
+- Average treatment effect is  $\bar{\beta}_1+\delta E[W_i]$
+<!-- - Coefficient on $W$ will depend on correlation -->
+<!-- - If $X$ randomly assigned, $W\perp X$, and omitted variables bias formula says limit of $\beta_1$ unchanged -->
+<!-- - If $X$ correlated with $W$, as in *conditional* random assignment, limit of $\beta_1$ is now some other weighted average of conditional treatment effects given $W$ -->
+ 
+
+<!-- ## Including Controls in Experiments  -->
+
+<!-- - Under pure random assignment of $X$, ATE identified by difference in means even if $W$ affects $Y$ -->
+<!-- - If treatment effect is constant or unaffected by $W$, structural representation still -->
+<!-- $$Y_i=\bar{\beta}_0+\bar{\beta}_1X_i+\gamma W_i+e_{0i}+X_ie_{1i}$$ -->
+<!-- - but now $X_i$ is independent of $W_i$ -->
+<!-- - As a result, $E[\gamma W_i+e_{0i}+X_ie_{1i}|X_i]=0$ -->
+<!-- - OLS with no controls consistently estimates $\bar{\beta}_1=ATE$ -->
+<!-- - OLS with $W$ as control also consistently estimates $\bar{\beta}_1$, but variance is now $Var(e_{0i}+X_ie_{1i}|X_i)$ instead of $Var(w_i+e_{0i}+X_ie_{1i}|X_i)$ -->
+<!-- - Adding controls reduces standard deviation of residuals, can give more precise estimate of causal effect -->
+<!-- - Can help correct for finite-sample covariate imbalance -->
+<!-- - If treatment effects correlated with $W_i$, $W_i$ correlated with $e_{0i}+X_ie_{1i}$ -->
+<!--     - OLS may no longer recover $\bar{\beta}_1$, efficiency gain not guaranteed -->
+
+
+
+<!-- ## Job training, again -->
+
+<!-- - Many worker covariates measured before running the experiment  -->
+<!-- - May affect 1978 wages, but not determined by them or treatment -->
+<!-- - Don't know ex ante if effect differs based on worker characteristics -->
+
+<!-- ```{r, eval=FALSE} -->
+<!-- # Run treatment effect regression again, now with controls -->
+<!-- exper2<-lm(formula = re78 ~ treat + age + educ + black +  -->
+<!--                 hisp + married + nodegr + re74 + re75 + -->
+<!--                 u74 + u75, data = lalonde) -->
+<!-- ``` -->
+
+<!-- ## Output -->
+<!-- ```{r, echo=FALSE, results="asis"} -->
+<!-- #Load package containing data set  -->
+<!-- suppressWarnings(suppressMessages(library(Matching))) -->
+<!-- data(lalonde) -->
+<!-- # Load Packages for Robust Standard Errors -->
+<!-- suppressWarnings(suppressMessages(library(sandwich))) #Robust SEs -->
+<!-- suppressWarnings(suppressMessages(library(lmtest))) #testing with robust SEs -->
+<!-- #Run simple regression of outcome (Real earnings in 78) on treatment in program -->
+<!-- experiment<-lm(formula = re78 ~ treat, data = lalonde) -->
+<!-- #Construct Robust SEs, test significance of causal effect -->
+<!-- experiment.vcov<-vcovHC(experiment, type="HC0") -->
+<!-- experiment.output<-coeftest(experiment,df=Inf,vcov. = experiment.vcov) -->
+
+<!-- # Run treatment effect regression again, now with controls -->
+<!-- exper2<-lm(formula = re78 ~ treat + age + educ +   -->
+<!--     black + hisp + married + nodegr + re74 + re75 + -->
+<!--           u74 + u75, data = lalonde) -->
+<!-- #Construct Robust SEs, test significance of causal effect -->
+<!-- exper2.vcov<-vcovHC(exper2, type="HC0") -->
+<!-- exper2.output<-coeftest(exper2, -->
+<!--       df=Inf,vcov. = exper2.vcov) -->
+<!-- suppressWarnings(suppressMessages(library(stargazer))) -->
+<!-- stargazer(experiment.output,exper2.output,header=FALSE,single.row=TRUE,font.size="tiny", title="Job Training with and without Covariates") -->
+
+<!-- ``` -->
+
+<!-- ## Interpretation -->
+
+<!-- - With controls, estimated treatment effect fairly similar -->
+<!-- - This is expected from random assignment of treatment -->
+<!-- - Standard error fairly similar -->
+<!--     - If treatment correlated with $W$, not guaranteed to get smaller errors -->
+<!--     - Covariate imbalance test suggested this might be a concern -->
+
+
+
+<!-- ## Try now with an interaction term -->
+
+<!-- - One can estimate treatment effect heterogeneity in experimental settings using interaction term -->
+<!-- - Useful if directly interested in heterogeneity across groups -->
+<!-- - In general, with small samples, may be hard to estimate size of interaction effects precisely -->
+
+<!-- - Examine results in job training experiment -->
+<!-- - Treatment effects now allowed to vary by previous employment -->
+<!-- ```{r, eval=FALSE} -->
+<!-- exper3<-lm(formula = re78 ~ treat + I(treat*u75) -->
+<!--      + age + educ + black + hisp + married  -->
+<!--      + nodegr + re74 + re75 + u74 + u75, data = lalonde) -->
+<!-- ``` -->
+
+<!-- ## Results with heterogeneity -->
+<!-- ```{r, echo=FALSE, results="asis"} -->
+<!-- # Treatment effects now allowed to vary by previous employment -->
+<!-- exper3<-lm(formula = re78 ~ treat + I(treat*u75) -->
+<!--      + age + educ + black + hisp + married  -->
+<!--      + nodegr + re74 + re75 + u74 + u75, data = lalonde) -->
+<!-- #Construct Robust SEs, test significance of causal effect -->
+<!-- exper3.vcov<-vcovHC(exper3, type="HC0") -->
+<!-- exper3.output<-coeftest(exper3, -->
+<!--       df=Inf,vcov. = exper3.vcov) -->
+<!-- stargazer(exper3.output,header=FALSE,single.row=TRUE,font.size="tiny", title="Job Training with Interactions") -->
+<!-- ``` -->
+
+
+<!-- ## Interpretation -->
+
+<!-- - Coefficient on treatment and interaction term both quite large, but not statistically significant -->
+<!-- - Small sample size (n=445) makes precise estimation hard, especially with many covariates -->
+<!-- - Point estimates consistent with training programs having different effects by unemployment status, but data too noisy to tell if this is just chance -->
+
+<!-- ## "Bad" controls -->
+<!-- - Not all variables we can add to a regression will help relieve confounding -->
+<!-- - Depends on what causal structure is determining them -->
+<!-- - Consider causal structure in which control could be used  -->
+<!--     - W causes X and Y, X and W cause Y, W not caused by X or Y -->
+<!-- - Now ask instead: What is causal effect of W on Y? -->
+<!-- - If we have effective random assignment of W, regression without X recovers ATE -->
+<!-- - What happens if we add X to regression? -->
+
+<!-- ## Post-treatment bias -->
+<!-- - Structural model $Y=f_1(X,W,U_1)$, $X=f_2(W,U_2)$, $W=f_3(U_3)$, $(U_1, U_2, U_3)$ mutually independent -->
+<!-- - **Direct effect** of $W$ on $Y$ is $\frac{\partial_W f_1(X,W,U_1)}{dW}$ -->
+<!-- - **Total effect** of $W$ is $\frac{d_W f_1(f_2(W,U_2),W,U)}{dW}$ -->
+<!-- - Comparison of means under experimental assignment of $W$ captures the latter -->
+<!-- - Regression of $Y$ on $X$ and $W$ captures the former -->
+<!-- - Which one we care about depends on objective -->
+<!-- - If W is a policy we will change, need total effect to judge outcome -->
+<!-- - Including $X$ is said to induce **post-treatment bias**  -->
+<!-- - Issue also called **conditioning on a collider** (Pearl 2000) or **bad control** (Angrist and Pischke) -->
+
+<!-- ## Linear model version -->
+<!-- - $Y=X\beta_1+W\beta_2+U_1$ -->
+<!-- - $X=W\beta_3 +U_2$ -->
+<!-- - $Y=(W\beta_3)\beta_1+W\beta_2+U_1+U_2\beta_1$ -->
+<!-- - Experiment recovers $\beta_2+\beta_1\beta_3$ -->
+<!-- - OLS recovers $\beta_2$ -->
+
+<!-- ## Example: education and wages, again -->
+<!-- - See Angrist and Pischke Ch 6 -->
+<!-- - $Y$ is wage, treatment $W$ is attending college, assumed to be assigned randomly for this example, and potential control $X$ is occupation = 1 if white collar, =0 if blue collar  -->
+<!-- - In any given occupation, college causes higher wages -->
+<!--     - $\beta_2>0$ -->
+<!-- - People who go to college also caused to enter white collar occupations than those who don't -->
+<!--     - $\beta_3>0$ -->
+<!-- - Probably white collar jobs pay more than blue collar -->
+<!--     - $\beta_1>0$ -->
+<!-- - Total effect of going to college on wages is $\beta_2+\beta_3*\beta_1>\beta_2$ -->
+<!--     - Direct effect on wages plus probability of going into higher paying occupation times increase in pay from going into that occupation -->
+<!--     - Regression estimate biased downwards -->
+    
+## Lessons
+
+- Causality defined in terms of model of what things could be like
+- Experiments can recover causal effects *on average*
+- Regression *with appropriate controls* can recover causal effects
+- Regression with missing controls causes omitted variable bias
+<!-- - Regression with controls caused by treatment causes post-treatment bias  -->
+
+## Next class
+
+- More on causality
+    - Structural models
+    - When regression does and doesn't work 
+
+
+
+
+
+
+
+
+
+
