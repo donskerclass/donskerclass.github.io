@@ -1,0 +1,438 @@
+---
+title: "Instrumental Variables continued"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+## Instrumental Variables Continued
+
+- Review
+- Estimation and Inference
+- IV in Potential outcomes framework: LATE
+
+
+## Endogeneity Problem
+
+- Suppose effect of $X$ on $Y$ can be represented as
+$$Y=\beta_0+\beta_1X + u$$ 
+- But with **endogeneity**
+$$E[Xu]\neq 0$$
+
+
+- Can arise from omitted confounders
+<!-- - Additional reasons for endogeneity will be discussed next week   -->
+<!--     - "Simultaneity bias": when causal graph **not** acyclic -->
+<!--     - Measurement error: want  $X^{*}$, observe $X=X^{*}+e$ -->
+- OLS inconsistent for $\beta_1$
+    - Finds slope of (Best Linear Predictor of) Conditional Expectation Function
+    - But this *isn't* what we want
+    
+## A Possible Solution: Instrumental Variables
+
+- Find instrument $Z$ such that
+$$Cov(Z,u)=0$$
+$$Cov(Z,X)\neq 0$$
+$$E[u]=0$$
+- $Z$ correlated with $X$ but not residual $u$
+- $Z$ affects treatment only
+    - No *direct* effect on $Y$
+    - No correlation with omitted confounders
+- Then $\beta_1=\frac{Cov(Z,Y)}{Cov(Z,X)}$
+- Estimate by **Instrumental Variables** Estimator
+$$\hat{\beta}_1^{IV}=\frac{\frac{1}{n}\sum_{i=1}^{n}(Z_i-\bar{Z})(Y_i-\bar{Y})}{\frac{1}{n}\sum_{i=1}^{n}(Z_i-\bar{Z})(X_i-\bar{X})}$$
+    
+
+## IV assumptions
+- Assume the following
+- (IV1) Linear Model
+$$Y=\beta_0+\beta_1X + u$$
+- (IV2) Random sampling: $(Y_i,X_i,Z_i)$ drawn i.i.d. from population satisfying linear model assumptions
+- (IV3) Relevance
+$$Cov(Z,X)\neq 0$$
+- (IV4(i)) Exogeneity
+$$Cov(Z,u)=0$$
+- (IV4(ii)) Mean 0 errors
+$$E[u]=0$$
+- Sometimes also assume
+(IV5) Homoskedasticity
+$$E[u^2|Z]=\sigma^2$$ ($\sigma^2$ a finite nonzero constant)
+
+
+## IV asymptotics
+- IV estimator $\hat{\beta}_1^{IV}$ is consistent for $\beta_1$ under (IV1)-(IV4(i))
+- IV estimator of constant term $\hat{\beta}_0^{IV}$ consistent under (IV1)-(IV4)
+- IV estimator $\hat{\beta}^{IV}$ asymptotically normal under (IV1)-(IV4)
+- Standard errors of IV estimator derived in usual way using CLT under (IV1)-(IV5)
+- Formula is in book, and applied by software 
+    - **ivreg** in **AER** library
+- Different formula if residuals are heteroskedastic 
+    - (IV1)-(IV4) hold, but (IV5) doesn't 
+    - Obtain from **vcovHC** command in **sandwich** library
+
+## Example application: Estimating a demand curve
+- Quantity demanded $Y$ is causally affected by price $X$
+    - But also other things, including shifts in demand curve
+- Want estimate of effect of price on demand
+    - Sometimes firms experiment with prices, but rarely
+- Instead, can find instrument $Z$ for price
+    - $Z$ *relevant* if it affects price
+    - $Z$ *exogenous* if independent of any shifts in demand curve 
+- Need something which independently shifts supply curve
+- Idea: instrument $Z$ using  
+    - Random change in tax on item 
+    - Random change in cost of inputs to production
+
+## Example: Cigarette demand
+
+- Let's estimate a demand curve for cigarettes across states (1995 data)
+- Use cigarette tax increases as instrument
+    - Works if tax changes determined by state fiscal needs unrelated to cigarette demand
+- Price elasticity estimated by IV regression of log sales on log price, using tax difference as instrument
+```{r, eval=FALSE}
+ivreg(log(packs) ~ log(rprice) | tdiff, data = c1995)
+```
+- Decompose into reduced form: effect of tax on quantity demanded, divided by first stage: effect of taxes on prices
+- OLS version of estimate gives correlation of price and quantity, but could come from supply or demand
+
+## Example: Cigarette demand (Code)
+```{r, eval=FALSE}
+#Load library containing IV command 'ivreg'
+library(AER)
+# Load data on cigarette prices and quantities
+data("CigarettesSW")
+#Use real prices as X
+CigarettesSW$rprice <- with(CigarettesSW, price/cpi)
+#Use changes in cigarette tax as
+# instrument which shifts supply curve
+CigarettesSW$tdiff <- with(CigarettesSW, (taxs - tax)/cpi)
+#data from different states in 1995
+c1995 <- subset(CigarettesSW, year == "1995")
+```
+
+```{r, echo=FALSE}
+#Load library containing IV command 'ivreg'
+suppressWarnings(suppressMessages(library(AER)))
+# Load data on cigarette prices and quantities
+data("CigarettesSW")
+#Use real prices as X
+CigarettesSW$rprice <- with(CigarettesSW, price/cpi)
+#Use changes in cigarette tax as supply curve shifting instrument
+CigarettesSW$tdiff <- with(CigarettesSW, (taxs - tax)/cpi)
+#data from different states in 1995
+c1995 <- subset(CigarettesSW, year == "1995")
+```
+
+## IV estimate of demand elasticity for cigarettes (code)
+
+```{r, eval=FALSE}
+#To get IV estimate of effect of x on y using
+#  z as instrument syntax is ivreg(y ~ x | z)
+# Effect of log(price) on log(quantity)
+# Elasticity
+fm_ivreg <- ivreg(log(packs) ~ log(rprice)
+                  | tdiff, data = c1995)
+#Obtain (robust) standard errors
+fm_ivreg.results<-coeftest(fm_ivreg,
+         vcov = vcovHC(fm_ivreg, type = "HC0"))
+```
+
+## OLS estimate of demand elasticity for cigarettes (code)
+
+```{r, eval=FALSE}
+#OLS estimate of effect of log(price)
+ #on log(quantity)  with no instrument
+fm_ols <- lm(formula= log(packs) ~
+               log(rprice), data = c1995)
+#Obtain (robust) standard errors
+fm_ols.results<-coeftest(fm_ols,
+    vcov = vcovHC(fm_ols, type = "HC0"))
+```
+
+## Components of IV estimates of demand elasticity for cigarettes (code)
+
+```{r, eval=FALSE}
+# First stage: z on x
+firststage<-lm(formula= log(rprice) ~
+                 tdiff, data = c1995)
+firststage.results<-coeftest(firststage,
+    vcov = vcovHC(firststage, type = "HC0"))
+# Reduced form
+reducedform<-lm(formula= log(packs) ~
+                tdiff, data = c1995)
+reducedform.results<-coeftest(reducedform,
+         vcov = vcovHC(reducedform, type = "HC0"))
+```
+
+## Results of IV estimates of demand elasticity for cigarettes (code)
+
+```{r, eval=FALSE, results="asis"}
+#Display results in big fancy table
+library(stargazer)
+stargazer(fm_ols.results,fm_ivreg.results,
+          reducedform.results,firststage.results,
+    type="html", 
+    title="Cigarette Demand Elasticity: OLS, 
+      IV, Reduced Form, First Stage",
+    header=FALSE, size="tiny",
+    column.labels=c("log(packs)","log(packs)",
+                    "log(packs)","log(price)"),
+    omit.table.layout="n")
+```
+
+## Results of IV estimates of demand elasticity for cigarettes
+
+```{r, echo=FALSE}
+#To get IV estimate of effect of x on y using
+#  z as instrument syntax is ivreg(y ~ x | z)
+# Effect of log(price) on log(quantity)
+# Elasticity
+fm_ivreg <- ivreg(log(packs) ~ log(rprice)
+                  | tdiff, data = c1995)
+#Obtain (robust) standard errors
+fm_ivreg.results<-coeftest(fm_ivreg,
+         vcov = vcovHC(fm_ivreg, type = "HC0"))
+```
+
+```{r, echo=FALSE}
+#OLS estimate of effect of log(price)
+ #on log(quantity)  with no instrument
+fm_ols <- lm(formula= log(packs) ~
+               log(rprice), data = c1995)
+#Obtain (robust) standard errors
+fm_ols.results<-coeftest(fm_ols,
+    vcov = vcovHC(fm_ols, type = "HC0"))
+```
+
+```{r, echo=FALSE}
+# First stage: z on x
+firststage<-lm(formula= log(rprice) ~
+                 tdiff, data = c1995)
+firststage.results<-coeftest(firststage,
+    vcov = vcovHC(firststage, type = "HC0"))
+# Reduced form
+reducedform<-lm(formula= log(packs) ~
+                tdiff, data = c1995)
+reducedform.results<-coeftest(reducedform,
+         vcov = vcovHC(reducedform, type = "HC0"))
+```
+
+```{r, echo=FALSE, results="asis"}
+#Display results in big fancy table
+suppressWarnings(suppressMessages(library(stargazer)))
+stargazer(fm_ols.results,fm_ivreg.results,reducedform.results,firststage.results,
+    type="html", title="Cigarette Demand Elasticity: OLS, IV, Reduced Form, First Stage",
+    header=FALSE, size="tiny",
+    column.labels=c("log(packs)","log(packs)","log(packs)","log(price)"),
+    omit.table.layout="n")
+```
+
+
+## Results
+
+- OLS says 1% difference in prices associated with 1.2% lower cigarette consumption
+    - Not causal effect of changing prices
+- IV says 1% increase in prices (due to change in tax) leads to 1% lower cigarette consumption
+- Justification: states that saw 1 % point increase in tax saw
+    - 3% increase in prices (First stage)
+    - 3% decrease in sales (Reduced form)
+- If tax increases effectively random, can interpret both as causal
+- If tax increases affect demand only through prices, ratio is effect of price on quantity
+- IV elasticity $\neq$ OLS estimate: states with higher cig prices also had other characteristics which reduced cigarette sales
+
+
+## Potential Outcomes Again
+- Let's extend heterogeneous treatment effects model to IV case
+- Recall potential outcomes model of causal effect of binary variable $X\in\{0,1\}$ on outcome $Y$
+$$Y_i=Y^0_i(1-X_i)+Y^1_iX_i$$
+- $Y^0_i$ is value of $Y_i$ given do $X_i=0$
+- $Y^1_i$ is value of $Y_i$ given do $X_i=1$
+- E.g. $X_i$ is a drug, $Y_i$ is a health outcome
+- Difference of conditional averages converges to difference in conditional expectations
+$$\frac{1}{n_1}\sum_{i=1}^{n}Y_iX_i-\frac{1}{n_0}\sum_{i=1}^{n}Y_i(1-X_i)\overset{p}{\to} E[Y_i|X_i=1]-E[Y_i|X_i=0]$$
+
+    - Same as slope in regression of $X$ on $Y$ 
+- If $X_i$ independent of $(Y^0_i,Y^1_i)$, e.g. because $X_i$ assigned randomly difference becomes $E[Y^1_i-Y^0_i]$
+    - Average Treatment Effect (ATE)
+
+
+## Potential Outcomes in IV
+- In IV case, $X_i$ not random, but $Z_i$ is
+    - Both binary $\{0,1\}$
+- E.g., maybe you ran a controlled experiment, giving drug to one group $Z_i=1$, not to other $Z_i=0$
+    - But some people forget to take the drug
+- Likely that people who forget not random
+    - Associated with stress, memory, physical ability, etc
+- Goal is causal effect of $X_i$  on $Y_i$
+- Experiment assigns $Z_i$: told to take the drug, 
+    - Not $X_i$: actually take the drug
+- Use $Z_i$ as instrument for $X_i$
+- Random assignment of IV means $Z_i$ independent of $(Y^0_i,Y^1_i,X^0_i,X^1_i)$
+
+## IV Estimate in Binary Z, Binary X case
+- *First Stage*: Regression of $X$ on $Z$ gives $E[X_i|Z_i=1]-E[X_i|Z_i=0]$
+- Since $Z$ random, this is ATE of Z on X
+- *Reduced form*: Regression of $Y$ on $Z$ gives $E[Y_i|Z_i=1]-E[Y_i|Z_i=0]$
+- Since $Z$ random, this is ATE of Z on Y
+- IV is reduced form over first stage
+$$\hat{\beta}_1^{IV}= \frac{\frac{1}{n_1}\sum_{i=1}^{n}Z_iY_i-\frac{1}{n_0}\sum_{i=1}^{n}(1-Z_i)Y_i}{\frac{1}{n_1}\sum_{i=1}^{n}Z_iX_i-\frac{1}{n_0}\sum_{i=1}^{n}(1-Z_i)X_i}$$
+- Converges to 
+$$\frac{E[Y_i|Z_i=1]-E[Y_i|Z_i=0]}{E[X_i|Z_i=1]-E[X_i|Z_i=0]}$$
+- In constant effects case, this is $\beta$
+    - But what if effects heterogeneous?
+
+## Goal of potential outcome interpretation
+
+- Under *constant treatment effects*, a valid IV gives ATE, independent of characteristics
+- Issue is subjects induced into treatment by IV may respond differently than other subjects when made to take treatment
+    - Drug more/less effective among people already healthier, and so less likely to forget
+    - Students who attend a school after winning a voucher are those who expect it will help them out the most
+- It turns out that, if effects differ, IV can only give you Average Treatment Effect for subpopulation
+- Call this the *Local Average Treatment Effect*, **LATE**
+- Still interesting if we want to give treatment just to this group
+    - Next, will show who this group is
+
+## Causal effect of Z on X
+- In potential outcomes notation, $X$ given $Z$ takes value
+$$X_i=X^0_i(1-Z_i)+X^1_iZ_i$$ 
+- Can distinguish 4 groups
+    - Always Takers: Take drug whether assigned or not
+    $$X^0_i=X^1_i=1$$
+    - Never Takers: Don't take drug whether assigned to or not
+    $$X^0_i=X^1_i=0$$
+    - Compliers: Take drug if assigned, Don't if not
+    $$X^0_i=0,\ X^1_i=1$$
+    - Defiers: Take drug if not assigned, don't take if assigned
+    $$X^0_i=1,\ X^1_i=0$$
+    
+## Reduced form in potential outcomes framework
+- Rewrite reduced form in terms of potential outcomes
+$$E[Y_i|Z_i=1]-E[Y_i|Z_i=0]=$$ $$E[X^1_iY^1_i+(1-X^1_i)Y^0_i|Z_i=1]-E[X^0_iY^1_i+(1-X^0_i)Y^0_i|Z_i=0]$$
+- Use independence: $Z_i$ independent of $(Y^0_i,Y^1_i,X^0_i,X^1_i)$
+$$= E[(X^1_i-X^0_i)(Y^1_i-Y^0_i)]$$
+- Decompose reduced form into effects on the 4 groups
+$$= P(X_i^1=1,X_i^0=0)E[1*(Y^1_i-Y^0_i)|X_i^1=1,X_i^0=0]$$
+$$+P(X_i^1=1,X_i^0=1)E[0*(Y^1_i-Y^0_i)|X_i^1=1,X_i^0=1]$$
+$$+P(X_i^1=0,X_i^0=0)E[0*(Y^1_i-Y^0_i)|X_i^1=0,X_i^0=0]$$
+$$+P(X_i^1=0,X_i^0=1)E[-1*(Y^1_i-Y^0_i)|X_i^1=0,X_i^0=1]$$
+
+## Reduced form in potential outcomes framework, ctd
+- Always takers and never takers unaffected by instrument
+- Reduced form is weighted difference in causal effects on compliers and defiers
+$$E[Y_i|Z_i=1]-E[Y_i|Z_i=0]=$$
+$$= P(X_i^1=1,X_i^0=0)E[1*(Y^1_i-Y^0_i)|X_i^1=1,X_i^0=0]$$
+$$+P(X_i^1=0,X_i^0=1)E[-1*(Y^1_i-Y^0_i)|X_i^1=0,X_i^0=1]$$
+
+## Monotonicity
+- In many cases, reasonable to assume no defiers
+    - E.g. drug only given to treatment group, so no way for control to take it, even though treatment group may sometimes forget
+    - If IV Z is something like "I give you money to do X", rational people will always be no less likely to do X when it is more profitable
+- Can fail if instrument can move outcome in either direction
+    - Judge A gives longer sentences to one group of criminals than Judge B, but shorter to a different group    
+- If monotonicity holds, $P(X_i^1=0,X_i^0=1)=0$ and
+$$E[Y_i|Z_i=1]-E[Y_i|Z_i=0]=$$
+$$P(X_i^1=1,X_i^0=0)E[Y^1_i-Y^0_i|X_i^1=1,X_i^0=0]$$
+- Reduced form is causal effect of $X$ for the compliers, multiplied by probability that the instrument induces compliance
+
+## First stage in potential outcomes framework
+- First stage is $E[X_i|Z=1]-E[X_i|Z_i=0]$
+- Independence means this equals $E[X^1_i]-E[X^0_i]$
+$$= P(X^1_i=1)-P(X^0_i=1)$$
+- Apply law of total probability
+$$= (P(X^1_i=1 \cap X^0_i=1)+P(X^1_i=1 \cap X^0_i=0))$$
+$$-(P(X^0_i=1 \cap X^1_i=1)+P(X^0_i=1 \cap X^1_i=0))$$
+$$= P(X^1_i=1 \cap X^0_i=0)-P(X^0_i=1 \cap X^1_i=0)$$
+- No defiers implies
+$$E[X_i|Z=1]-E[X_i|Z_i=0] = P(X^1_i=1 \cap X^0_i=0)$$
+- First stage estimates proportion of compliers
+
+
+## LATE
+- $E[Y^1_i-Y^0_i|X_i^1=1,X_i^0=0]$ is called the LATE
+    - Local Average Treatment Effect
+- Recovered by $$LATE=\frac{E[Y_i|Z_i=1]-E[Y_i|Z_i=0]}{P(X_i^1=1,X_i^0=0)}$$
+- Probability of compliance $P(X_i^1=1,X_i^0=0)=E[X_i|Z=1]-E[X_i|Z_i=0]$
+$$LATE=\frac{E[Y_i|Z_i=1]-E[Y_i|Z_i=0]}{E[X_i|Z=1]-E[X_i|Z_i=0]}$$
+- This is $\beta^{IV}$
+- Under independence and monotonicity, IV estimates LATE
+- With constant treatment effects, do **not** need monotonicity 
+    - IV measures ATE
+
+## Interpretation
+
+$$\hat{\beta}^{IV}_1\overset{p}{\rightarrow}E[Y^1_i-Y^0_i|X_i^1=1,X_i^0=0]$$
+
+- IV gives causal effect of treatment on compliers
+- This is average treatment effect over a subpopulation
+    - People induced to change their behavior by instrument
+- Maybe not the same as population as a whole
+    - People who remember to take medicine probably healthier than those who forget
+    - Then LATE gives effect of drug on healthier people, not always the same as on all people
+- If policy is to change $X$ for all people, IV only measures the effect if effects are the same on everyone
+- If policy is to induce people to do $X$, by changing $Z$, then IV gives what we want
+
+## Extensions
+- In non-binary instrument case, IV gives weighted average of conditional causal effects over different subgroups
+- See Angrist & Pischke book for many details
+
+## Example: Charter School Effectiveness
+- Policy question
+    - Many states now have privately run but publicly funded schools. 
+    - Do these schools improve learning outcomes? 
+- In certain school districts, admission to school for some students is by lottery
+    - $Z_i=1$ if admitted, $Z_i=0$ if not 
+    - Independent of potential learning outcomes since random
+- Not all who are admitted attend
+    - $X_i=1$ if attending, $0$ otherwise
+- If people who decide to attend differ from those who don't, difference in scores may provide biased measure of causal effects
+- Use IV to estimate causal effect of attending a charter school on Math test scores
+$$\hat{\beta}^{IV}=\frac{\text{Average score, admitted - Average score, not admitted}}{\%\text{ of admitted who attend - }\%\text{ of non-admitted who attend}}$$
+
+## Results (from Angrist and Pischke, Table 3.1)
+- Data from KIPP school in Lynn, Massachussetts, 2005-2008 
+- Sample of 371 students apply to school via lottery
+- 253 admitted, of whom 199 attend 
+- 118 not admitted, of whom 5 attend (got in some other way)
+- First stage: admitted students $199/253 - 5/118= 0.74$ percent increased likelihood of attending
+- Average Math score of lottery winners: 0.00 standard deviations below state mean
+- Average score for non-winners: 0.36 standard deviations below state mean
+- Reduced form: 
+    - Lottery winners have math scores 0.36 standard deviations higher than nonwinners. 
+    - ATE says winning boosts math scores
+- IV estimate: Reduced form/first stage = 0.36/0.74=0.48 standard deviations higher
+
+## Interpretation
+
+- Lottery boosts math scores by $.36\sigma$, and since this can only be coming from going to the school, which only 3/4 of winners did, effect of going to school is $\approx .5\sigma$ units on math tests
+- Constant effects model says $0.48\sigma$ is "the" causal effect of going to charter school for this population
+- If school more or less effective for some students, interpretation more limited
+- Always takers: students who would go even if not admitted 
+    - Probably these are people with involved parents
+    - Likely to differ on education-related characteristics
+- Never takers: students who won't attend even if admitted
+    - Again could differ on education-related characteristics
+- Defiers: students who would only go if not admitted
+    - Seems reasonable to rule this out
+- LATE: Causal effect of charter school for students in group who, if admitted, will choose to attend
+
+## Conclusions
+
+- When instrument available, IV estimator handles endogeneity
+- Linear constant coefficients case: 
+    - Requires **Exogeneity** and **Relevance**
+    - Estimates (constant) effect
+- Heterogeneous treatment effects case
+    - Requires **Independence** and **Monotonicity (No Defiers)**
+    - Estimates **Local Average Treatment Effect**
+        - Average of Treatment Effects for *compliers* only 
+
+
+## Next Class or Two
+
+- Multivariate Instrumental Variables
+    - 2SLS Estimator
+- Testing IV assumptions
+- More IV applications
+
+

@@ -1,0 +1,444 @@
+---
+title: "Time Series I - Data and Models"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+## Today
+
+- Time Series
+    - Data Structure
+    - Regression with time series data
+    - Dependence
+    - Models
+- Covered in Wooldridge Ch. 10-11    
+    
+## Time Series Data
+
+- Instead of random sample from population, have many observations of same object over time
+- Macroeconomic data from one country
+    - GDP, Inflation, Unemployment every month/quarter/year
+- Financial data
+    - Price of S&P, Dow, Nasdaq every 5 minutes for 10 years
+- $Y_t$, $t=1\ldots T$ ordered series of observations of variable $Y$    
+- If observations iid, acts just like random sample
+    - Usually this is false 
+    - Processes evolve in way that depends on time
+- Challenge for standard estimation and inference
+    - Random sampling fails
+- Opportunity to model structure of changes over time 
+    - Learn relationships 
+    - Use historical behavior to predict current and future behavior
+
+## Setup
+
+- Data consists of $T$ ordered observations of variables $Y_t$
+- May have vector $(Y_t,X_t)$, $X_t$ a $k+1\times 1$ vector of predictors
+- Compare to panel data: there have data ordered in time, but many observations of same process across individuals
+- Now can't use info across individuals to learn structure
+- For panel data, allowed variables to be related over time
+    - Saw in unobserved components model, effective sample size is not increased by adding time periods
+    - Can't say much of anything from a single series
+- 1 type of model: even if data not independent, build model from variables that are independent 
+    - Like pooled OLS with independent errors
+- Alternate possibility: "weak dependence"
+    - Occurrences "far in the past" "don't matter much today," can treat long past history as effectively independent observations
+- These are only *models* of the data
+    - May be good or bad decription of series of interest    
+
+## Example: US Quarterly GDP Growth, 1947q2-2018q3 (Code)
+
+```{r, eval=FALSE}
+#Library to download data
+library(pdfetch)
+#Download Seasonally Adjusted Quarterly Real US GDP Growth
+#FRED Series number "A191RL1Q225SBEA" 
+gdpgrowth<-pdfetch_FRED("A191RL1Q225SBEA")
+#Format as Quarterly time series starting 1947q2
+gdpg<-ts(gdpgrowth,start=c(1947,2),frequency=4)
+plot(gdpg, main="Real US GDP Growth, 
+  1947q2-2018q3",xlab="Quarter",ylab="Percent Change")
+```
+
+## Example: US Quarterly GDP Growth, 1947q2-2018q3
+
+```{r, echo=FALSE}
+#Library to download data
+library(pdfetch)
+#Download Seasonally Adjusted Quarterly Real US GDP Growth
+#FRED Series number "A191RL1Q225SBEA" 
+gdpgrowth<-pdfetch_FRED("A191RL1Q225SBEA")
+#Format as Quarterly time series starting 1947q2
+gdpg<-ts(gdpgrowth,start=c(1947,2),frequency=4)
+plot(gdpg, main="Real US GDP Growth, 1947q2-2018q3",xlab="Quarter",ylab="Percent Change")
+```
+
+## Regression
+
+- Relate $Y_t$ to $X_t$ based on values at same time
+- E.g. $Y$ is GDP, $X$ is interest rate
+    - Causal relationship called "IS curve" in macroeconomics
+- Will focus discussion on linear models with time series data
+    - Can do IV, nonlinear/nonparametric regression, MLE, etc
+    - General principles shared
+- Our usual model: $Y_t$ drawn from linear model (TS.1)
+$$Y_t=X_t^{\prime}\beta+u_t$$
+- Random sampling assumption removed
+- Without it, $X_s$ and $X_t$ may be correlated for $s\neq t$
+- Use standard least squares regression $\widehat{\beta}=(\sum_{t=1}^{T}X_tX_t^\prime)^{-1}\sum_{t=1}^{T}X_tY_t$ 
+- What are properties now?
+- 2 approaches 
+    - Make very strong assumptions on $u_t$ to use finite sample theory
+    - Find way to use LLN and CLT for correlated data
+
+
+## Regression Assumptions
+
+- If we can condition on entire sequence of $X_t$, and $u_t$ essentially random, don't need to use any properties of $X$ to describe OLS
+- **Strict Exogeneity** (TS.2)
+$$E[u_t|X_1\ldots X_T]=0\ \forall t$$
+- With (TS.1) and (TS.3) (No multicollinearity of $X_t$, same as before), implies OLS unbiased
+$$E[\widehat{\beta}]=\beta$$
+- Proof unchanged from cross-section case
+- OLS is also Best (Minimum Variance) Linear Unbiased Estimator if we also have
+    - (TS.4) $Var[u_t|X_1\ldots X_T]=Var(u_t)=\sigma^2$ Homoskedasticity
+    - (TS.5) $E[u_s u_t]=0\ \forall s\neq t$ No serial correlation
+- $\widehat{\beta}$ has a normal distribution, and usual $t$ and $F$ tests have exact $t$ and $F$ distributions if we also have
+    - (TS.6) $u_t\sim i.i.d.\ N(0,\sigma^2)$ independent of all $X$
+  
+
+## Implications
+
+- $X_t$ may follow complicated dynamics
+    - But *given* $X$, $Y$ differs only by uncorrelated random noise
+- Any relationship over time in $Y$ is due *only* to the value of $X$
+- Strict Exogeneity
+    - Means no feedback from past $Y$ to future $Y$
+    - Since $X_t$ related to each other need errors unrelated to *any* $X$
+- Above results use finite sample properties of residuals only
+- *No* results show consistency, asymptotic distribution
+    - Without knowing how $X$ changes over time, can't say anything about what $Y$ will do in large samples
+- Absence of relationship between $Y_t$ and $Y_s$ given a function of $X$ more likely if $X$ contains any variable that might relate to $Y$
+- One useful possibility
+    - $Y_t$ depends not just on current $X_t$, but also history of $X$
+    - E.g., changes in interest rate affect GDP not only this quarter, but also for many quarters to come
+
+## Lags, Differences, Etc.
+
+- Past (or sometimes future) values of variables can enter into $X_t$
+- "Lag of $X_t$" takes $X_t$ 1 period back
+    - Denote $X_{t-1}$ as $LX_t$, $X_{t-2}$ as $L^2 X_t$, etc
+- Change or difference in $X_t$ denoted 
+    - $\Delta X_t:=X_t-LX_t$
+- If data is column containing values, create lags by shifting index by one
+- For $X_t$, $LX_t$ to be columns of same length, need to delete first observation of $X_t$: lose one data point
+- Time series data format in $R$ using commands of form $gdp<-ts(gdpvector,start=1947,frequency=quarterly)$
+- Can run regressions using lags, etc. using **dynlm** package
+    - Syntax just like **lm** 
+    - Eg. `dynlm(Y~X+L(X))`
+
+## Distributed Lags
+
+- Regression on lags of $X$ called **distributed lag** regression
+$$Y_t=\beta_0+\beta_1x_t+\beta_2x_{t-1}+\beta_3 x_{t-2}+\ldots + u_t$$
+- Include enough lags so that error term is serially uncorrelated
+- Lets $x_t$ have effect on $Y_t$ today and for multiple future periods
+- Effect of $x_t$ on $Y_{t+h}$ is coefficient on $x_{t-h}$
+- **Impulse Response** describes effect when $x_t$ goes from zero to 1 for one period, then returns to $0$ again, as function of time $h$ from initial *shock*
+- It equals $\beta_1$, $\beta_2$, $\beta_3$, $\ldots$ up to maximum included lag
+- Can also describe effect of *permanent* change when $x_t$ goes from 0 to 1 then stays there as
+    - $\beta_1$, $\beta_1+\beta_2$, $\beta_1+\beta_2+\beta_3$,$\ldots$
+    - Sum of all coefficients is called **long run effect** of permanent change
+    
+
+## Dependent Data
+
+- Regression models can describe how $Y$ changes when $X$ does, but don't tell us how $X$ changes over time
+- Most time series data exhibits serial correlation $Corr(Y_t,Y_s)\neq 0$
+- Serial correlation can reflect 
+    - Changes in observable determinants
+    - Changes in unobserved determinants
+    - Or autonomous dynamics: effect of past values on future values
+- Regardless of whether goal is to summarize time evolution or describe causal relationships, can be useful to model dynamics of a single series
+- Many models exist, linear and nonlinear
+- Will provide a few linear examples
+    - Then describe properties which allow using dependent data in more general regression models
+
+## Autoregression
+
+- Simplest model generating correlation between $Y$ today and $Y$ in past is a (linear) autoregression (AR) model
+    - $Y_t=\rho Y_{t-1}+e_t\ \forall t$
+- $e_t$ uncorrelated over time and satisfies $E[e_t|Y_{t-1}]=0$
+- Linear relationship between $Y$ today and $Y$ last period: regression of $Y$ on itself, hence the name
+- Properties depend on value of $\rho$
+    - If $|\rho|<1$ $Y_t$ is called **stable**
+    - $E[Y_{t}|Y_{t-1}]=\rho Y_{t-1}$, so 
+    - $|E[Y_{t+1}|Y_{t}]|=|\rho Y_t|<|Y_{t}|$, 
+    - In fact $E[Y_{t+h}|Y_t]=E[\rho E[Y_{t+h-1}|Y_t]|Y_t]=\ldots=\rho^hY_t\rightarrow 0$ as $h\rightarrow\infty$
+    - $Y$ returns to its average value over time
+- If $|\rho|\geq 1$, $Y$ wanders around or even explodes
+    - More on this next week
+- Can extend by adding more lags of $Y$, or a constant term so mean is non-zero, or using nonlinear function
+- Stability conditions correspondingly more complicated
+
+## Moving Averages
+
+- Can also build $Y_t$ up from unobservable components
+    - **Moving Average** (MA) Model
+- E.g. $Y_t=e_t+\theta e_{t-1}\ \forall t$, $e_t$ i.i.d. $(0,\sigma_e^2)$ over time
+- $Cov(Y_t,Y_{t-1})=Cov(e_t+\theta e_{t-1},e_{t-1}+\theta e_{t-1})=\theta Cov(e_{t-1},e_{t-1})=\theta\sigma_e^2$
+- $Cov(Y_t,Y_{t-h})=0$ for $h\geq 2$
+- Can add more lags to allow dependence to last longer
+- AR model has MA representation 
+$$Y_t=\rho Y_{t-1}+e_t=\rho (\rho Y_{t-2}+e_{t-1})+e_t=\ldots$$
+$$=e_t+\rho e_{t-1}+ \rho^2 e_{t-2} + \rho^3 e_{t-3} + ...$$
+- Can combine into **ARMA(p,q)** model
+$$Y_t = \rho_1 Y_{t-1} + \rho_2 Y_{t-2} + ... + \rho _ p Y _{t-p} +$$
+$$e_t + \theta_1 e_{t-1}+ \theta_2 e_{t-2}+\ldots+ \theta_q e_{t-q}$$
+- Can describe arbitrary impulse response to unobserved components or pattern of covariances over time in this way
+
+## Plot: AR, MA, and ARMA series (Code 1)
+
+```{r, eval=FALSE}
+tl<-80 #Length of simulated series
+#Initialize random number generator for reproducibility
+set.seed(55) 
+e1<-ts(rnorm(tl)) #standard normal shocks
+theta<-0.7 #MA parameter
+rho<-0.7 #AR parameter
+yAR<-numeric(tl-1)
+yMA<-numeric(tl)
+yARMA<-numeric(tl)
+yMA<-e1+theta*lag(e1)
+for(s in 1:(tl-1)){
+  #AR(1) initialized at 0
+  yAR[s+1]<-rho*yAR[s]+e1[s]
+  #ARMA(1,1) using same shocks
+  yARMA[s+1]<-yARMA[s]+yMA[s]
+}
+```
+
+
+## Plot: AR, MA, and ARMA series (Code 2)
+
+```{r, eval=FALSE}
+#Represent as same length time series
+yAR<-ts(yAR[1:tl-1])
+yARMA<-ts(yARMA[1:tl-1])
+#Collect as Matrix
+simulatedseries<-cbind(yAR,yMA,yARMA)
+#Plot
+ts.plot(simulatedseries,gpars=list(main=
+  "AR(1),MA(1), and ARMA(1,1) Simulated data", 
+  ylab="Series value",lty=c(1,2,3),
+  col=c("red","black","blue")))
+legend("topleft",bty="n",
+  expression("AR(1): rho=0.7","MA(1): 
+  theta=0.7","ARMA(1,1): rho=0.7, theta=0.7"),
+  lty=1:3, col=c("red","black","blue"))
+```
+
+## Plot: AR, MA, and ARMA series
+
+```{r, echo=FALSE}
+tl<-80 #Length of simulated series
+#Initialize random number generator for reproducibility
+set.seed(55) 
+e1<-ts(rnorm(tl)) #standard normal shocks
+theta<-0.7 #MA parameter
+rho<-0.7 #AR parameter
+yAR<-numeric(tl-1)
+yMA<-numeric(tl)
+yARMA<-numeric(tl)
+yMA<-e1+theta*lag(e1)
+for(s in 1:(tl-1)){
+  #AR(1) initialized at 0
+  yAR[s+1]<-rho*yAR[s]+e1[s]
+  #ARMA(1,1) using same shocks
+  yARMA[s+1]<-yARMA[s]+yMA[s]
+}
+#Represent as same length time series
+yAR<-ts(yAR[1:tl-1])
+yARMA<-ts(yARMA[1:tl-1])
+#Collect as Matrix
+simulatedseries<-cbind(yAR,yMA,yARMA)
+#Plot
+ts.plot(simulatedseries,gpars=list(main="AR(1),MA(1), and ARMA(1,1) Simulated data", ylab="Series value",lty=c(1,2,3),col=c("red","black","blue")))
+legend("topleft",bty="n",expression("AR(1): rho=0.7","MA(1): theta=0.7","ARMA(1,1): rho=0.7, theta=0.7"),lty=1:3,col=c("red","black","blue"))
+
+```
+
+## Stationarity and Weak Dependence
+
+- To use a time series inside our standard methods, would really like to have a law of large numbers and central limit theorem
+- These hold for independent and identically distributed data
+    - Each data point has same average
+    - Even when some points differ from it, others likely to differ in opposite direction
+    - So mean is usually close to true average
+- For this to be true of a time series, need a few things
+- First, it must *have* a well-defined average
+    - $E[Y_t]$ and $E[Y_s]$ should be the same
+- Next, correlations cannot be so large that when one point is observed large, you expect entire series to be large
+- Need that future and past observations reflect similar properties
+- And that the far past close enough to unrelated to the present that we can consider it separate information
+- Formally guaranteed by **stationarity** and **weak dependence**
+
+## Stationarity and Weak Dependence: Formal conditions
+
+- (Second order) **Stationarity** means
+    - $E[Y_{t}]=E[Y_{s}]$ for all $t$, $s$
+    - $Cov(Y_{t},Y_{t+h})=Cov(Y_{s},Y_{s+h})$ for all $t$, $s$
+- Shifting $h$ periods leaves mean and covariances unchanged
+- Conditional mean can change over time, but unconditional value shouldn't
+- **Strict stationarity** 
+    - Entire joint distribution is unchanged by shifting time
+- **Weak dependence** requires, in general
+    - $Cov(Y_t,Y_{t+h})\rightarrow 0$ as $h\rightarrow \infty$
+    - Also need convergence to be fast: $\sum_{h=-\infty}^{\infty}|Cov(Y_t,Y_{t+h})|<\infty$ 
+    - Ensures that time average of $Y_t$ satisfies central limit theorem
+- Stationary and weakly dependent series have similar asymptotic properties to $i.i.d.$ data when used in estimators
+
+## Limit theorems under weak dependence
+
+- Suppose data $y_t, t=1:T$ are stationary and weakly dependent
+- Holds, e.g. for MA and stable AR and ARMA series
+- **Ergodic Theorem** (generalizes law of large numbers)
+$$\frac{1}{T}\sum_{t=1}^{T}y_t\overset{p}{\rightarrow}E[y_t]$$
+- Central limit theorem
+$$\frac{1}{\sqrt{T}}\sum_{t=1}^{T}(y_t-E[y_t])\overset{d}{\rightarrow}N(0,\Sigma)$$
+- Where $\Sigma$ is the limit of the variance of the sum, equal to
+$$\Sigma=\sum_{h=-\infty}^{\infty}Cov(y_t,y_{t+h})=Var(Y_t)+2\sum_{h=1}^{\infty}Cov(y_t,y_{t+h})$$
+- Stationarity and weak dependence ensure $\Sigma$ well-defined and finite
+- $\Sigma$ called **long run variance** of series $y_t$
+
+
+## Regression with dependent data
+
+- When $X_t$ and $u_t$ satisfy weak dependence, can obtain consistency, asymptotic normality for regression
+- **Strict exogeneity** $E[u_t|X_1\ldots X_T]=0\ \forall t$ can be weakened to 
+- **contemporaneous exogeneity** $E[u_t|X_t]=0 \forall t$
+- Or as far as $Cov(X_t,u_t)=0$
+- This permits $X_t$ to be related to $u_{t-1}$, for example
+- Allows case where $X_t=Y_{t-1}$
+    - *Autoregression* can be estimated by linear regression
+- Unbiasedness fails: usually substantial bias in finite samples
+- If $u_t$ homoskedastic and has no serial correlation, asymptotic variance has standard formula
+- This can be true if $X_t$ contains all historical information relevant to predicting $Y_t$, possibly including lags of $Y_t$ and $X_t$
+- Otherwise, limit depends on long run variance
+    - Will discuss robust estimates next class
+
+## Time Series Regression: Assumptions
+
+- (TS.1') Linear Model $(X_t,y_t)$ drawn from model $Y_t=X_t^{\prime}\beta+u_t$ and satisfy stationarity and weak dependence
+- (TS.2') No perfect multicollinearity of $X_t$
+- (TS.3') Contemporaneous exogeneity $E[u_t|X_t]=0 \forall t$
+- or (TS 3'') $Cov(X_t,u_t)=0$
+- (TS.4') Contemporaneous homoskedasticity: $Var(u_t|X_t)=\sigma^2$ $\forall\ t$
+- (TS.5') No serial correlation $E[u_tu_s|X_t,X_s]=0$ $\forall\ t\neq s$
+
+## Time Series Regression: Results
+
+ - Under (TS.1'),(TS.2'),(TS.3'') (or (TS.3'), which implies (TS.3'')), have consistency: 
+$$\widehat{\beta}\overset{p}{\rightarrow}\beta$$
+ - Proof is same as before
+    - But by ergodic theorem instead of law of large numbers
+ - Under (TS.1')-(TS.5') have asymptotic normality with usual variance formula
+$$\sqrt{T}(\widehat{\beta}-\beta)\overset{d}{\rightarrow}N(0,\sigma^2(E[X_tX_t^\prime])^{-1})$$
+- Inference is exactly standard: t-statistics, Wald tests, CIs, etc
+- Proof similar to before, using exogeneity and 0 serial correlation, plus time series CLT
+- With heteroskedasticity
+    - Consistent but need robust standard errors
+- With serial correlation, need *another* kind of robust SEs
+
+## Example: Monetary Policy Reaction Function ("Taylor Rule") (Code 1)
+
+```{r, eval=FALSE}
+#Download quarterly series from FRED
+gdppot<-pdfetch_FRED("GDPPOT") # Potential GDP
+fefr<-read.csv("Data/FEDFUNDS.csv") # Downloaded quarterly 
+  #fed funds rate to file in directory
+  # need this file to compile
+ffr<-ts(fefr[,2],start=c(1954,3),frequency=4)
+Lffr<-lag(ffr)
+gdpdef<-pdfetch_FRED("GDPDEF") # GDP Price Deflator
+gdpc1<-pdfetch_FRED("GDPC1") # Real GDP
+```
+
+## Example: Monetary Policy Reaction Function ("Taylor Rule") (Code 2)
+
+```{r, eval=FALSE}
+gap<-ts(100*(gdpc1-gdppot)/gdppot,start=c(1949,2),
+    frequency=4) #Output Gap
+inf<-ts(100*(gdpdef-lag(gdpdef,4))/lag(gdpdef,4),
+    start=c(1947,2),frequency=4) #Inflation
+    # Change from 1 year ago
+#Library for time series regression
+library(dynlm)
+taylorrule<-dynlm(ffr~L(ffr)+inf+gap)
+```
+
+## Example: Monetary Policy Reaction Function ("Taylor Rule")
+
+- Fed sets monetary policy by changing Fed Funds Rate $r_t$
+- Want to know how Fed responds to macroeconomic variables
+- Suggested that good description is that Fed responds to inflation $inf_t$ and output gap (measure of difference in GDP from "potential" level) $gap_t$
+- $r_t$ evolves more slowly than inflation or output, so current value also predictable from past: $r_{t-1}$
+- Regression equation for reaction function is 
+$$r_t=\beta_0+\beta_1 r_{t-1} + \beta_2 inf_t + \beta_3 gap_t + u_t$$
+- Run regression using data from **FRED**
+    - Macroeconomic database for US
+```{r, echo=FALSE}
+#Download quarterly series from FRED
+gdppot<-pdfetch_FRED("GDPPOT") # Potential GDP
+fefr<-read.csv("Data/FEDFUNDS.csv") # Downloaded quarterly fed funds rate to file in directory
+    # need this file to compile
+ffr<-ts(fefr[,2],start=c(1954,3),frequency=4)
+Lffr<-lag(ffr)
+gdpdef<-pdfetch_FRED("GDPDEF") # GDP Price Deflator
+gdpc1<-pdfetch_FRED("GDPC1") # Real GDP
+gap<-ts(100*(gdpc1-gdppot)/gdppot,start=c(1949,2),frequency=4) #Output Gap
+inf<-ts(100*(gdpdef-lag(gdpdef,4))/lag(gdpdef,4),start=c(1947,2),frequency=4) #Inflation, 
+    # Change from 1 year ago
+#Library for time series regression
+suppressWarnings(suppressMessages(library(dynlm)))
+```
+```{r}
+taylorrule<-dynlm(ffr~L(ffr)+inf+gap)
+```
+
+## Estimates (Code)
+
+```{r, eval=FALSE}
+#Display results in table
+library(stargazer)
+stargazer(taylorrule,header=FALSE, 
+  omit.stat=c("ser","adj.rsq"),type="html",
+  title="Fed Funds Rate Policy Rule")
+```
+
+## Estimates
+
+```{r, echo=FALSE, results="asis"}
+#Display results in table
+suppressWarnings(suppressMessages(library(stargazer)))
+stargazer(taylorrule,type="html",header=FALSE, omit.stat=c("ser","adj.rsq"),title="Fed Funds Rate Policy Rule")
+```
+
+## Conclusion
+
+- Time series present another design for data
+- Serial correlation makes usual inference difficult
+- But can *model* serial correlation to describe properties of data
+- With strong exogeneity, can do regressions using time series data and rely on finite sample properties
+- If time series are weak dependent, have modified LLN and CLT
+- Can do regression and get consistency and asymptotics
+- Same results extend to most other estimators we've seen in class
+
+## Next Time
+
+- More time series
+    - Trends, seasonality, integration, failure of weak dependence
+    - Serial Correlation
+    - Inference 

@@ -1,0 +1,613 @@
+---
+title: "Panel Data II"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+
+## Today
+
+- More Panel Data
+- Unobserved Effects Model Continued
+- Estimators
+    - Pooled OLS
+    - First Difference
+    - Fixed Effects 
+    - Least Squares Dummy Variable
+    - Random Effects 
+- Book Chapters
+    - Wooldrige 13: First Differences and Diff-in-Diff
+    - Angrist & Pischke 5: Diff-in-Diff
+    - Wooldridge 14: Fixed Effects, Random Effects
+    
+## Review: Unobserved Effects Model
+
+- Observe panel data with $n$ groups $i$ of size $T$
+- Interest is in effect of $X$ on $Y$, as usual
+- Groups may have characteristics which are shared between members of group, but differ across groups
+    - **Unobserved Heterogeneity** or **Fixed Effects**
+- Incorporate into linear model    
+$$Y_{i,t}=X_{i,t}^{\prime}\beta+a_i+u_{i,t}$$
+
+- Idea: capture that differences in assignment of $X$ may be related to group characteristics
+- Several ways to estimate $\beta$ in this model
+    - Under slightly different assumptions
+
+## Estimators: Pooled OLS
+
+- Simplest way:  just ignore $a_i$, regress $Y$ on $X$ by OLS
+- Ignores group structure
+    - Each $(i,t)$ treated as separate observation
+- Fine so long as $Cov(a_i,X_{i,t})=0$
+- Needs a treatment which is uncorrelated with unobserved characteristics that do not vary over time
+- More likely if substantial set of controls included
+- $v_{i,t}=a_i+u_{i,t}$ becomes residual
+
+<!-- - $\widehat{\beta}$ consistent -->
+
+## Inference in Pooled OLS
+
+- OLS residuals $v_{i,t}=a_i+u_{i,t}$ generally correlated across $t$: 
+$$Cov(v_{i,t},v_{i,s})=Var(a_i)+Cov(u_{i,t},u_{i,s})\neq 0$$
+- Even if idiosyncratic error $u_{i,t}$ independent and homskedastic $Cov(u_{i,t},u_{i,s})=0$ $Var(u_{i,t})=\sigma_u^2$, still have $Var(a_i)=\sigma_{a}^2$ term
+- Omitted time-constant variable causes outcome to be correlated within group even conditional on $X$
+- Need to adjust variance estimates for this: clustering
+- Idea: since outcomes in group related, have effectively smaller number of independent observations
+- Can also have heteroskedasticity across and/or within groups
+- Command **vcovHC(regression, cluster="group")** in **plm** gives clustered (and heteroskedasticity-robust) SEs
+
+
+<!-- ## Special case of Pooled OLS: Binary X -->
+
+<!-- - If X just a time dummy and a constant, model is **event study** -->
+<!-- - If X contains constant, time dummy, treatment group dummy, and interaction, model is **difference in differences** -->
+<!-- - In both cases, unobserved heterogeneity absorbed into constant term -->
+<!-- - Standard OLS estimation, inference -->
+<!-- - For T>2, still wise to adjust SEs for serial correlation -->
+
+## Estimators: First Difference
+
+- If $Cov(X_{it},a_{i})\neq 0$, can avoid unobserved heterogeneity by looking at *changes* instead of *levels*
+$$Y_{i,t}=X_{i,t}^{\prime}\beta+a_i+u_{i,t}$$
+
+- becomes
+
+$$\Delta Y_{i,t}= \Delta X_{i,t}^{\prime}\beta + \Delta u_{i,t}$$
+
+- Where $\Delta Y_{i,t} = Y_{i,t}-Y_{i,t-1}$
+- "The effect of the change in X on the change in Y"
+- Variables which don't change over time disappear: including constant
+- Estimate by OLS on differenced variables
+<!-- - Consistent if changes in $X_{i,t}$ uncorrelated with changes in unobserved factors -->
+<!-- - Residuals only serially uncorrelated under random walk model: use clustered SEs otherwise -->
+
+## Standard Errors
+
+- To have exogeneity in first difference equation, need $E[\Delta u_{i,t}\Delta X_{i,t}]=0$
+- Sufficient for this is **strict exogeneity**:
+    - $E[u_{i,t}X_{i,s}]=0$ for any t,s
+- Says that residuals uncorrelated with current, past, or future covariates
+- Means that future treatment can't depend on past outcomes
+- $\Delta u_{i,t}=u_{i,t}-u_{i,t-1}$ and $\Delta u_{i,t+1}=u_{i,t+1}-u_{i,t}$ both contain $u_{i,t}$
+    - Often means errors are correlated across $t$ within $i$
+    - Need to account for this: cluster standard errors by time
+    - Exception is if $u_{i,t}=u_{i,t-1}+e_{i,t}$ $e_{i,t}\sim\text{i.i.d.}$
+    - Called *random walk* model: growth is i.i.d.
+
+## First Difference Assumptions
+- Just need to impose conditions for OLS to apply to changes
+
+- (FD1) $Y_{i,t}=X_{i,t}^{\prime}\beta+a_i+u_{i,t}$
+- (FD2) $(Y_i,X_i)$ are a random sample from cross section
+- (FD3) No $X_i$ is constant over time, and also no perfect linear relationships between variables
+- (FD4) $E[u_{i,t}|a_i,X_i]=0$ for all t: Strict exogeneity
+- Or (FD4') $E[\Delta u_{i,t} \Delta X_{i,t}]=0$ for $t=2\ldots T$
+- (FD5) $Var(\Delta u_{i,t}|X_{i,t})=\sigma^2$ for all t
+- (FD6) $Cov(\Delta u_{i,t},\Delta u_{i,s}|X_{i})=0$ for all $t\neq s$
+- (FD7) $\Delta u_{i,t}\sim\text{i.i.d.}N(0,\sigma^2)$
+
+## Results
+
+- Just apply usual results for OLS
+- (FD1-4') get consistency
+- (FD1-4) get unbiasedness
+    - Requires $X$ to be random with respect to all periods
+- (FD1-6) get homoskedastic inference
+    - Very strong, requires random walk in residual
+- (FD1-7) get finite sample normal distribution, exact t, F statistics
+
+- Usually don't believe homoskedasticity, no serial correlation, so use robust and clustered standard errors
+
+## Fixed Effects Transform
+
+- Any transform which subtracts out the fixed effect term will produce a valid estimator
+- Instead of subtracting just last period, can subtract the average over all periods
+- $Ÿ_{i,t}=Y_{i,t}-\frac{1}{T}\sum_{t=1}^{T}Y_{i,t}$
+- This is called the **Fixed Effects** transform 
+    - or the **within** transform
+- Apply to both sides of fixed effects model to get
+$$ Ÿ_{i,t}=\ddot{X}_{i,t}^{\prime}\beta +  \ddot{u}_{i,t}$$
+- Have this equation for t in $T-1$ periods, e.g. $t=2\ldots T$ 
+    - One period is redundant
+    - Doesn't matter which period: all numerically identical
+- If $T=2$, estimator is same as first differencing
+- Estimate by OLS again
+
+## Assumptions to use OLS
+
+- Again just need assumptions so OLS works
+- Exogeneity requires $E[\ddot{X}_{i,t}\ddot{u}_{i,t}]=0$ for any t
+- Not quite the same as in FD case
+    - But both implied by strict exogeneity
+- Homoskedasticity requires constant conditional variance of $u_{i,t}$ and also that $Cov(u_{i,t}u_{i,s}|X_i,a_i)=0$
+    - Residuals in *level* are uncorrelated, instead of random walk (strongly correlated)
+    - Can then use usual OLS inference except with sample size in formulas replaced by $n(T-1)$, not $nT$
+- If there is still serial correlation, still use clustered SEs
+    - FE gets rid of $a_i$ but not correlated $u_i$
+
+
+## Fixed Effects Assumptions
+- Just need to impose conditions for OLS to apply to transformed data
+
+- (FE1) $Y_{i,t}=X_{i,t}^{\prime}\beta+a_i+u_{i,t}$
+- (FE2) $(Y_i,X_i)$ are a random sample from cross section
+- (FE3) No $X_i$ is constant over time, and also no perfect linear relationships between variables
+- (FE4) $E[u_{i,t}|a_i,X_i]=0$ for all t: Strict exogeneity
+- Or (FE4') $E[\ddot{X}_{i,t}\ddot{u}_{i,t}]=0$ for $t=2\ldots T$
+- (FE5) $Var(u_{i,t}|X_{i,t})=\sigma^2$ for all t
+- (FE6) $Cov(u_{i,t}, u_{i,s}|X_{i})=0$ for all $t\neq s$
+- (FE7) $u_{i,t}\sim\text{i.i.d.}N(0,\sigma^2)$
+
+<!-- ## FE vs. FD -->
+
+<!-- - With strict exogeneity, same model, FE and FD both consistent, unbiased -->
+<!-- - Exactly the same if T=2 -->
+<!-- - Efficiency depends on degree of serial correlation in residuals -->
+<!-- - If highly serially correlated, FD better -->
+<!-- - If not, FE more efficient -->
+<!-- - If using clustered SEs, both provide valid inference -->
+
+<!-- ## Example: Union status and wages -->
+<!-- ```{r, echo=FALSE} -->
+<!-- #Load Libraries -->
+<!-- suppressWarnings(suppressMessages(library(plm))) -->
+<!-- suppressWarnings(suppressMessages(library(lmtest))) -->
+<!-- suppressWarnings(suppressMessages(library(stargazer))) -->
+<!-- #Load Data -->
+<!-- library(foreign) -->
+<!-- wagepan<-read.dta("http://fmwww.bc.edu/ec-p/data/wooldridge/wagepan.dta") -->
+<!-- #Turn into panel data set -->
+<!-- wagepan.p<-pdata.frame(wagepan, index=c("nr","year")) -->
+<!-- #Create Time dummies -->
+<!-- wagepan.p$yr<-factor(wagepan.p$year) -->
+<!-- ``` -->
+<!-- - Regress log wage on union status along with time invariant (race, previous education) and time-varying (experience, marital status) worker characteristics (and year dummies) by different methods -->
+<!-- ```{r, echo=FALSE} -->
+<!-- #Loaded data set, show what it looks like -->
+<!-- pdim(wagepan.p) -->
+<!-- ``` -->
+<!-- - FE and FD regression can be performed from **plm** package in R -->
+<!-- - Syntax for these regressions is **plm** command -->
+<!--     - model="within" for within/FE transform -->
+<!--     - model="fd" for first difference transform -->
+<!--     - model="pooling" for pooled OLS (no transforming to get rid of unobserved effects, just OLS) -->
+
+
+
+<!-- ## Results -->
+<!-- ```{r, echo=FALSE,results="asis"} -->
+<!-- # Run Pooled OLS -->
+<!-- olsreg<-(plm(lwage ~ union + I(exper^2)+married + -->
+<!--     educ + black + hisp + exper + -->
+<!--     d81+d82+d83+d84+d85+d86+d87, -->
+<!--              data=wagepan.p, model="pooling")) -->
+<!-- # Run First Differences -->
+<!-- fdreg<-(plm(lwage ~ 0+ union + -->
+<!--     I(exper^2)+ married + -->
+<!--       educ + black + hisp +  exper + -->
+<!--       d81+d82+d83+d84+d85+d86+d87, -->
+<!--              data=wagepan.p, model="fd")) -->
+<!-- # Run Fixed Effects -->
+<!-- fereg<-(plm(lwage ~ 0+ union + -->
+<!--      I(exper^2)+ married + educ + black + hisp + -->
+<!--       d81+d82+d83+d84+d85+d86+d87, -->
+<!--              data=wagepan.p, model="within")) -->
+<!-- #fdreg$coefficients #Report FD -->
+<!-- #fereg$coefficients #Report FE -->
+<!-- #olsreg$coefficients #Report OLS -->
+
+<!-- stargazer(fdreg,fereg,olsreg,size="tiny", -->
+<!--     type="latex",header=FALSE,no.space=TRUE, -->
+<!--     title="FD, FE, Pooled OLS", -->
+<!--     column.sep.width=c("1pt"), -->
+<!--     omit=c("educ","black","hisp","d81","d82","d83","d84","d85","d86","d87"), -->
+<!--     #keep=c("union","married","exper^2"), -->
+<!--     omit.stat=c("f","rsq","adj.rsq"), -->
+<!--     omit.table.layout="n#") -->
+<!-- ``` -->
+
+
+<!-- ## Estimators: Fixed Effects -->
+
+<!-- - Alternative to First Differencing when $Cov(X_{it},a_{i})\neq 0$ -->
+<!-- - Fixed effects transform: $\ddot{Y}_{i,t} = Y_{i,t}-\frac{1}{T}\sum_{s=1}^{T}Y_{i,s}$ -->
+<!-- $$Y_{i,t}=X_{i,t}^{\prime}\beta+a_i+u_{i,t}$$ -->
+
+<!-- - becomes -->
+<!-- $$\ddot{Y}_{i,t}= \ddot{X}_{i,t}^{\prime}\beta + \ddot{u}_{i,t}$$ -->
+
+<!-- - Variables which don't change over time disappear -->
+<!--     - including constant -->
+<!-- - Estimate by OLS on transformed variables -->
+<!-- - Consistent if deviations from mean of $X_{i,t}$ uncorrelated with deviations from mean of unobserved factors -->
+<!-- - If $Cov(u_{i,t},u_{i,s})=0$ (no serial correlation) can use usual OLS inference except with sample size in formulas replaced by $n(T-1)$, not $nT$ -->
+<!-- - If there is still serial correlation, still use clustered SEs -->
+<!--     - FE gets rid of $a_i$ but not correlated $u_i$ -->
+
+
+## Estimators: Least Squares Dummy Variable
+
+- Take unobserved coefficients model and replace $a_i$ with dummy variable $d_i=1$ for group $i$, $d_i=0$ otherwise
+- Run OLS regression on augmented equation
+$$Y_{i,t}=X_{i,t}^{\prime}\beta+\sum_{i=1}^{n}a_i d_i+u_{i,t}$$
+
+- Estimator $\widehat{\beta}$ is *numerically identical* to Fixed Effects estimator
+
+- Under homoskedasticity and 0 serial correlation of $u_{i,t}$
+    - OLS standard error formula is correct *so long as* degrees of freedom correction included
+    - i.e., if $X$ is $k$ variables, residual variance estimator is $\frac{1}{nT-K-n}\sum_{i=1}^{nT}\widehat{u}_{i,t}^2$
+    - Accounts for $n$ variables added
+    - Usually want to use robust, cluster-adjusted inference
+
+
+## Incidental Parameters
+
+- Coefficients $a_i$ on dummies are *not* consistently estimated by $\widehat{a}_i$  
+    - Number of coefficients grows exactly with sample size
+    - Consistency, asymptotic normality results fail
+- Reason: only have $T$ observations per individual $i$
+    - Essentially a finite sample problem
+- Under strict conditional mean 0 exogeneity, coefficients unbiased, but variance never goes to 0
+- Coefficient $\widehat{a}_i$ for $i$ is measure of average effect of $i$
+    - But *not* a consistent one
+
+<!-- - $R^2$ coefficient also overstates true predictive power -->
+
+
+<!-- ## Learning about the unobserved heterogeneity -->
+
+<!-- - When LSDV used, $\widehat{a}_i$ *not* consistent -->
+<!--     - But functions of them can be -->
+<!-- - Mean of $\widehat{a}_i$ gives mean of FEs, sample variance gives variance, etc -->
+<!-- - Some panel data software reports mean as "intercept term" -->
+<!--     - Average value when $X$ covariates 0 -->
+<!-- - This is estimate of intercept in untransformed model, not in transformed model -->
+
+## FE vs. FD. vs LSDV
+
+- With strict exogeneity $E[u_{i,t}|X_{i,1},X_{i,2},\ldots,X_{i,T},a_i]=0$ 
+    - FE and FD both consistent, unbiased
+- FE, FD exactly the same if T=2
+- Efficiency depends on degree of serial correlation in residuals
+- If highly serially correlated, FD better
+- If not, FE more efficient
+- If using clustered SEs, both provide valid inference 
+- LSDV is same as FE: easier to do manually
+    - Better to use panel data software: gets standard errors right. 
+- LSDV usually slower to implement, since number of parameters is now huge
+
+## Example: Union status and wages (Code 1)
+
+```{r, eval=FALSE}
+#Load Libraries
+library(plm)
+library(lmtest)
+library(stargazer)
+#Load Data
+library(foreign)
+wagepan<-read.dta(
+"http://fmwww.bc.edu/ec-p/data/wooldridge/wagepan.dta")
+#Turn into panel data set
+wagepan.p<-pdata.frame(wagepan, index=c("nr","year"))
+```
+
+## Example: Union status and wages (Code 2)
+```{r, eval=FALSE}
+# Run Pooled OLS
+olsreg<-(plm(lwage ~ union + I(exper^2)+married +
+    educ + black + exper +
+    d81+d82+d83+d84+d85+d86+d87,
+             data=wagepan.p, model="pooling"))
+# Run First Differences
+fdreg<-(plm(lwage ~ 0+ union +
+    I(exper^2)+ married +
+      educ + black +  exper +
+      d81+d82+d83+d84+d85+d86+d87,
+             data=wagepan.p, model="fd"))
+```
+
+
+## Example: Union status and wages (Code 3)
+
+```{r, eval=FALSE}
+#Run Fixed Effects
+fereg<-plm(lwage ~ union + I(exper^2)+ married +
+  d81+d82+d83+d84+d85+d86+d87, data=wagepan.p, 
+  model="within",index=c("nr","year"))
+#Run Least Squares Dummy Variables
+lsdvreg<-plm(lwage ~ union + I(exper^2)+ married +
+  d81+d82+d83+d84+d85+d86+d87+factor(nr),
+  data=wagepan.p, model="pooling")
+```
+
+## Example: Union status and wages
+```{r, echo=FALSE}
+#Load Libraries
+suppressWarnings(suppressMessages(library(plm)))
+suppressWarnings(suppressMessages(library(lmtest)))
+suppressWarnings(suppressMessages(library(stargazer)))
+#Load Data
+library(foreign)
+wagepan<-read.dta("http://fmwww.bc.edu/ec-p/data/wooldridge/wagepan.dta")
+#Turn into panel data set
+wagepan.p<-pdata.frame(wagepan, index=c("nr","year"))
+```
+- Regress log wage on union status along with time invariant (race, previous education) and time-varying (experience, marital status) worker characteristics (and year dummies) by different methods
+- All can be performed from **plm** package in R
+- Syntax for these regressions is **plm** command 
+    - model="within" for within/FE transform
+    - model="fd" for first difference transform
+    - model="pooling" for pooled OLS (no transforming to get rid of unobserved effects, just OLS)
+    - LSDV uses OLS, but include group as factor
+
+```{r, echo=FALSE}
+# Run Pooled OLS
+olsreg<-(plm(lwage ~ union + I(exper^2)+married +
+    educ + black + exper +
+    d81+d82+d83+d84+d85+d86+d87,
+             data=wagepan.p, model="pooling"))
+# Run First Differences
+fdreg<-(plm(lwage ~ 0+ union +
+    I(exper^2)+ married +
+      educ + black +  exper +
+      d81+d82+d83+d84+d85+d86+d87,
+             data=wagepan.p, model="fd"))
+#Run Fixed Effects
+fereg<-plm(lwage ~ union + I(exper^2)+ married +
+  d81+d82+d83+d84+d85+d86+d87, data=wagepan.p, 
+  model="within",index=c("nr","year"))
+#Run Least Squares Dummy Variables
+lsdvreg<-plm(lwage ~ union + I(exper^2)+ married +
+  d81+d82+d83+d84+d85+d86+d87+factor(nr),
+  data=wagepan.p, model="pooling")
+```
+
+
+## Results (Code 1)
+```{r, eval=FALSE}
+#Get Coefficients and clustered standard errors
+olscoef<-coeftest(olsreg,
+      vcov=vcovHC(olsreg,cluster = "group"))
+fdcoef<-coeftest(fdreg,
+      vcov=vcovHC(fdreg,cluster = "group"))
+fecoef<-coeftest(fereg,
+      vcov=vcovHC(fereg,cluster = "group"))
+lsdvcoef<-coeftest(lsdvreg,
+    vcov=vcovHC(lsdvreg,cluster = "group"))
+```
+
+## Results (Code 2)
+```{r, eval=FALSE}
+#Build Table
+stargazer(olscoef,fdcoef,fecoef,lsdvcoef,size="tiny",
+    type="text",header=FALSE,no.space=TRUE,
+    #title="Panel Data Estimators: Results",
+    column.sep.width=c("1pt"),
+    omit=c("d81","d82","d83","d84",
+    "d85","d86","d87","factor*","Constant"),
+    column.labels=c("pOLS","FD","FE","LSDV"),
+    #keep=c("union","married","exper^2"),
+    omit.table.layout="n#l")
+```
+
+## Results of different methods (All SEs clustered)
+
+```{r, echo=FALSE}
+#Get Coefficients and clustered standard errors
+olscoef<-coeftest(olsreg,vcov=vcovHC(olsreg,cluster = "group"))
+fdcoef<-coeftest(fdreg,vcov=vcovHC(fdreg,cluster = "group"))
+fecoef<-coeftest(fereg,vcov=vcovHC(fereg,cluster = "group"))
+lsdvcoef<-coeftest(lsdvreg,vcov=vcovHC(lsdvreg,cluster = "group"))
+#Build Table
+stargazer(olscoef,fdcoef,fecoef,lsdvcoef,
+    type="text",header=FALSE,no.space=TRUE,
+    #title="Panel Data Estimators: Results",
+    column.sep.width=c("1pt"),
+    omit=c("d81","d82","d83","d84","d85","d86","d87","factor*","Constant"),
+    column.labels=c("pOLS","FD","FE","LSDV"),
+    #keep=c("union","married","exper^2"),
+    omit.table.layout="n#l")
+```
+
+
+## Random Effects Model
+
+- Sometimes regressors *not* correlated with $a_i$
+- This is more likely if you include time-constant variables 
+    - Use these to account for this heterogeneity
+- Could run pooled OLS, but usual standard errors are wrong
+- Also lose efficiency
+    - $a_i$ induces serial correlation of errors  
+- When $u_{i,t}$ are homoskedastic, serially uncorrelated, $a_i$ homoskedastic, know form of serial correlation
+- Most efficient estimator is Feasible Generalized Least Squares: 
+    - Weight pooled OLS by covariances
+- Random Effects is FGLS with error form given by
+$$Var(a_i+u_{i,t})=\sigma_a^2+\sigma_u^2$$ 
+$$Cov(a_i+u_{i,t}, a_i+u_{i,s})=\sigma_a^2$$
+
+## Random Effects Estimator
+
+- RE has representation in terms of **quasi-demeaning**
+
+$$\lambda=1-(\frac{\sigma_u^2}{\sigma_u^2+T \sigma_a^2})^{1/2}$$
+
+$$Y_{i,t}=X_{i,t}^{\prime}\beta+a_i+u_{i,t}$$
+
+- becomes
+
+$$Y_{i,t}-\lambda\bar{Y}_i= (X_{i,t}^{\prime}-\lambda\bar{X}_{i}^{\prime})\beta + v_{i,t}-\lambda\bar{v}_{i}$$
+
+- Because $a_i$ same over time, large average $Y_i$ could come from $\bar{X}_i$ or from $a_i$, 
+    - Best guess of coefficients should depend less on averages, more on things that change over time
+
+## Random Effects Estimator 
+
+- Since $\lambda<1$,time-invariant terms do not disappear
+- But estimates closer to FE (exactly the same if $\lambda=1$, no unobserved heterogeneity)
+- Since $\sigma_u^2$, $\sigma_a^2$ unknown, estimate by using pooled OLS, then taking sample variance of residuals
+- Need (strict) exogeneity for consistency, correctly specified error structure gives efficiency
+- Option **model="random"** in **plm()**
+
+
+## Random Effects Assumptions
+
+- (RE 1) Linear Model $Y_{i,t}=X_{i,t}^{\prime}\beta+a_i+u_{i,t}$
+- (RE 2) $(Y_i,X_i)$ are a random sample from cross section
+- (RE 3) No perfect linear relationships between variables
+- (RE 4) $E[u_{i,t}|a_i,X_i]=0$ for all t: Strict exogeneity and
+    - $E[a_i|X_i]=\beta_0$ No correlation with unobserved heterogeneity
+- (RE5) $Var(u_{i,t}|X_{i}, a_i)=\sigma_u^2$ for all t and $Var(a_i|X_{i})=\sigma_a^2$
+- (RE6) $Cov(u_{i,t},u_{i,s}|X_i,a_i)=0$ for all $t\neq s$
+
+## Results
+
+- (RE1-4) give consistency, unbiasedness
+    - Strict exogeneity and random sampling
+    - Imposes strong condition of 0 correlation with unobserved variables
+- Condition (RE 3) no longer requires getting rid of time-constant variables
+- RE is most efficient estimator if (RE1-6) hold
+    - Homoskedastic, no serial correlation
+- (RE 1-6) also permit asymptotic normality with SE estimate under homoskedastic formula
+- Even without (RE5-6), can do heteroskedasticity and serial correlation robust SEs for T, Wald tests
+
+<!-- - Can do GLS with robust estimates, if desired -->
+
+## Fixed vs Random Effects
+
+- FE/FD robust to correlation with heterogeneity, but if RE assumptions hold, less efficient
+- Can run both, test equality in Hausman test
+- **phtest(fe,re)** in **plm**
+- Alternatively, can write $a_i= \gamma_0+\gamma_1\bar{X}_{1i}+\gamma_2\bar{X}_{2i}+\ldots+\gamma_k\bar{X}_{ki}+r_i$
+- "Correlated random effect" with $E[r_i X_{i,t}]=0$ represents linear fit of heterogeneity onto regressors
+- Including these **between** averages in regression with $X_{i,t}$ by pooled OLS/RE, just get back FE estimate (numerically the same)
+- If $\gamma_j$ terms jointly 0 in Wald test, can't reject standard RE
+
+## Unions and wages: (Code 1)
+
+```{r, eval=FALSE}
+#Compare RE and FD to FE estimates of unions on wages
+#Run Random Effects
+rereg<-plm(lwage ~ union + I(exper^2)+ married +
+             + educ + black + exper +
+  d81+d82+d83+d84+d85+d86+d87, data=wagepan, 
+  model="random",index=c("nr","year"))
+#Run Pooled OLS
+polsreg<-plm(lwage ~ union + I(exper^2)+ married +
+               + educ + black + exper +
+  d81+d82+d83+d84+d85+d86+d87, data=wagepan, 
+  model="pooling",index=c("nr","year"))
+```
+
+## Unions and wages: (Code 2)
+```{r, eval=FALSE}
+#Run First Differences
+fdreg<-plm(lwage ~0+ union + I(exper^2)+ married +
+  d81+d82+d83+d84+d85+d86+d87, data=wagepan, 
+  model="fd",index=c("nr","year"))
+#Construct Coefficients and Clustered SEs
+fecoefClust<-coeftest(fereg,
+      vcov=vcovHC(fereg,cluster = "group"))
+recoefClust<-coeftest(rereg,
+      vcov=vcovHC(rereg,cluster = "group"))
+fdcoefClust<-coeftest(fdreg,
+      vcov=vcovHC(fdreg,cluster = "group"))
+polscoefClust<-coeftest(polsreg,
+    vcov=vcovHC(polsreg,cluster = "group"))
+```
+
+## Unions and wages: (Code 3)
+
+```{r, eval=FALSE}
+#Build Table
+stargazer(fdcoefClust,fecoefClust,
+          recoefClust,polscoefClust,
+    type="text",header=FALSE,no.space=TRUE,
+    column.sep.width=c("1pt"),
+    omit=c("d81","d82","d83","d84",
+      "d85","d86","d87","Constant"),
+    column.labels=c("FD","FE","RE","pOLS"),
+    omit.table.layout="n#l")
+```
+
+## Unions and wages: FD, FE, RE, Pooled OLS (Clustered)
+
+```{r, echo=FALSE}
+#Compare RE and FD to FE estimates of unions on wages
+#Run Random Effects
+rereg<-plm(lwage ~ union + I(exper^2)+ married +
+             + educ + black + exper +
+  d81+d82+d83+d84+d85+d86+d87, data=wagepan, 
+  model="random",index=c("nr","year"))
+#Run Pooled OLS
+polsreg<-plm(lwage ~ union + I(exper^2)+ married +
+               + educ + black + exper +
+  d81+d82+d83+d84+d85+d86+d87, data=wagepan, 
+  model="pooling",index=c("nr","year"))
+#Run First Differences
+fdreg<-plm(lwage ~0+ union + I(exper^2)+ married +
+  d81+d82+d83+d84+d85+d86+d87, data=wagepan, 
+  model="fd",index=c("nr","year"))
+#Construct Coefficients and Clustered SEs
+fecoefClust<-coeftest(fereg,vcov=vcovHC(fereg,cluster = "group"))
+recoefClust<-coeftest(rereg,vcov=vcovHC(rereg,cluster = "group"))
+fdcoefClust<-coeftest(fdreg,vcov=vcovHC(fdreg,cluster = "group"))
+polscoefClust<-coeftest(polsreg,vcov=vcovHC(polsreg,cluster = "group"))
+#Build Table
+stargazer(fdcoefClust,fecoefClust,recoefClust,polscoefClust,
+    type="text",header=FALSE,no.space=TRUE,
+    column.sep.width=c("1pt"),
+    omit=c("d81","d82","d83","d84","d85","d86","d87","Constant"),
+    column.labels=c("FD","FE","RE","pOLS"),
+    omit.table.layout="n#l")
+```
+
+## Comparisons (Code)
+
+```{r,eval=FALSE}
+#Run Hausman test to compare Fixed vs Random
+phtest(fereg,rereg)
+```
+
+## Comparisons
+
+- RE between pooled OLS and FE
+- Need to believe union status uncorrelated with *unobserved* fixed characteristics to trust RE or pooled OLS as consistent
+- If this is believed, RE should be more efficient
+- Can test: run **phtest(fereg,rereg)** to get
+```{r,echo=FALSE}
+phtest(fereg,rereg)
+```
+- Reject null of no correlation: be wary of RE estimates
+- Fact that FD differs suggests possible violation of strict exogeneity (or other model asumption)
+- Timing of joining a union may not be conditionally random
+
+## Next Time
+
+- Nonlinear Models
+
+
+
+
+    

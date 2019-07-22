@@ -1,0 +1,456 @@
+---
+title: "Inference and Causality"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+## Today
+
+- Heteroskedasticity
+- Intro to Causality and Experiments
+
+## Inference with minimal assumptions
+
+- Recall linear model assumptions
+1. In population, $y=\beta_0+\beta_{1}x_{1}+\beta_{2}x_{2}+\ldots+\beta_{k}x_{k}+u$
+2. ${(y_i,\mathbf{x}_i^\prime):i=1 \ldots n}$ are independent random sample of observations following 1
+3. There are no exact linear relationships among the variables $x_0 \ldots x_k$
+- Formulas for inference required additional assumptions
+    - (4) $E(u|\mathbf{x})=0$
+    - (5) **Homoskedasticity** $Var(u|x)=\sigma^2$ a constant $>0$
+- Saw last class that (4) can fail with nonlinear conditional expectations
+    - Replace by (4') $E(u\mathbf{x})=0$ : OLS is best linear predictor
+- Removing (5) or both (4) and (5), what can we say about inference?  
+
+## Heteroskedasticity
+- Assumption (5) requires distribution to take a particular shape
+    - $Var(u|x)=\sigma^2$ is constant: not a function of $x$
+- Says dispersion of deviations from best fitting line not equal at all predictor values
+- Regardless of what you know, your prediction of $y$ given $\mathbf{x}$ is equally accurate on average
+- Often fails: 
+    - If population c.e.f. nonlinear, distribution around line will depend systematically on $\mathbf{x}$
+    - Even in truly linear case, where (4) holds, variance can depend on $\mathbf{x}$
+    - This situation is called **heteroskedasticity** 
+    
+## Data exhibiting linearity but heteroskedasticity (code)
+
+```{r, eval=FALSE}
+#Generate a data set
+x<-runif(1000, min=1, max=7)
+u<-rnorm(1000)*(4*x) #u is a function of x
+y<-1+4*x+u
+#Fit linear regression
+hetreg<-lm(y ~ x)
+#Plot points and OLS best fit line
+plot(x,y,xlab = "x", ylab = "y",
+     main = "Heteroskedastic Linear Relationship")
+abline(hetreg, col = "blue", lwd=2)
+```
+
+## Data exhibiting linearity but heteroskedasticity
+
+```{r, echo=FALSE}
+#Generate a data set
+x<-runif(1000, min=1, max=7)
+u<-rnorm(1000)*(4*x) #u is a function of x
+y<-1+4*x+u
+#Fit linear regression
+hetreg<-lm(y ~ x)
+#Plot points and OLS best fit line
+plot(x,y,xlab = "x", ylab = "y",
+     main = "Heteroskedastic Linear Relationship")
+abline(hetreg, col = "blue", lwd=2)
+```
+    
+## Data exhibiting nonlinear conditional expectation (code)
+
+```{r, eval=FALSE}
+#Generate a data set
+x<-runif(1000, min=1, max=7)
+u<-6*rnorm(1000) #u is not a function of x
+y<-1+4*x+5*cos(3*x)+u
+#Fit linear regression
+hetreg2<-lm(y ~ x)
+#Plot points and OLS best fit line
+plot(x,y,xlab = "x", ylab = "y",
+     main = "Misspecified Relationship")
+abline(hetreg2, col = "blue", lwd=2)
+curve(1+4*x+5*cos(3*x),add=TRUE,col="red",lwd=2)
+```
+
+## Data exhibiting nonlinear conditional expectation
+
+```{r, echo=FALSE}
+#Generate a data set
+x<-runif(1000, min=1, max=7)
+u<-6*rnorm(1000) #u is not a function of x
+y<-1+4*x+5*cos(3*x)+u
+#Fit linear regression
+hetreg2<-lm(y ~ x)
+#Plot points and OLS best fit line
+plot(x,y,xlab = "x", ylab = "y",
+     main = "Misspecified Relationship")
+abline(hetreg2, col = "blue", lwd=2)
+curve(1+4*x+5*cos(3*x),add=TRUE,col="red",lwd=2)
+```
+
+
+## Implications of heteroskedasticity
+- Conditional distribution of y given x now varies
+    - $Var(u|\mathbf{x}):=\sigma^2(\mathbf{x})$
+- Gauss Markov assumptions fail, OLS is not MLE
+- OLS no longer efficient
+- But method of moments interpretation still works
+- We still have consistency: can we do inference?
+    - Yes, CLT still holds, with different variance
+    - Need new variance estimator to make tests/CIs
+
+## Limit Distribution under Heteroskedasticity: Univariate Case
+
+- Under linearity
+$$\hat{\mathbf{\beta}_{1}}:=\beta_1+ \frac{\sum_{i=1}^{n}(\mathbf{x}_{i}-\bar{x})u_i}{\sum_{i=1}^{n}(\mathbf{x}_{i}-\bar{x})^2}$$
+- Rescale by $\sqrt{n}$ to get $$\sqrt{n}(\hat{\mathbf{\beta}}-\beta)= \frac{\frac{1}{\sqrt{n}}\sum_{i=1}^{n}(\mathbf{x}_{i}-\bar{x})u_i}{\frac{1}{n}\sum_{i=1}^{n}(\mathbf{x}_{i}-\bar{x})^2}$$
+- Apply CLT, LLN, obtain $$\sqrt{n}(\hat{\beta}_{1}-\beta_{1})\overset{d}{\rightarrow}N(0,\Sigma_{11})$$
+- $$\Sigma_{11}:=\frac{E[u_{i}^2(x_{i}-E[x_{i}])^2]}{Var^2(x_i)}$$
+
+## Eicker-Huber-White Robust Standard Errors
+
+- $$\Sigma_{11}=\frac{E[u_{i}^2(x_{i}-E[x_{i}])^2]}{Var^2(x_i)}=\frac{E[E[u_{i}^2|\mathbf{x}](x_{i}-E[x_{i}])^2]}{Var^2(x_i)}$$
+- Replace means by sample averages to get estimate
+- Estimated errors consistent without exact linearity or homoskedasticity
+- Gives valid (approximate) CIs, tests, etc under (1-3), (4')
+- Works whether linear or not, homoskedastic or not, hence "robust"
+- Multivariate case similar, see bonus slides
+- Implemented in **R** using **sandwich** command
+<!-- - Under homoskedasticity, $\Sigma_{11}$ simplifies to $\frac{\sigma^2}{Var(x_i)}$
+- Estimate using sample variances of $\hat{u}_i$, $x_i$ -->
+
+## Wage predictions with and without robust SEs (Code 1)
+
+```{r, eval=FALSE, results="asis"}
+# Obtain access to data sets used in our textbook
+library(foreign) 
+#Load library to make pretty table
+library(stargazer)
+# Import data set of education and wages
+wage1<-read.dta(
+  "http://fmwww.bc.edu/ec-p/data/wooldridge/wage1.dta")
+# Regress log wage on years of education and experience
+wageregression2 <- lm(formula = lwage ~ educ + 
+                  exper, data = wage1)
+#Load library to calculate Robust SEs
+library(sandwich)
+# Calculate heteroskedasticity-consistent (HC) estimate 
+Sigmahat<-vcovHC(wageregression2,type="HC0") 
+#type chooses scaling with some degrees of freedom 
+#correction: exact choice doesn't matter in large samples
+```
+
+## Wage predictions with and without robust SEs (Code 2)
+
+```{r, eval=FALSE, results="asis"}
+#Load library to implement tests
+library(lmtest)
+# Test coefs using robust s.e.s
+robustwagereg<-coeftest(wageregression2,
+              df=Inf,vcov=Sigmahat)
+# df=Inf means use critical values from Normal 
+# distribution, equivalent to t dist with 
+# infinite degrees of freedom)
+
+#Plot comparison
+stargazer(wageregression2,robustwagereg,
+    type="html",       
+    header=FALSE,omit.stat=c("adj.rsq","ser","F"),
+    font.size="tiny",digits=5,column.labels = 
+    c("Homoskedastic Error Formula", 
+      "Heteroskedastic Error Formula"),
+    model.names=FALSE, 
+    title="Wage Regression with SE Estimates")
+```
+
+## Wage predictions with and without robust SEs
+
+```{r, echo=FALSE, results="asis"}
+# Obtain access to data sets used in our textbook
+library(foreign) 
+#Load library to make pretty table
+suppressWarnings(suppressMessages(library(stargazer))) 
+# Import data set of education and wages
+wage1<-read.dta(
+  "http://fmwww.bc.edu/ec-p/data/wooldridge/wage1.dta")
+# Regress log wage on years of education and experience
+wageregression2 <- lm(formula = lwage ~ educ + exper, data = wage1)
+
+#Load library to calculate Robust SEs
+suppressWarnings(suppressMessages(library(sandwich)))
+# Calculate heteroskedasticity-consistent (HC) estimate 
+Sigmahat<-vcovHC(wageregression2,type="HC0") 
+#type chooses scaling with some degrees of freedom correction: exact choice doesn't matter in large samples
+
+#Load library to implement tests
+suppressWarnings(suppressMessages(library(lmtest))) 
+# Test coefs using robust s.e.s
+robustwagereg<-coeftest(wageregression2,df=Inf,vcov=Sigmahat)
+# df=Inf means use critical values from Normal distribution (equivalent to t dist with infinite degrees of freedom)
+
+#Plot comparison
+stargazer(wageregression2,robustwagereg,type="html", header=FALSE,omit.stat=c("adj.rsq","ser","F"),font.size="tiny",digits=5,column.labels = c("Homoskedastic Error Formula", "Heteroskedastic Error Formula"),model.names=FALSE, title="Wage Regression with SE Estimates")
+```
+
+
+
+## Hypotheses tests under heteroskedasticity
+
+- For individual coefficients $\frac{\hat{\beta}_j-\beta_j}{\hat{S.E.}_{robust}}\overset{d}{\rightarrow}N(0,1)$
+- Can use standard t-statistic and test with modified standard error estimate
+- R commands: **SE<-vcovHC(regression)** produces standard errors, **coeftest(regression,vcov=SE,df=inf)** produces tests and p-values
+- For testing multivariate restrictions, F-test no longer valid
+- As an alternative, can use *Wald test* statistic $W_n$
+- $W_n$ is a sum of squares of unrestricted coefficients $\hat{\beta}$ weighted by $\hat{\Sigma}_{robust}$
+    - See bonus slides for exact formula
+    - If robust variance replaced by nonrobust variance, equivalent to F-test
+- Under $H_0$ with $q$ linear restrictions, $W_n\overset{d}{\rightarrow}\chi^2_q$
+    - "Chi-squared distribution with q degrees of freedom"
+- R command: **waldtest** in library **lmtest** or **linearHypothesis** in library **car**
+      
+
+## Causality
+
+- Probability is language of things that happen
+    - When X happens, Y also happens
+- Causality is the language of things that could happen, if something were different
+    - If I do X, Y will happen
+- Difference is between 
+    - Factual outcomes: there is some process in the world which leads to data X and Y
+    - Counterfactual outcomes: replace the process generating X with a new process
+- Example
+    - When gas is expensive, people drive less
+    - If we raise the tax on gasoline, people will drive less
+    
+## Education Example again
+
+- Saw in classes 1-3 that people with more education tend to have higher wages
+- Causal question: if I decide to get more education, will it raise my wages?
+- If you could observe yourself (or people just like you) who were made to study more and not study more, you could compare
+- This is idea behind **experiments**
+    - To see what happends when you change something, change it!
+    
+## Notation
+
+- Already have notation for factual outcomes: probability
+    - $X$ and $Y$ drawn from joint distribution $P(X,Y)$
+    - This can be rewritten as $P(Y|X)P(X)$ by conditional probability
+- Need new notation for counterfactual outcomes: what happens to $Y$ if we do $X$, i.e. replace the process generating $X$ with $X$ set at some particular value $x$
+    - $Y^x$ is *potential outcome*: value of what $Y$ would be in world where $X$ set to $x$ 
+    - Distribution $P(Y^x)$ of $Y^x$ called $P(Y|do(X=x))$
+    - This may or may not coincide with $P(Y|X=x)$, observed distribution of $Y$ in situations when $X=x$
+    
+    
+## Causal Models
+
+- How do $P(Y|X=x)$ and $P(Y|do(X=x))$ relate?
+- We need a model of the world 
+    - There are many things in the world that happen, some of which correspond to causal actions: some variable sets the value of some other variable at some level
+- A model which describes these is called "structural" or "causal"
+- Such a model will consist of equations specifying $P(Y|do(X=x))$ for different sets of variables $X$ and $Y$, up to a set of *parameters* $\theta$
+- Model will also specify distribution over *observed* events $P(Y,X;\theta)$ given underlying causal structure
+- Main task of causal inference is **identification**
+  - Given $P(Y,X)$ recover (some information about) the parameters $\theta$ of the causal model
+  
+## A Randomized Experiment
+
+- Consider data generated by an **experiment**, in which $X$ is set by the experimenter randomly, drawn from a distribution $P(X)$ independently from all other variables related to outcome $Y$
+- $Y$ is the *outcome variable*, $X$ is called the *treatment*
+- Suppose we model what $Y$  *would* be if $X$ set to $x$ as $$Y^x=f(x,U)$$
+- $U\sim P_U(U)$ describes all variables other than $X$ affecting $Y$
+- Because set by experimenter, $X\sim P_X(X)$ with $X\perp U$
+    - This implies $X\perp Y^x$
+- Finally, assume *causal consistency* $Y=Y^X$ 
+    - Observed outcome is what it would be if we set $X$ to its observed value
+- The *parameters* of model are $f(.,.)$, $P_X(X)$, and $P_U(U)$  
+
+## Identifying Causal Effects
+- Assume in above model we observe $P(Y,X)$ 
+    - $U$ is an *unobserved* or *latent* variable
+- In this model, $$P(Y<z|X=x)=P(Y^X<z|X=x)$$
+$$=P(Y^x<z)$$
+$$=P_U(f(x,U)<z)$$
+- Line 1 by causal consistency, line 2 by independence, and line 3 by our structural model
+- $P(X)=\int P(Y,X)dY$ and $P(Y|X)=\frac{P(Y,X)}{P(X)}$ come from data
+- $P(Y^x)$ is identified: can write it as a function of $P(Y,X)$
+- Experiments allow us to learn something about causal effects
+
+## Going from identification to estimation
+
+- Above result says that if we knew $P(Y,X)$ in experimental population, could get distribution of potential outcomes
+- To learn $P(Y,X)$ need to estimate it
+- Need 2 additional assumptions
+- We have a (large) random sample drawn from population where counterfactual distributions are the same
+    - "external validity": experimental setting should correspond to setting of interest
+- Observations should be independent, to satisfy L.L.N.
+    - Requires "No Interference" between units
+    - One person's job training shouldn't affect another's wages
+    
+
+## What we can't learn from experiments
+
+- Experiments can tell us distribution of potential outcomes $Y^x$ for all $x$ studied
+- This is not all we might want to know
+    - Without observing other variables $U$ or knowing something about $f(.,.)$, can't say much about effects of $U$
+    - We don't manipulate $U$ so we can't say what its effect is
+- Usually can't learn *realization* of $Y^x$ for $X\neq x$
+    - Know its distribution, but not its value
+- E.g.: can never learn what would happen to **you** if you got more education, just distribution of what could happen  
+    
+## Non-experimental data
+- Without explicit causal assignment, much less believable that $X$ is unrelated to other variables affecting $Y$
+- Maybe unobserved variable causes $Y$ and $X$ or $Y$ and $X$ both cause unobserved variable
+- Can still write $Y^x=f(x,U)$ and $Y=Y^X$
+- But now, instead of $X$ set at a particular value, have some process generating a joint distribution $$(X,U)\sim P(X,U)$$ not in general independent
+- In general $P(Y|X)\neq P(Y|do(X))$
+- Ex: P(Y=Rain today|X=people carrying umbrellas) is increasing function in X, but P(Rain|do(carry an umbrella)) is constant in X
+
+## Special case: binary treatment
+
+- Let $X\in{0,1}$ be the treatment whose effect we want to measure
+- Model $Y^x=f(x,U)$ can now be expressed as $Y^0:=f(0,U)$, $Y^1:=f(1,U)$
+- Each unit $i$ sampled has values $Y_i^0=f(0,U_i)$ and $Y_i^1:=f(1,U_i)$
+- **Treatment effect** for $i$ is defined as $Y_i^1-Y_i^0$
+- Causal consistency says observations given by $Y_i=Y_i^0 1\{X_i=0\}+Y_i^1 1\{X_i=1\}$
+- Only observe actual outcome $Y_i^{X_i}$, never counterfactual outcome $Y_i^{1-X_i}$
+- Fundamental problem of causal inference
+    - Only see what was, not what might have been
+
+
+## Learning about treatment effects
+
+- Usually interested in learning about features of distribution of treatment effects
+- Parameter of interest: 
+    - **Average Treatment Effect** (ATE) $E[Y_i^1-Y_i^0]$
+- Let's see why this is hard to learn about
+- Consider naïve comparison: difference in conditional means $E[Y_i|X_i=1]-E[Y_i|X_i=0]$
+- If we have a sample of a population $(Y_i,X_i)$ with $n_0$ units with $X_i=0$ and $n_1$ with $X_i=1$, we can construct estimate of this by
+$$\frac{1}{n_1}\sum_{i=1}^{n}Y_i 1\{X_i=1\}-\frac{1}{n}\sum_{i=1}^{n_0}Y_i 1\{X_i=0\}$$
+
+## Bias in naïve estimate of causal effects
+$$E[Y_i|X_i=1]-E[Y_i|X_i=0]=E[Y_i^1|X_i=1]-E[Y_{i}^{0}|X_i=0]$$
+Add and subtract $E[Y_i^0|X_i=1]$
+$$=\stackrel{\text{ATT}}{E[Y_i^1-Y_i^0|X_i=1]}+\stackrel{\text{"selection bias"}}{(E[Y_i^0|X_i=1]-E[Y_i^0|X_i=0])}$$
+
+- First term is **ATT** "average treatment effect on the treated"
+    - For those assigned to treatment group, causal effect of the treatment
+    - May differ from ATE if treatment assigned to groups for whom efficacy differs
+- Second term is **selection bias**
+    - Difference in baseline outcome levels between group selected for treatment and group not selected
+    - Nonzero if treatment and control group systematically differ in ways relevant to the outcome
+    
+## Example: Job Training and Earnings
+- US runs many job training programs for low skill workers
+- Goal is to get them back from bad economic situation to find higher-paying work
+- Is training effective? Hard to tell
+$$E[\text{earnings|training}]-E[\text{earnings|no training}]=$$
+$$E[\text{earnings change|do(training),trained}]+$$
+$$(E[\text{untrained earnings|trained}]-E[\text{untrained earnings|not trained}])$$
+- Want to know effectiveness of program
+- First term gives this, at least for participants
+- Problem is, second term is probably very negative
+    - People get job training because they have a bad job, or no job at all
+    - On average, those who get training are those with lower untrained earnings    
+    
+## Experiments and treatment effects
+
+- Suppose treatment assigned randomly: $(Y_i^0,Y_i^1) \perp X_i$
+- Independence means conditional distributions same as unconditional
+- Selection bias now $$E[Y_i^0|X_i=1]-E[Y_i^0|X_i=0]=E[Y_i^0]-E[Y_i^0]=0$$
+- ATT now $$E[Y_i^1-Y_i^0|X_i=1]=E[Y_i^1-Y_i^0]=\text{ATE}$$
+- By L.L.N. Difference in means consistently estimates ATE for randomized experiments
+- In small samples, estimate not exact
+    - May have drawn sample where $U_i$ differ between treatment and control groups
+
+<!-- ## Covariate balance -->
+<!-- - One way to check if a random assignment has been successful: -->
+<!-- - See if treatment independent of *observable* characteristics -->
+<!-- - Run any test to see if treatment group and control group differ in distribution -->
+<!-- - If differences exist, even if due to chance, these could result in differences in outcome not attributable to treatment -->
+<!-- - As sample sizes grow, less and less likely with true randomization, but this is source of finite sample error that can be investigated    -->
+
+## Random coefficients
+- Write potential outcomes model in more familiar form
+$$Y_i=Y_i^0+(Y_i^1-Y_i^0)X_i$$
+- Define $\beta_{0,i}=Y_i^0$, $\beta_{1,i}=Y_i^1-Y_i^0$, then
+$$Y_i=\beta_{0,i}+\beta_{1,i}X_i$$
+- Slope is treatment effect, intercept is value if not treated
+- Result is a linear model with *random coefficients*
+- Like linear model, but slope terms no longer constant
+
+## Relating to standard linear model
+- Taking averages, can write as 
+    - $\beta_{0,i}:=\bar{\beta}_0+e_{0i}$ 
+    - $\beta_{1,i}:=\bar{\beta}_1+e_{1i}$
+    - $E[e_{0i}]=E[e_{1i}]=0$
+- Random coefficients model becomes
+$$Y_i=\bar{\beta}_0+\bar{\beta}_1X_i+e_{0i}+X_ie_{1i}$$
+- A standard linear model with heteroskedastic errors
+- Slope coefficient $\bar{\beta}_1$ is ATE
+- *Endogeneity*: under nonrandom assignment, residual may be correlated with $X_i$
+
+## Estimation
+
+- If X assigned randomly, $X_i\perp e_{0i}$ (no selection bias) and $X_i\perp e_{1i}$ (treatment effect independent of treatment assignment)
+- Model becomes standard linear model satisfying Assumptions (1-4)
+- $\hat{\beta}_1$ OLS estimator same as difference in means
+- Heteroskedasticity: residual $e_{0i}+X_ie_{1i}$ has variance which depends on $X$ so long as $e_{1i}\neq 0$ ("heterogeneous treatment effects")
+- OLS with robust standard errors gives valid inference on ATE for experimental data
+- Equivalent to two-sample t-test on difference in means with unequal variances
+    
+
+## Next class
+
+- Examples
+- Causality in multivariate setting
+- Read Angrist Chapter 2
+
+## (Bonus 1): Standard errors under heteroskedasticity
+
+- Recall Multivariate OLS formula
+$$\hat{\mathbf{\beta}}:=\beta+ (\sum_{i=1}^{n}\mathbf{x}_{i}\mathbf{x}_{i}^\prime)^{-1}\sum_{i=1}^{n}\mathbf{x}_{i}u_i$$
+- Rescale by $\sqrt{n}$ to get $$\sqrt{n}(\hat{\beta}-\beta)=(\frac{1}{n}\sum_{i=1}^{n}\mathbf{x}_{i}\mathbf{x}_{i}^\prime)^{-1}\frac{1}{\sqrt{n}}\sum_{i=1}^{n}\mathbf{x}_{i}u_i$$
+- Second part of second term looks like sum used in CLT
+- It has mean $E[\mathbf{x}_{i}u_{i}]=0$ and variance $E[u_{i}^2\mathbf{x}_{i}\mathbf{x}_{i}^{\prime}]$
+- This equals $E[E[u_{i}^2\mathbf{x}_{i}\mathbf{x}_{i}^{\prime}|\mathbf{x}]]=E[E[u_{i}^2|\mathbf{x}]\mathbf{x}_{i}\mathbf{x}_{i}^{\prime}]$
+
+## (Bonus 2) Limiting variance
+
+- Above results and CLT imply $$\frac{1}{\sqrt{n}}\sum_{i=1}^{n}\mathbf{x}_{i}u_i\overset{d}{\rightarrow}N(0,E[E[u_{i}^2|\mathbf{x}]\mathbf{x}_{i}\mathbf{x}_{i}^{\prime}])$$
+- By L.L.N., (3), and continuity  $\text{plim}(\frac{1}{n}\sum_{i=1}^{n}\mathbf{x}_{i}\mathbf{x}_{i}^\prime)^{-1}=(E[\mathbf{x}_{i}\mathbf{x}_{i}^\prime])^{-1}$
+- Next, if M is a $k+1\times k+1$ matrix and $v$ is a $k+1\times 1$ random vector, fact that $Var(ax+by)=a^{2}Var(x)+b^{2}Var(y)+2abCov(x,y)$ plus mechanics of matrix multiplication imply $Var(Mv)=MVar(v)M^{\prime}$
+- Slutsky's theorem: if $\hat{a}\overset{p}{\rightarrow}a$ a constant and $\hat{b}\overset{d}{\rightarrow}b$ a random variable, then $(\hat{a},\hat{b})\overset{d}{\rightarrow}(a,b)$
+
+## (Bonus 3) Sandwich formula
+- The above results imply 
+$$\sqrt{n}(\hat{\beta}-\beta)\overset{d}{\rightarrow}N(0,\Sigma)$$
+- where
+$$\Sigma:=(E[\mathbf{x}_{i}\mathbf{x}_{i}^\prime])^{-1}E[E[u_{i}^2|\mathbf{x}]\mathbf{x}_{i}\mathbf{x}_{i}^{\prime}](E[\mathbf{x}_{i}\mathbf{x}_{i}^\prime])^{-1}$$
+- "Sandwich" formula since outer terms are the same
+- Replace expectations by averages, $u_i$ by $\hat{u}_{i}$ to get estimates
+
+
+## (Bonus 4) Wald Test Formula
+
+- $H_0: R\beta=r$, $H_1: R\beta\neq r$ for $R$ a $q\times k+1$ matrix consisting of $q$ linear combinations of coefficients
+- e.g. $\beta_0-\beta_2=0$, $\beta_3=0$ has $R_{1}=[1,0,-1,0]$, $R_{2}=[0,1,0,0]$, $r=[0,0]'$
+- Robust variance estimate is $\hat{\Sigma}=(\frac{1}{n}\sum_{i=1}^{n}x_ix_i^\prime)^{-1}(\frac{1}{n}\sum_{i=1}^{n}\hat{u}_i^2x_ix_i^\prime)(\frac{1}{n}\sum_{i=1}^{n}x_ix_i^\prime)^{-1}$
+- Wald statistic is
+$$W_n:=n(R\hat{\beta}-r)^{\prime}(R\hat{\Sigma}R^{\prime})^{-1}(R\hat{\beta}-r)$$
+
+- Idea: $(R\hat{\Sigma}R^{\prime})^{-1/2}\sqrt{n}(R\hat{\beta}-r)\overset{d}{\rightarrow}N(0,I_q)$ under $H_0$
+- Inverse is multivariate equivalent of dividing by the standard deviation
+- $\chi^2_q$ is defined as sum of squares of $q$ standard normal random variables
+
+
+
+
+

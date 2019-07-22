@@ -1,0 +1,470 @@
+---
+title: "Discrete Outcome Models"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+## Today
+
+- More on discrete outcome models
+- Can define a model around any conditional distribution
+    - Hopeless to give complete accounting
+- Instead mention a bunch of commonly used examples
+    - Describe shared principles
+- "Zoo" of nonlinear models
+    - Probit, Logit, Linear Probability Model
+    - Extensions and Alternatives
+    - Multinomial/Nested/Ordered Logit
+    - Poisson Regression
+    - Tobit
+    
+## Binary outcome/Discrete Choice Models
+
+- Find relationship between regressors $X$ and outcome $Y$
+- $Y$ is binary: 0 or 1, Yes/No, Choice A/Choice B
+- Any binary variable must have a (conditional) Bernoulli distribution
+    - $P(Y=1|X)=p(X)$, $P(Y=0|X)=1-p(X)$
+- With a random sample, can obtain a likelihood function by assuming a model for $p(X,\theta)$
+- Estimate by maximizing log likelihood     
+    - $\ell(Y,X,\theta)=\sum_{i=1}^{n}(Y_i\log(p(X_i,\theta))+(1-Y_i)\log(1-p(X_i,\theta)))$
+- Saw last class **Random Utility Model** $Y_i=1\{X_i^\prime\beta>u_i\}$
+    - **Latent variable** $y_i^*=X_i^\prime\beta-u_i$ interpretable as relative utility of 1 instead of 0
+    - Choose $Y_i=1$ if $y_i^*\geq 0$
+    - Gives $p(X,\theta)=F(X^\prime\beta)$ for $F$ the CDF of unobserved heterogeneity $u$
+
+## Probit and Logit as MLE
+
+- Probit model assumes $F(x)=\Phi(x)=\int_{-\infty}^{x}\frac{1}{\sqrt{2\pi}}exp(-u^2/2)du$
+- Logit model assumes $F(x)=\frac{exp(x)}{1+\exp(x)}$
+- Fully specifies conditional likelihood as function of data and parameters
+- If conditional probability of outcome drawn from this form, for some $\beta$, MLE consistent, asymptotically normal, and efficient
+- Recall, consistency of MLE needs
+    - Identification: $\ell(Y,X,\beta^*)\neq\ell(Y,X,\beta)$ for $\beta\neq\beta^*$ with positive probability
+    - Uniform convergence to expected likelihood 
+        - Guaranteed so long as dimension of $\beta$ fixed and finite
+- Asymptotic normality needs above and
+    - Twice differentiability of log likelihood (holds for forms above)
+    - Uniform convergence of derivatives (also guaranteed) 
+- Efficiency needs above and correct specification
+    - Binary outcome ensures likelihood truly is binomial
+    - Form of $p(X,\theta)$ must equal $P(Y=1|X)$
+
+## MLE Results
+
+- If $P(Y=1|X)=F(X^\prime\beta^*)$ for some $\beta^*$, MLE satisfies all of above conditions so long as there is no multicollinearity in $X$
+- Asymptotic variance of $\widehat{\beta}_{MLE}$ is given by sandwich formula in terms of first and second derivatives 
+- Under correct specification, many terms in this formula simplify, and it can be estimated as
+$$(\sum_{i=1}^{n}\frac{[f(X_i^\prime\widehat{\beta})]^2X_iX_i^\prime}{F(X_i^\prime\widehat{\beta})[1-F(X_i^\prime\widehat{\beta})]})^{-1}$$
+- Under incorrect specification, $\widehat{\beta}_{MLE}$ converges to the value which maximizes the expected log likelihood under the true conditional distribution
+- Asymptotic variance given by sandwich formula
+    - But cancelations do not occur
+- Use libraries $sandwich$ and $lmtest$, and command **vcov=vcovHC(mylogitregression,type="HC0")** (HC1,2,3,etc) for consistent estimator
+
+
+## Interpretation of Nonlinear Model Parameters
+
+- In any generalized linear model, coefficients represent impact on index $X^\prime\beta$, which enters into likelihood through nonlinear **link function**
+- A 0 coefficient means no impact, positive increases index, negative decreases it
+- Conditional probability function $P(Y=1|X)=F(X^\prime\beta)$ determines scale and relative magnitude
+- To compute measure of effect of $X$ on $Y$, use **marginal** or **partial effect** 
+    - Either derivative of $P(Y=1|X)$ with respect to $X_j$, or, if $X_j$ is discrete, difference
+    - Derivative is $f(X^\prime\beta)\beta_j$, 
+    - Difference is $F(\beta_0 + \beta_1X_1 +\ldots \beta_j X_j +\ldots)-F(\beta_0 + \beta_1X_1 +\ldots \beta_j (X_j-1) +\ldots)$
+
+## Heterogeneity in effects
+
+- Partial effect is function of $X$: Report multiple ways
+    - At $\bar{X}$ **Partial Effect at the Average** 
+    - Average derivative/difference over distribution of $X$ **Average Partial Effect** 
+    - Or at relevant points or subpopulations
+- Use **probitmfx** or **logitmfx** in **mfx** library to calculate    
+- Heterogeneity of effect here only from nonlinearity
+    - Same for anyone with same level of index
+    - Not equivalent to random coefficients model where individuals have different $\beta$
+    - Can estimate that model too (see **mlogit** library) 
+- Regardless of specification, conditional probability function may or may not have causal interpretation: depends on true causal model generating $Y$
+
+
+## Probit vs. Logit vs. LPM
+
+- **Linear Probability Model** estimates $Y=X^\prime\beta+u$ by OLS
+    - For binary $Y$, estimates $P(Y=1|X)=X^\prime\beta$ 
+    - Does not impose that probabilities bounded between 0 and 1
+    - Interpret as best linear approximation of probability
+- For estimating marginal effects, usually get similar results, especially for partial effect at average
+- Marginal effect is $f(\bar{X}^{\prime}\widehat{\beta})\beta_j$ for probit/logit, $\beta_j$ for LPM
+- Have $f_{probit}(0)\approx 0.4$, $f_{logit}(0)=0.25$, 
+    - Multiply coefficients by these numbers to get number roughly interpretable as change in  conditional probability
+
+##Bertrand and Mullainathan (2004) resume study (Code)
+```{r,eval=FALSE}
+#Load library with data
+library(AER)
+#Load Bertrand and Mullainathan data
+data("ResumeNames")
+#Load library with marginal effects commands
+library(mfx)
+# Convert outcome variable to numeric so it reads as 0/1
+ResumeNames$callback<-as.numeric(ResumeNames$call)-1
+#Load library to make pretty table
+library(stargazer) 
+```
+
+## Example: Bertrand and Mullainathan (2004) resume study
+
+```{r,echo=FALSE}
+#Load library with data
+suppressWarnings(suppressMessages(library(AER))) 
+#Load Bertrand and Mullainathan data
+data("ResumeNames")
+#Load library with marginal effects commands
+suppressWarnings(suppressMessages(library(mfx))) 
+# Convert outcome variable to numeric so it reads as 0/1
+ResumeNames$callback<-as.numeric(ResumeNames$call)-1
+#Load library to make pretty table
+suppressWarnings(suppressMessages(library(stargazer))) 
+```
+
+- Randomized controlled experiment on discrimination
+- Send resumes out to employers, with identical distribution of contents, except name of applicant
+- Use names highly correlated with ethnicity in US population as proxy for perceived ethnicity of applicant
+- Outcome $Y=1$ if resume gets called back, 0 otherwise
+- Estimate by probit, logit, linear probability model
+- Compare marginal effects for "average" applicant
+
+## Results (Code 1)
+
+```{r, eval=FALSE,results="asis"}
+#Run Probit & Logit by glm command, LPM by lm()
+disc.probit<-glm(formula=callback~ethnicity
+  +experience+quality,family=
+  binomial(link="probit"), data=ResumeNames)
+disc.logit<-glm(formula=callback~ethnicity
+  +experience+quality,family=
+  binomial(link="logit"), data=ResumeNames)
+disc.lpm<-lm(formula=callback~ethnicity
+  +experience+quality,data=ResumeNames)
+```
+
+## Results (Code 2)
+```{r, eval=FALSE,results="asis"}
+#Display table of coefficients
+stargazer(disc.probit,disc.logit,
+      disc.lpm,header=FALSE,
+      omit.stat=c("aic","rsq","adj.rsq"),
+      font.size="tiny",
+      title="Binary Choice Output")
+```
+
+
+## Results
+```{r, echo=FALSE,results="asis"}
+#Run Probit & Logit by glm command, LPM by lm()
+disc.probit<-glm(formula=callback~ethnicity
+    +experience+quality,family=binomial(link="probit"), data=ResumeNames)
+disc.logit<-glm(formula=callback~ethnicity+experience+quality,
+          family=binomial(link="logit"), data=ResumeNames)
+disc.lpm<-lm(formula=callback~ethnicity+experience+quality,
+          data=ResumeNames)
+disc.lmfx<-logitmfx(formula=callback~ethnicity+experience
+    +quality, data=ResumeNames)
+disc.pmfx<-probitmfx(formula=callback~ethnicity+experience
+    +quality, data=ResumeNames)
+#Display table of coefficients
+stargazer(disc.probit,disc.logit,disc.lpm,type="html",header=FALSE,omit.stat=c("aic","rsq","adj.rsq"),font.size="tiny",title="Binary Choice Output")
+
+```
+
+
+## Partial effects at average: Logit (Code)
+
+```{r,eval=FALSE}
+#Estimate partial effects at average
+disc.lmfx<-logitmfx(formula=callback~ethnicity
+    +experience+quality, data=ResumeNames)
+#Display them
+(disc.lmfx)
+```
+
+
+## Partial effects at average: Logit
+
+```{r,echo=FALSE}
+(disc.lmfx)
+```
+
+
+## Partial effects at average: Probit (Code)
+
+```{r,eval=FALSE}
+#Estimate partial effects at average
+disc.pmfx<-probitmfx(formula=callback~ethnicity
+  +experience+quality, data=ResumeNames)
+#Display them
+(disc.pmfx)
+```
+
+## Partial effects at average: Probit
+
+```{r,echo=FALSE}
+(disc.pmfx)
+```
+
+## Probit and Logit as Empirical Risk Minimizers
+
+- When misspecified, can interpret as empirical risk minimizer
+- Loss function is (minus) log likelihood, risk is expected loss 
+$$-E[\ell(Y,p(X,\theta))]=-E[Y_i\log(p(X_i,\theta))+(1-Y_i)\log(1-p(X_i,\theta))]$$
+- Called (KL) Divergence
+- Maximized when $p(X,\theta)=E[Y|X]$, otherwise tries to get as close as possible
+- Unlike square loss, penalty infinite if probability not in [0,1]: ought to be a real probability
+
+
+## Alternative Loss Functions
+
+- Sometimes care more about prediction errors
+    - Guessing 1 when truth 0, 0 when 1
+- Can look for rules which give 1 or 0 guess $\widehat{Y}$ for every $X$ instead of a probability
+    - Called a "classifier" in machine learning
+    - Convert probability guess $f(X)$ into prediction by rule like $\widehat{Y}=1[f(X)>0.5]$
+    - Logit/Probit fit in with $f(X)=p(X,\theta)$
+- Measure error by percent misclassified 
+    - 0-1 Loss $1[Y\neq\widehat{Y}]$ 
+    - Or weighted version to emphasize one type of error more
+- Can evaluate predictions by this measure 
+    - Or use in empirical risk minimization
+
+## Incorporating Nonlinearities
+
+- Nothing in particular requires $p(X,\theta)$ to take form $F(X^\prime\beta)$
+- Can replace $X^\prime\beta$ (or $p(X,\theta)$) with any nonlinear function
+- Estimate by maximum likelihood still, under same conditions
+- Works like nonlinear regression: consistency, normality, etc hold 
+    - Identification condition now needs $p(X,\theta^*)\neq p(X,\theta)$ with positive probability for $\theta\neq\theta^*$
+- Typical usage: $X^\prime\beta$ replaced by a neural network function to classify binary outcome variable
+    - Inside logistic or similar function
+
+## Multiple Outcomes: J>2 Multinomial Logit
+
+- With $>2$ choices, $Y$ takes a **multinomial** distribution 
+- Likelihood characterized by $P(Y=j|X,\theta)$ for $j=0$ to $J-1$
+- More choices here, but random utility model provides direction
+- Let $U_{ij}=X_{ij}^\prime\beta_j+e_{ij}$ be utility of choice $j$ for sample $i$
+    - $e_{ij}$ iid across $i$, $j$ with Type I Extreme Value distribution
+        - CDF $F(x)=exp(-exp(-x))$
+- Then $Pr(Y_i=j)=\frac{exp(X_{ij}^\prime\beta_j)}{\sum_{j=0}^{J-1}exp(X_{ij}^\prime\beta_j)}$
+- Divide $X_{ij}$ into (1) $X_j$ characteristics of the choices 
+    - Coefficient $\beta$ does not vary with $j$ 
+- and (2) $X_i$ individual-specific characteristics
+    - $\beta_j$ *does* vary with $j$
+- Normalize coeffs on individual-specific variables to $\beta_0=0$
+    - Since decision only function of relative utility
+- Estimate by MLE on $\sum_{i=1}^{n}\sum_{j=0}^{J-1}1[Y_i=j]log(P(Y=j|X,\theta))$
+
+## Example: Travel Mode Choice (Code)
+
+```{r, eval = FALSE}
+#Load data on travel decisions
+#travel<-read.csv(
+#  "http://www.stern.nyu.edu/~wgreene
+# /Text/Edition7/TableF18-2.csv")
+#Install multinomial logit library if not installed yet 
+# install.packages("mlogit",
+# repos = "http://cran.us.r-project.org")
+library(mlogit) # Load Library
+data("TravelMode", package = "AER") #Load data
+travelchoice<-mlogit(choice~wait|income, TravelMode, 
+        shape = "long", chid.var = "individual", 
+        alt.var="mode", choice = "choice")
+```
+
+## Example: Travel Mode Choice
+
+```{r, echo = FALSE}
+#Load data on travel decisions
+#travel<-read.csv("http://www.stern.nyu.edu/~wgreene/Text/Edition7/TableF18-2.csv")
+#Install multinomial logit library if not installed yet 
+# install.packages("mlogit",repos = "http://cran.us.r-project.org")
+# Load Library
+suppressWarnings(suppressMessages(library(mlogit))) 
+#Load data on Travel Mode
+data("TravelMode", package = "AER")
+```
+
+- Use **mlogit** library for multinomial logit model
+- Predict which way consumers travel
+    - mode = 'car', 'bus', 'train', 'air'
+- Use consumer income as individual-specific predictor
+- Use wait time as choice-specific predictor
+- Air is base category: coefficients relative to this
+- See help files for detail on data format
+
+```{r,eval=FALSE}
+travelchoice<-mlogit(choice~wait|income, TravelMode, 
+        shape = "long", chid.var = "individual", 
+        alt.var="mode", choice = "choice")
+```
+
+## Results: Coefficients
+
+```{r, eval=FALSE, results="asis"}
+#Display table of coefficients
+stargazer(travelchoice,
+          type="html",
+    header=FALSE,omit.stat=c("rsq"),
+    font.size="tiny",
+    title="Multinomial Logit 
+      Travel Choice Estimates")
+```
+
+## Results: Coefficients
+
+```{r,echo=FALSE}
+travelchoice<-mlogit(choice~wait|income, TravelMode, shape = "long",
+        chid.var = "individual", alt.var="mode", choice = "choice")
+```
+```{r, echo=FALSE, results="asis"}
+#Display table of coefficients
+stargazer(travelchoice,type="html",header=FALSE,omit.stat=c("rsq"),font.size="tiny",title="Multinomial Logit Travel Choice Estimates")
+```
+
+
+
+## Alternatives Models for Multinomial Choice
+
+- Multinomial logit imposes restrictions on functional form
+    - If one option dropped, relative probability of other options remains unchanged
+- Many alternative specifications for predicting multiple outcomes (all in **mlogit**)
+- Multinomial probit
+    - Same random utility model, but with normal heterogeneity
+    - No closed form likelihood, so need numerical methods to calculate and maximize
+- Nested logit: Logit function for probability $j$ in group, then logit conditional probability among choices in that group
+    - E.g., choose soda vs. tea, then Coke vs. Pepsi, Lipton vs. Nestea
+
+## More Alternative Models for Multinomial Choice
+
+- Ordered logit/probit
+    - Outcome variable $Y_i$ may have known ordering:
+    - E.g., how much do you approve of candidate, on 3 point scale
+    - Latent utility $U^{*}_i=X_{i}^\prime\beta +e_i$, $e_i$ extreme value (logit) or normal (probit)
+    - $Y_i=j$ if $\mu_{j-1}<U_i^*\leq\mu_j$ for thresholds $\mu_j$ estimated as parameters
+- Random coefficients logit
+    - Same as standard/multinomial logit but allow coefficients $\beta_i$ to differ between individuals
+    - Draw $\beta_i$ from a parameterized distribution (e.g. normal)
+    - Estimate parameters of distribution by MLE
+
+
+## Integer Outcomes: Poisson Regression and Extensions
+
+- When outcome $Y$ is **count data** have non-negative integer $\{0,1,2,\ldots\}$ number of things
+    - Rather than fixed finite number of possibilities
+- Could use linear or nonlinear regression to predict
+    - Fine if $Y$ close to continuous 
+- Discreteness preferred if many observations are small numbers
+- One useful distribution over counts is **poisson**
+    - Link function gives generalized linear model
+$$P(Y=h|X)=exp(-exp((X^\prime\beta)))[exp(X^\prime\beta)]^h/h!$$
+- Fit by **glm** with **family="poisson"**
+- Distribution has $E[Y|X]=exp(X^\prime\beta)$ so partial effects given by derivative of this
+- Also has variance $Var[Y|X]=E[Y|X]$, which is restrictive
+- Generalize this by using **overdispersed Poisson regression**
+    - Variance is $\sigma^2E[Y|X]$, so scale can change
+    - Fit by **family="quasiposson"**
+
+## Mixed discrete and continuous outcomes: Tobit Model
+
+- Many ways for $Y$ to be part discrete and part continuous
+- Most common case: corner solutions
+    - Can't buy less than 0 of something
+    - Can choose any *positive* amount
+- If $Y^{*}=X^{\prime}\beta+e$ is desired unrestricted outcome $Y=Y^{*}1[Y^{*}>0]$ is observed amount
+- If $e$ has known distribution, estimate by MLE
+    - **Tobit** regression assumes normality
+- Marginal effect on $Y^{*}$ given by $\beta$, but effect on conditional expectation of $Y$ smaller, since sometimes $Y$ stuck at 0
+- Can generalize to other cutoffs
+- Useful also for topcoded data: some income surveys cut off above a certain income to preserve privacy.
+
+## Extramarital Affairs (Fair 1978) (Code)
+
+```{r,eval=FALSE}
+#Can download from online
+#affairs<-read.csv(
+#  "http://www.stern.nyu.edu/~wgreene
+# /Text/Edition7/TableF17-2.csv")
+
+# Or use version in AER library
+data("Affairs",package = "AER")
+```
+
+
+## Example: Extramarital Affairs (Fair 1978)
+
+```{r,echo=FALSE}
+#Can download from online
+#affairs<-read.csv("http://www.stern.nyu.edu/~wgreene/Text/Edition7/TableF17-2.csv")
+# or use version in AER library
+data("Affairs",package = "AER")
+```
+
+- Fair obtained data from magazine survey on extramarital affairs
+- Most surveyed individuals claimed 0 affairs in past year
+    - But max up to 12
+- To match highly skewed outcome, bounded below at 0, can try Tobit or poisson regression
+- Scales not comparable
+    - Need to use marginal effects formulas for each
+
+## Fair's Affairs: Tobit, Poisson, and Quasipoisson (Code 1)
+
+```{r,eval=FALSE}
+fair.tobit <- tobit(affairs ~ age + yearsmarried + 
+ religiousness  + occupation + rating, data = Affairs)
+fair.pois <- glm(affairs ~ age + yearsmarried + 
+ religiousness + occupation + rating, 
+ family=poisson, data = Affairs)
+fair.qpois <- glm(affairs ~ age + yearsmarried +
+  religiousness + occupation + rating, 
+  family=quasipoisson, data = Affairs)
+```
+
+## Fair's Affairs: Tobit, Poisson, and Quasipoisson (Code 2)
+```{r, eval=FALSE, results="asis"}
+#Display table of coefficients
+stargazer(fair.tobit, fair.pois, 
+    fair.qpois,type="html",header=FALSE,
+    omit.stat=c("rsq","aic"),
+    font.size="tiny",title=
+    "Predicting Extramarital Affairs")
+```
+
+## Fair's Affairs: Tobit, Poisson, and Quasipoisson 
+
+```{r,echo=FALSE}
+fair.tobit <- tobit(affairs ~ age + yearsmarried + 
+ religiousness  + occupation + rating, data = Affairs)
+fair.pois <- glm(affairs ~ age + yearsmarried + 
+ religiousness + occupation + rating, 
+ family=poisson, data = Affairs)
+fair.qpois <- glm(affairs ~ age + yearsmarried +
+  religiousness + occupation + rating, 
+  family=quasipoisson, data = Affairs)
+```
+
+```{r, echo=FALSE, results="asis"}
+#Display table of coefficients
+stargazer(fair.tobit, fair.pois, fair.qpois,type="html",header=FALSE,omit.stat=c("rsq","aic"),font.size="tiny",title="Predicting Extramarital Affairs")
+```
+
+## Summary
+
+- Broad variety of nonlinear models are available for discrete or limited dependent outcomes
+- Given a model, can estimate by MLE
+- Need to interpret coefficients using marginal effects 
+- For binary outcomes, can do probit, logit, and variety of other loss functions and nonlinear extensions
+- For multinomial outcomes, can base estimates on model of choice process
+- Models also exist for non-negative and integer outcomes
+
+
+
+

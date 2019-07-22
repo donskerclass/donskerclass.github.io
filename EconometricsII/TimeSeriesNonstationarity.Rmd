@@ -1,0 +1,319 @@
+---
+title: 'Nonstationary and Persistent Time Series'
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+    
+## Today
+
+- Estimation and inference with persistent time series
+    - Reasons for persistence
+    - Problems caused by persistence
+    - Testing
+- Results crucial when handling financial data
+    - Easy ways to lose money in the stock market!
+- Chapter 12, 18 in Wooldridge
+
+## Time series dependence: Review
+
+- Recall, a time series $Y_t$ is stationary and weakly dependent if $E[Y_t]=E[Y_s]$, $Cov(Y_t,Y_{t+h})=Cov(Y_s,Y_{s+h})$ $\forall\ s\neq t$ and $Cov(Y_t,Y_{t+h})\rightarrow 0$ quickly enough
+- Law of large numbers ("Ergodic Theorem") and (modified) Central Limit Theorem hold
+- Allows the series to be used in a regression with more or less usual results, up to a modified standard error formula
+- Historical events can be treated like "samples" of underlying process
+- Need future to be comparable to past, and not too related to it
+- This can be reasonable *if* we directly account for characteristics that do change over time
+    
+## Dealing with nonstationary data
+
+- Most basic approach
+    - Transform series so that transformed series is stationary
+- In any model built out of stationary components, can solve for the stationary variable
+- For trend stationary data, can "detrend"
+    - Regress series on function of time and use residual
+    - Or include function of time in regression
+- Transformed variables are stationary but regression equation may have different interpretation
+    - GDP not stationary but GDP growth might be
+
+## Integrated Series
+
+- Series where source of nonstationarity is random much harder to deal with
+- Random walk $Y_t=Y_{t-1}+e_t$ typical example of series with **stochastic trend**
+- Series drifts far away from any particular value, but this drift is not on preset path
+- With constant, $Y_t=b_0+Y_{t-1}+e_t$, expected to increase by $b_0$ each period, but doesn't stay close to line
+- A series $Y_t$ is called **integrated** (of order 1) if
+    - $Y_t$ nonstationary, $\Delta Y_t$ stationary, 
+- Asset prices, exchange rates, many macro variables seem to look like this
+- A possible solution
+    - Remove both trends by *differencing*: $\Delta Y_t= b_0 + e_t$ stationary
+    
+## What if source of nonstationarity not known?
+- How can we detect it?
+    - Measure dependence
+    - Apply hypothesis tests
+- What if we don't account for it?
+- What are our options to deal with it?
+
+## Daily log price, S&P 500 (1-04-2010-Last Week): (Code)
+
+```{r, eval=FALSE}
+#Install data library (uncomment if needed)
+#install.packages("quantmod",
+#  repos="http://cran.us.r-project.org") 
+library(quantmod) #Use quantmod to download data
+#Get S&P500 Data
+getSymbols("^gspc",src="yahoo",from = "2010-01-01") 
+spdata<-as.ts(GSPC) # Turn into time series format
+sp500<-spdata[,6] #Extract just adjusted closing price
+lsp500<-log(sp500) #Take logs
+library(dynlm)
+dftest<-dynlm(d(lsp500)~L(lsp500)+trend(lsp500))
+#Plot log prices
+ts.plot(lsp500)
+```
+
+
+## Daily log price, S&P 500 (1-04-2010-Last Week): Looks persistent
+
+```{r, echo=FALSE}
+#Install useful time series libraries (uncomment if needed)
+#install.packages("forecast",repos="http://cran.us.r-project.org")
+#install.packages("readr",repos="http://cran.us.r-project.org")
+#install.packages("quantmod",repos="http://cran.us.r-project.org") 
+#Use quantmod to download data
+suppressWarnings(suppressMessages(library(quantmod)))
+#Get S&P500 Data
+invisible(suppressWarnings(suppressMessages(getSymbols("^gspc",src="yahoo",from = "2010-01-01")))) #Load S&P 500
+spdata<-as.ts(GSPC) # Turn into usable time series format
+sp500<-spdata[,6] #Extract just adjusted closing price
+lsp500<-log(sp500) #Take logs
+suppressWarnings(suppressMessages(library(dynlm)))
+dftest<-dynlm(d(lsp500)~L(lsp500)+trend(lsp500))
+#Plot log prices
+ts.plot(lsp500)
+```
+
+## Differenced daily log price, S&P 500 (Code)
+```{r, eval=FALSE}
+#Plot Differenced series
+ts.plot(diff(lsp500))
+```
+
+
+## Differenced daily log price, S&P 500: looks less persistent
+```{r, echo=FALSE}
+#Plot Differenced series
+ts.plot(diff(lsp500))
+```
+
+## A tool for detecting dependence: the Autocorrelation Function (ACF)
+
+- ACF measures dependence between time periods
+- Autocovariance is $V(h)=Cov(Y_t,Y_{t+h})$
+- Should go to 0 and rapidly if series is weakly dependent
+- Traditional to divide by variance to get correlation instead of covariance
+    - $\gamma (h)=Corr(Y_t,Y_{t+h})=\frac{V(h)}{V(0)}$
+- Estimate by sample correlations, display chart
+- If it goes towards 0 quickly consistent with weak dependence
+- If not, may need to adjust series before using in regression
+- Shape may also be informative about structure
+    - e.g. AR(1) $Y_t=\rho Y_{t-1} + e_t$ has ACF $\gamma (h)= \rho^h$
+    - For random walk, acf declines linearly
+    - For MA(q), drops to 0 after q periods 
+- $acf()$ in $R$
+
+## Autocorrelation function of daily log price, S&P 500
+```{r,eval=FALSE}
+#Plot Autocorrelation function of log S&P 500
+acf(lsp500,lag.max=120)
+```
+
+## Autocorrelation function of daily log price, S&P 500
+```{r,echo=FALSE}
+#Plot Autocorrelation function of log S&P 500
+acf(lsp500,lag.max=120)
+```
+
+## Unit roots
+
+- Random walk model one example of strongly dependent series
+$$Y_t=\rho Y_{t-1}+e_t$$
+- Where $\rho=1$, $E[e_t|Y_{t-1}]=0$
+- Generalizes to **unit root** process: $e_t$ any stationary process
+- Maybe have trend or constant also: $Y_t=b_0 + b_1 t + Y_{t-1}+e_t$
+- $Y_t=e_t+e_{t-1}+e_{t-2}+e_{t-3}+\ldots+Y_0$
+- Acts like a sum, instead of a single variable
+    - $\frac{1}{t}(Y_t-Y_0)\overset{p}{\rightarrow}E[e_t]$, $\frac{1}{\sqrt{t}}(Y_t-Y_0)\overset{d}{\rightarrow}N(0,\Sigma_{e})$
+    - This messes up a lot of our usual regression results
+    - May get spurious correlations even when no deterministic trend
+- If we know we have a unit root, can take difference
+- But how do we know?
+
+## Sources of unit roots
+
+- Lots of series look like unit roots, especially asset prices
+- Not a coincidence: consider following argument
+- Suppose $E[price_{t+1}|\text{info today}]>price_t$
+    - Buy as much as you can today, sell tomorrow, make a ton of money
+- Suppose $E[price_{t+1}|\text{info today}]<price_t$
+    - Sell a ton today, buy tomorrow, make a ton of money
+- So if $E[price_{t+1}|\text{info today}]\neq price_t$ possible to make a lot of money very fast
+- This is an **Arbitrage** argument
+- Price should be close to a unit root
+- Need to borrow money to do this, at interest rate $r$, so should actually be $E[price_{t+1}|\text{info today}]= price_t+r$, unit root with drift
+- Also only make a lot of money *on average* 
+    - Argument may not be exact: correct for risk, etc
+
+## Problems with nonstationarity
+
+- When $Y_t$, $X_t$ nonstationary, law of large numbers and CLT fail
+    - Can't trust tests or confidence intervals
+- If both series integrated, both have mean changing over time
+- Acts like "time" is omitted variable, even though no deterministic trend
+- Regressions will yield large and statistically significant coefficients
+    - Relationship just as likely to go in opposite direction in the future
+    - Spurious/nonsense regression
+- Deterministic detrending won't solve this
+    - "Trend" is random, not of any fixed functional form
+- Huge problem when working with financial data
+    - Easy to regress stock price on another variable and get big coefficient
+    - Relationship will disappear in the future
+    - If you trade on this, you will lose money
+
+## What to do about it?
+
+- If you work with economic data, means you should be careful when working with time series, since data may look like unit root and then usual methods have issues
+- Applies to more than just financial data because many things can be function of prices
+- Can resolve by taking differences if needed
+- If you work in finance, care much more about exactly unit root or only approximately
+- Arbitrage argument only says that price should behave this way, or else someone can make a lot of money
+- Many behavioral reasons to think this is only approximate
+- If not exact, can trade and make money from deviations 
+    - Somebody has to, for result to hold
+- Many hedge funds do (more sophisticated version of) this
+- Either way, useful to have explicit hypothesis test for unit root
+
+## Unit root testing
+
+- Model is $Y_t=\rho Y_{t-1}+e_t$
+- $H_0:\ \rho=1$, $H_1:\ \rho<1$
+- Setup looks like a regression problem: regress $Y_t$ on $Y_{t-1}$
+- Under $H_0$, $Y_t$ not stationary, so usual regression results fail
+- Rewrite as $\Delta Y_t=\theta Y_{t-1} +e_t$
+- $H_0:\ \theta=0$, $H_1:\ \theta<0$
+- Still have nonstationary regressor
+    - But run OLS anyway
+    - Use standard t statistic
+- Turns out this works, under some conditions
+    - But can't use usual normal/Student t critical values
+
+## Dickey-Fuller Test
+
+- Let $\Delta Y_t=\theta Y_{t-1} +e_t$
+- Assume $e_t$ is mean 0 serially uncorrelated homoskedastic series: pure random walk
+- Regress $\Delta Y_t$ on $Y_{t-1}$ to get $\hat{\theta}$, construct usual standard error formula $\widehat{S.E.}_{\hat{\theta}}$
+- Test statistic is usual t statistic $t_{DF}=\frac{\hat{\theta}}{\widehat{S.E.}_{\hat{\theta}}}$
+- Under $H_0$, $t_{DF}$ has, not a normal or Student t distribution, but a **Dickey-Fuller** distribution
+- Tables of one sided critical values in your book
+    - Or in standard software
+- In practice, pure random walk assumption too strong
+- Can add a constant to regression to allow for drift
+    - Can also add time trend 
+    - Distribution under $H_0$ changes, but tables/software still exist
+    
+## Accounting for serial correlation in root testing
+
+- 0 Serial correlation in $e_t$ is strong assumption
+- Can relax it by also adding lags of $\Delta Y_t$ to regression
+    - $\Delta Y_t =\theta Y_{t-1}+ \beta_1\Delta Y_{t-1}+\ldots\beta_{k}\Delta Y_{t-k}+e_t$
+- Include enough lags until residual is serially uncorrelated
+    - Add constant and time trend also if needed
+- This version is called **Augmented Dickey Fuller** test 
+- **ur.df** in **urca** library in R, also versions in **tseries** or **forecast**
+- Adding lags may not be enough to make residual serially uncorrelated and homoskedastic
+- Resolve by using Newey West (Heteroskedasticity and Autocorrelation-Consistent) standard errors
+    - This version is called **Phillips Perron** test (also in R)
+<!-- - With known form of serial correlation, can get more powerful test (rejection more likely if false) by using GLS estimate -->
+<!-- - This version known as **Elliott-Rothenberg-Stock** test -->
+- All have nonstandard critical values 
+    - Don't rely on usual p values!
+
+## Testing for Unit Root in S&P 500 (log) price (Code)
+
+```{r,eval=FALSE}
+library(urca)
+#ADF tests
+spADF0<-ur.df(lsp500,type="drift",lags=0)
+t0<-spADF0@teststat[1] #t value, no lags
+spADF1<-ur.df(lsp500,type="drift",lags=1)
+t1<-spADF1@teststat[1] #t value, 1 lag
+#Phillips Perron test
+spPP<-ur.pp(lsp500,type="Z-tau",model="constant")
+ppt<-spPP@teststat #t value, robust errors
+```
+
+## Application: Testing for Unit Root in S&P 500 (log) price
+
+```{r,echo=FALSE}
+suppressWarnings(suppressMessages(library(urca)))
+#ADF tests
+spADF0<-ur.df(lsp500,type="drift",lags=0)
+spADF1<-ur.df(lsp500,type="drift",lags=1)
+#Phillips Perron test
+spPP<-ur.pp(lsp500,type="Z-tau",model="constant")
+```
+
+- Economic argument says price should be unit root with drift
+- Also suggests there should be no serial correlation in residuals
+- But can include anyway to be safe
+- Run ADF test with constant but no trend, and with 0 or 1 lags
+- Results the same: t-stat is `r spADF0@teststat[1]` or `r spADF1@teststat[1]`
+- 10% and 5% Critical values are `r spADF0@cval[1,3]` and `r spADF0@cval[1,2]` for both
+    - Can't reject at 5% level
+- Theory says nothing about heteroskedasticity (and well known that stock prices appear to have non-constant volatility) so may want robust test
+- Phillips Perron test gives statistic `r spPP@teststat`
+- 10%, 5%, 1% critical values `r spPP@cval[3]`, `r spPP@cval[2]`, `r spPP@cval[1]`
+- Evidence against unit root hypothesis not strong
+- In practice, finance researchers almost always work with difference in price (called "return"), not price itself
+
+## What to do with series with a unit root
+
+- So you test your series and find you can't reject unit root
+- If you care about $\rho$ in $Y_t=\rho Y_{t-1}+e_t$, $\rho=1$ not rejected just means it can't be ruled out, not that $1$ is best estimate
+- Simplest solution is to difference if unsure
+    - Removes stochastic and linear trends
+- If $Z_t$ is in fact stationary, $\Delta Z_t$ stationary too, so not much harm if used in regression
+- After differencing can use in regression
+    - Interpret relationships in terms of *changes*
+    - May get less precise estimates when true relationship exists
+- Other detrending methods may have different properties
+<!-- - Many macroeconomists swear by something called the HP filter -->
+<!-- - Recent paper title: "Why you should never use the HP filter" -->
+
+<!-- - Recall "spurious regression" problem -->
+<!-- - Regressing $Y_t$ on $X_t$ when both generated from independent unit root processes gives strongly significant nonzero coefficients, test statistics -->
+<!-- - Deterministic detrending doesn't solve this, since trend is random, not linear -->
+<!-- - In finite samples, even if stationary, can still get large bias from this problem if close to unit roots -->
+
+
+
+## Persistent Data: Conclusions
+
+- Many economic time series exhibit nonstationary behavior
+- If deterministic, can account for it by subtracting trend, or including it in regression
+- Many financial and macroeconomic series act like "unit root"
+    - Weakly dependent changes added up over time
+- Can test for this by regressing $\Delta Y_t$ on $Y_{t-1}$, comparing t-statistic to nonstandard critical values
+- Difference and detrend to describe short run relationships
+
+## Time Series Conclusions
+
+- Time series data allow learning from past events using data from single unit over long time
+- Under assumption that future is like the past, and weakly correlated with it, can treat past time periods as separate observations
+    - Use this data in regression and other procedures  
+- To make events over time comparable, may need to transform, detrend or difference
+    - Especially for financial data
+    
+
+

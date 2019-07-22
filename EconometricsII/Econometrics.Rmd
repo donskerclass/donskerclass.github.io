@@ -1,0 +1,274 @@
+---
+title: "Econometrics II"
+author: "73-374 Econometrics II"
+output: 
+  html_document:
+    code_folding: show
+---
+## Econometrics
+
+>- The art of learning about economic phenomena using data
+>- Neither pure economics nor statistics applied to economic data
+
+## Goals of econometrics
+
+- Answer scientific and policy questions
+- What happens to $Y$ if we do $X$?
+    - $Y=$ unemployment rate, $X=$ raise the minimum wage
+    - $Y=$ our company's sales figures, $X=$ lower our prices
+    - $Y=$ bus ridership, $X=$ build a new subway line
+    - $Y=$ GDP growth, $X=$ raise the Fed Funds Rate
+
+## The Econometric Approach
+- An economic **model** describes behavior of economic **variables** when world is governed by a specific structure, described by a set of **parameters**
+    - Parameters allow us to find causal effects.
+- Goal is to use data to learn parameters.
+- Separate into steps
+    - **Identification**: Supposing we know exactly how certain variables behave, what would we then know about parameters 
+    - **Estimation**: Find some function of the data that tells us about parameters
+    - **Inference**: What values of parameters (if any) are plausibly consistent with the data? 
+    
+## Challenges
+- Reasonable descriptions of the world often imply that the answer to our questions cannot be found in the data we have
+   - `What if' questions are fundamentally asking about the behavior of something we can't see
+   - Need assumptions about these unseen things, valid only in special circumstances, to make progress
+- Economic data often exhibits features not well described by the most basic statistical models
+    - Nonlinear relationships, dependence between observations
+    - Need statistical descriptions which take these features into account
+    
+## This Course 
+
+- A collection of models, methods, and examples of how to handle these challenges
+- Two major topics
+1. Causal inference in linear models
+2. Nonlinear models and time series
+
+## Syllabus
+
+https://canvas.cmu.edu/
+
+
+## R 
+- Modern, powerful open source statistical language
+- Standard at CMU, data analysts in academia and private sector
+- Textbook companion at [URfIE.net](http://www.URfIE.net)
+- TA will lead tutorial
+- Not looking for advanced programming skills, just learn a few commands to open a data set, run some procedures.
+
+## Example: Wage and Education Data: Code
+```{r, eval=FALSE}
+# Obtain access to data sets used in our textbook
+library(foreign) 
+# Import data set of education and wages
+wage1<-read.dta(
+  "http://fmwww.bc.edu/ec-p/data/wooldridge/wage1.dta")
+# Scatter plot
+plot(wage1$educ,wage1$lwage, xlab = "Years of Education",
+      ylab = "Log Wage", main = "Wage vs Education")
+```
+
+## Example: Wage and Education Data
+```{r, echo=FALSE}
+# Obtain access to data sets used in our textbook
+library(foreign) 
+# Import data set of education and wages
+wage1<-read.dta(
+  "http://fmwww.bc.edu/ec-p/data/wooldridge/wage1.dta")
+# Scatter plot
+plot(wage1$educ,wage1$lwage, xlab = "Years of Education",
+      ylab = "Log Wage", main = "Wage vs Education")
+``` 
+
+## Statistical Question: Do educated people earn more money?
+
+- Data set of sample of individuals, with education and wages
+- Estimation 
+    - **Regression** summarizes relationship between variables in sample
+- Inference
+    - **Confidence Interval** for regression coefficient gives range containing population relationship with high probability
+    - **Hypothesis Test** indicates whether relationship can be distinguished from a fixed value (say, 0) given sampling variation in data 
+  
+## Economic Question
+
+- How much would *my* wages change if *I* stayed in school one more year?
+- Answer to *statistical* question insufficient to answer this
+- What kind of data can be used to answer this question?
+- How do we use that data to provide an answer?
+- Need an economic model of how data relates to decisions
+- Fundamental statistical problems are the same
+    - Estimation: how much
+    - Inference: how reliable is this estimate
+- Answer now depends on our understanding of how observed data relates to causal question of interest
+- This affects which estimator we use, how we perform inference
+- First part of class, will discuss when and how regression (and variations thereof) can answer these questions
+
+
+## Statistics
+
+- From your previous classes, you should all be able to 
+    - Describe the best fitting linear relationship between education and wages 
+    - Construct confidence intervals for the slope and intercept
+    - Visually and numerically assess fit of the relationship
+    
+## Ordinary Least Squares Review   
+
+Let ${(x_i,y_i):i=1 \ldots n}$ be a sample of measured education levels and log wages from a population of individuals.
+OLS estimator solves $$(\hat{\beta_0},\hat{\beta_1})=\arg\min \sum_{i=1}^{n}(y_i-\beta_0-\beta_{1}x_i)^2$$
+Giving the formulas $$\hat{\beta_1}=\frac{\sum_{i=1}^{n}(x_i-\bar{x})(y_i-\bar{y})}{\sum_{i=1}^{n}(x_i-\bar{x})^2}$$
+$$\hat{\beta_0}=\bar{y}-\hat{\beta_1}\bar{x}$$
+
+## Regression as statistical model
+- You can run OLS on any data set
+- Under some assumptions (Wooldrige Ch2), it tells us true features of the population
+1. In population, $y=\beta_0+\beta_{1}x+u$
+2. ${(x_i,y_i):i=1 \ldots n}$ are independent random sample of observations following 1
+3. ${x_i : i=1 \ldots n}$ are not all identical
+4. $E(u|x)=0$
+5. $Var(u|x)=\sigma^2$ a constant $>0$
+
+
+## Regression properties
+
+- Under above assumptions, OLS estimator is 
+1. Consistent: $Pr(|\hat{\beta_1}-\beta_1|>e)\rightarrow 0$ as $n\rightarrow\infty$ for any $e>0$
+2. Unbiased: $E(\hat{\beta_1})=\beta_1$
+3. Asymptotically normal $$Pr(\frac{\sqrt{n}(\hat{\beta_1}-\beta_1)}{\sqrt{\frac{\sigma^2} {\frac{1}{n}\sum_{i=1}^{n}(x_i-\bar{x})^2}}}<t)\rightarrow Pr(Z<t)$$ for any $t$, where $Z \sim N(0,1)$ 
+- (In practice can replace $\sigma^2$ by $\frac{1}{n-2} \sum (y_i-\hat{\beta_0}-\hat{\beta_{1}}x_i)^2$ )
+
+## Regression Results: Table (Code)
+```{r, eval=FALSE, results="asis"}
+# Obtain access to data sets used in our textbook
+library(foreign) 
+#Load library to make pretty table
+suppressWarnings(suppressMessages(library(stargazer))) 
+# Import data set of education and wages
+wage1<-read.dta(
+  "http://fmwww.bc.edu/ec-p/data/wooldridge/wage1.dta")
+# Regress log wage on years of education 
+wageregoutput <- lm(formula = lwage ~ educ, data = wage1)
+stargazer(wageregoutput,header=FALSE,type="html",
+  omit.stat=c("adj.rsq"),font.size="tiny",
+  title="Regression of Log Wage on Years of Education")
+```
+
+## Regression Results: Table
+```{r, echo=FALSE, results="asis"}
+# Obtain access to data sets used in our textbook
+library(foreign) 
+#Load library to make pretty table
+suppressWarnings(suppressMessages(library(stargazer))) 
+# Import data set of education and wages
+wage1<-read.dta(
+  "http://fmwww.bc.edu/ec-p/data/wooldridge/wage1.dta")
+# Regress log wage on years of education 
+wageregoutput <- lm(formula = lwage ~ educ, data = wage1)
+stargazer(wageregoutput,header=FALSE,type="html",omit.stat=c("adj.rsq"),
+      font.size="tiny", title="Regression of Log Wage on Years of Education")
+
+```
+
+## Regression Results: Plot (Code)
+```{r, eval=FALSE}
+# Scatter plot with regression line
+plot(wage1$educ,wage1$lwage, xlab = "Years of Education",
+      ylab = "Log Wage", main = "Wage vs Education")
+abline(wageregoutput,col="red")
+
+```
+
+## Regression Results: Plot
+```{r, echo=FALSE}
+# Scatter plot with regression line
+plot(wage1$educ,wage1$lwage, xlab = "Years of Education",
+      ylab = "Log Wage", main = "Wage vs Education")
+abline(wageregoutput,col="red")
+
+```
+
+## Note on using R
+
+- Regression results were implemented in **R**
+- Command for linear regression
+
+```{r, eval=FALSE}
+regression<-lm(formula = lwage ~ educ)
+summary(regression)
+```
+
+- Learn syntax for any command by using **?** in front of name to get help, e.g.
+
+```{r, eval=FALSE}
+?plot
+```
+
+- I will post "Code Display" version of each lecture with R code and explanatory notes for any result displayed in class
+- Can also download raw code .Rmd file for each lecture
+
+## Interpretation
+
+- Even when assumptions are satisfied, causal question not answered by above results
+- How much would wages change if I stayed in school one more year?
+- Maybe education raises wages, or vice versa 
+    - Or both related to some third factor (job performance?)
+- Regression alone won't tell us this without extra info 
+- In practice, above assumptions often dubious even as statistical descriptions
+- More powerful statistical methods which better describe relationship can help
+- Combination of these methods and model of economic situation *together* needed to make headway
+
+
+## Causal inference strategies
+- This course covers research designs which describe situations in which it is possible to extract the causal effect of education on wages 
+    - Experiments
+    - Control
+    - Instrumental Variables
+    - Fixed Effects
+    - Regression Discontinuity
+- We will also go over some methods for better *statistical* descriptions of the relationship.
+
+## Nonlinear methods (code)
+
+```{r, eval=FALSE}
+#Load Libraries for nonparametric estimation
+#Install "np" library 
+install.packages("np", 
+            repos="http://cran.us.r-project.org")
+library(np))
+wagebw<-npregbw(ydat=wage1$lwage,xdat=wage1$educ,
+    regtype="ll",bws=c(2),
+    bandwidth.compute=FALSE, ckertype="uniform")
+#Pretty up Names
+wagebw$xnames<-"Years of Education"
+wagebw$ynames<-"Log Wage"
+plot(wagebw,ylim=c(min(wage1$lwage),max(wage1$lwage)), 
+    main="Wage vs Education, Linear and Nonlinear Fits")
+points(wage1$educ,wage1$lwage,pch=1, col="blue")
+abline(wageregoutput, col="red")
+
+```
+
+## Nonlinear methods
+
+```{r, echo=FALSE}
+#Load Libraries for nonparametric estimation
+#If not installed, uncomment to install "np" library for nonparametrics
+#install.packages("np",repos="http://cran.us.r-project.org")
+suppressWarnings(suppressMessages(library(np)))
+suppressWarnings(suppressMessages(wagebw<-npregbw(ydat=wage1$lwage,xdat=wage1$educ,regtype="ll",bws=c(2),bandwidth.compute=FALSE, ckertype="uniform")))
+#Pretty up Names
+wagebw$xnames<-"Years of Education"
+wagebw$ynames<-"Log Wage"
+suppressWarnings(suppressMessages(plot(wagebw,ylim=c(min(wage1$lwage),max(wage1$lwage)), main="Wage vs Education, Linear and Nonlinear Fits")))
+points(wage1$educ,wage1$lwage,pch=1, col="blue")
+abline(wageregoutput, col="red")
+#scatter.smooth(wage1$educ,wage1$lwage, xlab = "Years of Education", ylab = "Log Wage", main = "Wage vs Education, Linear and Nonlinear Fits")
+
+```
+
+
+## Assignments and readings
+- Readings
+    - This week: brush up on linear models/OLS from Econometrics I/Intro to Statistical Inference
+    - Wooldridge Appendix B & C Review Probability and Statistics
+    - Wooldridge Ch 2-5 review linear regression, univariate and multivariate
+- Assignments
+    - Problem Set 1

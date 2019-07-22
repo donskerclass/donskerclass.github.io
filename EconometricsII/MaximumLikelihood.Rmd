@@ -1,0 +1,345 @@
+---
+title: "Maximum Likelihood and Applications"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+## Today
+
+- Maximum Likelihood Estimation
+    - Why it works
+    - Properties
+    - How to do it
+- Examples: Discrete Choice
+    - Probit
+    - Logit
+    
+## Likelihood-Based Models
+
+- A model defines a probability distribution $f(z,\theta)$ over data $z$ for each parameter value $\theta\in\Theta$ in set of possible values
+    - $f(z,\theta)$ is called the **likelihood function**
+- E.g., linear regression model with normal errors 
+    - $y=x^{\prime}\beta+u$, $u\sim N(0,\sigma^2)$, 
+    - $z=(y,x)$, $\theta$ is coefficient $\beta$ and variance $\sigma^2$
+    - $f(z,\theta)=\frac{1}{\sqrt{2\pi\sigma^2}}exp(-(y-x^{\prime}\beta)^2/2\sigma^2)f(x)$
+- Given observed data $\{z_i\}_{i=1}^{n}\sim i.i.d. f(z,\theta^{*})$, $\theta^{*}\in\Theta$, joint distribution is $\Pi_{i=1}^{n}f(z_i,\theta^*)$
+- Goal is to learn parameters generating distribution by estimating $\theta^*$
+
+
+## Maximum Likelihood Estimatior
+
+- "Estimate model by choosing parameters under which observed data has highest probability"
+- Maximum likelihood estimator (**MLE**) is
+$$\widehat{\theta}_{MLE}=\underset{\theta\in\Theta}{\arg\max}\Pi_{i=1}^{n}f(z_i,\theta)$$
+- Since max not changed by monotone transform, this is same as 
+$$\widehat{\theta}_{MLE}=\underset{\theta\in\Theta}{\arg\max}\frac{1}{n}\sum_{i=1}^{n}log(f(z_i,\theta))$$
+- $\widehat{\theta}_{MLE}$ is special case of nonlinear estimators discussed before
+    - Estimation, identification, computation, inference follow same principles
+    - Show $\widehat{\theta}_{MLE}$ good estimator of $\theta^{*}$ by verifying conditions for consistency, normality, etc.
+
+
+## Example: Discrete outcomes models 
+
+<!-- - We saw OLS and NLLS justifiable as Maximum Likelihood estimators -->
+- MLE most useful where we care about features of distribution other than the mean
+- E.g. discrete data, which take only limited number of values
+- Entire distribution characterized by $Pr(Y=j)$ for each outcome $j=0\ldots J-1$
+- Likelihood model can give probability of different outcomes, predict and explain $Y$
+- If $J=2$, mean $E[Y]=Pr(Y=1)$ gives whole distribution
+- If $Y$ is outcome, predict it using conditional probability $Pr(Y=1|X,\theta)$
+- Likelihood function is $f(Y|X,\theta)=Pr(Y=1|X,\theta)^{Y}(1-Pr(Y=1|X,\theta))^{1-Y}$
+- Joint distribution, if $X\sim f(X)$ is $f(Y|X,\theta)f(X)$
+- Since $f(X)$ not a function of $\theta$, can ignore it in MLE
+    - This gives **conditional likelihood**
+
+
+## Random utility model
+
+- What is a good model for $Pr(Y=1|X,\theta)$?
+- $Pr(Y=1|X,\theta)=X^\prime\beta$ probably not a good one
+    - Probability should be between 0 and 1
+- If $Y$ is a choice made by a person, can use a theory of choices
+- One theory economists often use is utility maximization 
+    - Pick the choice with the highest utility value
+- Utility of $Y=1$ or $Y=0$ may be function of choice and individual characteristics, observed $X$ and unobserved $u$, usually modeled as a linear model
+- Outcome is $Y_i=1\{X_i^\prime\beta^1+u_i^1>X_i^\prime\beta^0+u_i^0\}$
+- Since outcome doesn't depend on scale of utility, just relative value, rewrite as 
+$$Y_i=1\{X_i^\prime\beta>u_i\}$$
+- If $u$ has CDF $F()$ in population, obtain
+$$Pr(Y=1|X,\beta)=F(X^\prime\beta)$$
+
+
+## Probit and Logit
+
+- Common models for distribution $F$ of $u$ are 
+    - Normal $Pr(u<x)=\Phi(x):=\int_{-\infty}^{x}\frac{1}{\sqrt{2\pi}}exp(-u^2/2)du$
+    - Logistic $Pr(u<x)=\frac{exp(x)}{1+\exp(x)}$
+- Likelihood function becomes
+    - Probit Model
+$$f(z,\theta)=\Phi(X^{\prime}\beta)^{Y}(1-\Phi(X^{\prime}\beta))^{1-Y}$$
+    - Logit Model 
+$$f(z,\theta)=(\frac{exp(X^{\prime}\beta)}{1+\exp(X^{\prime}\beta)})^{Y}(1-\frac{exp(X^{\prime}\beta)}{1+\exp(X^{\prime}\beta)})^{1-Y}$$
+
+
+## Justification of models
+
+- Both come from random utility model
+- Probit comes from normal unobserved heterogeneity
+- Logit from Type I extreme value distribution for $u^1$ and $u^0$
+- Or can just be thought of as convenient functional forms for conditional probability
+- Can apply to any data with discrete outcomes
+    - Not just decision data
+- Enforces probability between 0 and 1, makes it monotone function of $X$, with direction given by $\beta$
+- Other choices of F possible
+    - Predictions tend to be fairly similar
+    - Mostly these two used in practice
+
+## Computation
+
+- Logit and probit models implemented in $R$ in **glm** function
+    - Stands for *Generalized Linear Models*
+- Like linear models, except linear function $X^\prime\beta$ enters into likelihood function through a nonlinear transform
+    - Called a **link function**
+- Many variations: binary data (binomial likelihood), count data (poisson likelihood), continuous data (normal likelihood: this is just OLS)
+- Reports coefficients, etc, just like **lm()** command
+- For user-specified likelihood functions, use **maxLik** command
+- Maximize likelihood of data numerically
+    - Iterate over parameters by gradient until max reached
+    - Works well if -log likelihood convex, parameters identified
+
+## Empirical Example: 401K Plan Participation (Code)
+
+```{r, eval=FALSE}
+#Load the Data
+library(foreign)
+Savingsdata<-read.dta(
+  "http://fmwww.bc.edu/ec-p/data/wooldridge/401ksubs.dta")
+library(lmtest)
+# Run and report logit regression of pension 
+# plan participation on income and wealth
+(savingsplanchoice<-glm(formula=p401k~inc+nettfa+age,
+        family=binomial(link="logit"),
+        data = Savingsdata))
+```
+
+
+## Empirical Example: 401K Plan Participation
+
+ - Predict whether individuals will participate in employer-provided 401K Plan
+    - 1 if Yes, 0 if No
+ - Use linear function of income, assets, age to predict
+ - All other unexplained heterogeneity in choice assumed to have logistic distribution
+ - glm command reports coefficients and "deviance"
+    - -2 times the maximized value of the likelihood function
+```{r, echo=FALSE}
+#Load the Data
+library(foreign)
+Savingsdata<-read.dta("http://fmwww.bc.edu/ec-p/data/wooldridge/401ksubs.dta")
+suppressWarnings(suppressMessages(library(lmtest)))
+```
+```{r,eval=FALSE}
+# Run and report logit regression of pension 
+# plan participation on income and wealth
+(savingsplanchoice<-glm(formula=p401k~inc+nettfa+age,
+        family=binomial(link="logit"),
+        data = Savingsdata))
+```
+
+## Results 
+
+```{r,echo=FALSE}
+# Run and report logit regression of pension plan participation on income and wealth
+(savingsplanchoice<-glm(formula=p401k~inc+nettfa+age,
+        family=binomial(link="logit"),data = Savingsdata))
+```
+
+## Interpreting results
+
+- Parameters must be interpreted using model $Pr(Y=1|X,\beta)=F(X^\prime\beta)$
+- Compare linear probability model $E[Y|X]=X^{\prime}\beta$
+- Scale not comparable, and effect size depends on $X$
+- Useful to measure **marginal effects** $\frac{\partial}{\partial X_j}F(X^\prime\beta)=f(X^\prime\beta)\beta_j$
+- Derivative is scaled version of $\beta$, with scale depending on $X$
+- For large magnitudes, density small
+    - If probability almost 1 (0), it can't increase (decrease) much
+- Standard to report summaries of the distribution of effects
+    - **Average Partial Effect** (**APE**) = $\frac{1}{n}\sum_{i=1}^{n}f(X_i^\prime\widehat{\beta})\widehat{\beta}_j$
+    - Similar to Average Treatment Effect in random coefficients model, but now distribution is determined by form of nonlinearity
+    - Comparable across models: probit, logit, etc 
+
+## Average Partial Effects: 401k example
+
+```{r,eval=FALSE}
+#Load Library to calculate marginal effects
+library(mfx)
+#Command runs logistic regression and calculates APEs
+(spcmfx<-logitmfx(formula=p401k~inc+nettfa+age,
+        atmean=FALSE,             
+        robust=TRUE,
+        data = Savingsdata))
+```
+
+## Average Partial Effects: 401k example
+
+```{r,echo=FALSE}
+#Load Library to calculate marginal effects
+suppressWarnings(suppressMessages(library(mfx)))
+#Command runs logistic regression and calculates APEs
+(spcmfx<-logitmfx(formula=p401k~inc+nettfa+age,atmean=FALSE,
+        robust=TRUE,data = Savingsdata))
+```
+
+## Consistency in Nonlinear Models Review
+
+- Choose parameters to minimize criterion function $$\widehat{\theta}=\underset{\theta\in\Theta}{\arg\min}\widehat{Q}(\theta)$$
+- For MLE, $\widehat{Q}(\theta)=\frac{1}{n}\sum_{i=1}^{n}-log(f(z_i,\theta))$
+- Consistency of $\widehat{\theta}_{MLE}$ follows by general result for optimization-based estimators if we have **uniform convergence** and **identification** 
+- $\widehat{Q}(\theta)$ converges uniformly to $Q(\theta)=-E[log(f(z_i,\theta))]$ by uniform law of large numbers
+- **Identification** means $\theta^{*}$ strictly minimizes $Q$
+- Can show this holds for MLE if we have
+    - Correct specification $z_i\sim i.i.d. f(z,\theta^*)$ for $\theta^*\in\Theta$
+    - Uniqueness: $f(z,\theta^*)\neq f(z,\theta)$ with positive probability for any $\theta\neq \theta^*$ in $\Theta$ (For generalized linear model, just means no multicollinearity)
+
+## MLE: Identification Proof
+
+- To see why MLE is maximized at $\theta^{*}$ under correct specification and uniqueness use Jensen's inequality 
+- $E[log(Z)]\leq log(E[Z])$ for any variable Z with equality only if $Z$ constant
+$$Q(\theta^*)-Q(\theta)=E[-log(f(z,\theta^*))+log(f(z,\theta))]$$
+$$=\int[log(f(z,\theta))-log(f(z,\theta^*))]f(z,\theta^*)dz$$
+$$=\int[log(\frac{f(z,\theta)}{f(z,\theta^*)})]f(z,\theta^*)dz\leq log(\int[\frac{f(z,\theta)}{f(z,\theta^*)}]f(z,\theta^*)dz)$$
+$$=log(\int f(z,\theta)dz)=log(1)=0$$
+
+- Inequality strict whenever $\frac{f(z,\theta)}{f(z,\theta^*)}$ not a constant
+    - i.e., if uniqueness holds
+
+## Nonlinear Model Asymptotic Distribution: MLE Case 
+
+- Asymptotic distribution in nonlinear models follows from Taylor expansion of criterion $\widehat{Q}(\theta)$ around the limit $\theta^*$
+- Can repeat argument for this case, starting with first order condition for maximum
+$$0=-\frac{\partial}{\partial\theta}\widehat{Q}(\widehat{\theta}_{MLE})=\frac{1}{n}\sum_{i=1}^{n}\frac{\partial}{\partial\theta}log(f(z,\widehat{\theta}))$$
+- Taylor expand around $\theta^*$ (in 1d case again for simplicity)
+$$=\frac{1}{n}\sum_{i=1}^{n}\frac{\partial}{\partial\theta}log(f(z,\theta^{*}))+\frac{1}{n}\sum_{i=1}^{n}\frac{\partial^2}{\partial\theta^2}log(f(z,\bar{\theta}))(\widehat{\theta}_{MLE}-\theta^*)$$
+- Rearrange and scale by $\sqrt{n}$ to get representation
+$$\sqrt{n}(\widehat{\theta}_{MLE}-\theta^*)=(\frac{-1}{n}\sum_{i=1}^{n}\frac{\partial^2}{\partial\theta^2}log(f(z,\bar{\theta})))^{-1}\frac{1}{\sqrt{n}}\sum_{i=1}^{n}\frac{\partial}{\partial\theta}log(f(z,\theta^{*}))$$
+
+
+
+## MLE: Distribution
+
+- Standardized first derivative follows CLT
+$$\sqrt{n}\frac{\partial}{\partial\theta}\widehat{Q}(\theta^*)=\frac{1}{\sqrt{n}}\sum_{i=1}^{n}\frac{\partial}{\partial\theta}log(f(z,\theta^*))\overset{d}{\rightarrow}N(0,\Sigma_Q)$$
+$$\Sigma_Q=E[\frac{\partial}{\partial\theta}log(f(z,\theta^*))\frac{\partial}{\partial\theta}log(f(z,\theta^*))^\prime]$$
+- Second derivative converges by uniform law of large numbers
+$$\frac{-\partial^2}{\partial\theta^2}\widehat{Q}(\widehat{\theta})=\frac{-1}{n}\sum_{i=1}^{n}\frac{\partial^2}{\partial\theta^2}log(f(z,\bar{\theta}))\overset{p}{\rightarrow}\mathcal{J}:=-E[\frac{\partial^2}{\partial\theta^2}log(f(z,\theta^{*}))]$$
+- Together, obtain full limit distribution
+$$\sqrt{n}(\widehat{\theta}_{MLE}-\theta^*)\overset{d}{\rightarrow}N(0,\mathcal{J}^{-1}\Sigma_Q\mathcal{J}^{-1})$$
+- Can estimate this by replacing expectations by sample means, evaluated at $\widehat{\theta}$
+
+## MLE Inference
+
+- Since parameters are asymptotically normal, t-tests and confidence intervals for individual parameters constructed in standard way
+- Under correct specification, can simplify sandwich formula, and standard commands do so
+- Test joint hypotheses  by Wald test, using estimated variance
+- One more convenient way to conduct multivariate test: Likelihood ratio test
+    - To compare $H_0:R\theta=0$ restricted values (E.g., subset of size $p$ of coefs are 0) against unrestricted, can estimate restricted and unrestricted versions
+    - $-2n*(\widehat{Q}_{Restricted}-\widehat{Q}_{unrestricted})\sim\chi^2_p$ under $H_0$
+    - Displayed by default in **glm** for test that coefficients except constant all 0, in same way that F test displayed for OLS
+
+## 401K Choice Example: Inference (Code)
+
+```{r,eval=FALSE, results="asis"}
+# Display estimates with inference 
+# for 401K Logit regression
+sum401k<-summary(savingsplanchoice)
+library(stargazer)))
+table<-stargazer(savingsplanchoice,
+                 type="html",
+  header=FALSE,
+  no.space=TRUE, 
+  title="Logistic Regression for Savings Plan Choice",
+  omit.stat=c("aic"),
+  font.size="small")
+```
+
+## 401K Choice Example: Inference
+
+```{r,echo=FALSE, results="asis"}
+# Display estimates with inference for 401K Logit regression
+sum401k<-summary(savingsplanchoice)
+suppressMessages(suppressWarnings(library(stargazer)))
+table<-stargazer(savingsplanchoice, type="html", header=FALSE,
+                 no.space=TRUE, 
+                 title="Logistic Regression for Savings Plan Choice",
+                 omit.stat=c("aic"),
+                 font.size="small")
+```
+
+## MLE as Empirical Risk Minimizer
+
+- If data not drawn from $f(X,\theta)$ for some $\theta\in\Theta$, the model is called **misspecified**
+- E.g., true error distribution is normal, but you estimate Logit, or vice versa
+- Even if misspecified, MLE interpretable as finding parameter that minimizes a risk function defined by the likelihood
+- Probability limit is the lowest risk value in parameter space
+- Whether this is meaningful or not depends on if parameters still have some natural interpretation
+- In probit/logit case, corresponds to minimizing particular weighting of 0/1 prediction error
+- Usually gives okay performance for **classification**
+    - Best guess of 0 vs 1, 
+    - Also for Average Partial Effect
+- Variance calculation goes through exactly the same
+- Sandwich formula doesn't simplify
+    - Need to use robust variance estimator
+
+## Efficiency
+
+- If data truly drawn from distribution $f(X,\theta)$, MLE is asymptotically efficient 
+    - Has smallest asymptotic variance of any "regular" estimator
+    - Compare to anything for which $\sqrt{n}(\widehat{\theta}-\theta)\overset{d}{\rightarrow}N(0,V)$
+    - For any one dimensional linear combination of parameters $c^\prime\theta$, $Var(c^{\prime}\widehat{\theta}_{MLE})\leq Var(c^{\prime}\widehat{\theta})$
+<!-- - (Precise statement of best is that $V-\Sigma_{MLE}$ is positive semidefinite) -->
+- Not about finite sample properties
+    - MLE can be and often is biased
+    - Other estimators may have smaller variance in finite samples but do no better asymptotically
+- If data not drawn from $f(X,\theta)$, MLE need not be most efficient estimator, even of whatever it is estimating    
+
+## MLE Assumptions
+
+- (MLE1) Nonlinear model $z\sim f(z,\theta^*)$ for some $\theta^*\in\Theta$
+- (MLE2) Random sampling $z_i$ drawn iid from above model
+- (MLE3) (i): Identification: $f(z,\theta^*)\neq f(z,\theta)$ with positive probability for any $\theta\in\Theta$
+    -  (ii): Uniformity: $\underset{\theta\in\Theta}{\sup}|\frac{1}{n}\sum_{i=1}^{n}\frac{\partial}{\partial\theta}\log f(z_i,\theta)-E[\frac{\partial}{\partial\theta}\log f(z_i,\theta)]| \overset{p}{\rightarrow}0$ 
+    - (iii): $\Theta$ finite dimensional, closed, and bounded, and $f(z,\theta)$ continuous in $\theta$ (implies (ii))
+- (MLE4) (i): Differentiability: $f(X,\theta)$ twice continuously differentiable in $\theta$ with bounded derivatives
+    - (ii): Uniform convergence of second derivative (holds under 4(i) and 3(iii))
+
+## MLE: Properties
+
+- Under MLE 1-3, correct specification, random sampling, identification, and uniformity, MLE consistently estimates $\theta^*$
+- Adding (4), second derivatives which converge uniformly, have asymptotically normal inference with efficient variance matrix
+- Results under partial misspecification not as strong as those for OLS/NLS
+- Since full distribution is used to estimate parameters, no part of model that can be ignored like distribution of error term in OLS
+    - Under heteroskedasticity, MLE may not even be consistent
+- If correct specification fails, (MLE2) replaced by $z_i\sim i.i.d.f(z)$ for density not in class (but other assumptions same), MLE finds $\theta$ which minimizes the expected loss, which might be decent predictor if likelihood interpreted as a prediction loss
+- MLE then consistent and asymptotically normal, but no longer efficient, and need robust estimator (use **sandwich** library)
+
+## Summary
+
+- Maximum likelihood allows estimating models specified in terms of density
+- Can achieve efficient estimates, and predictions which describe properties of data other than conditional mean
+- Especially useful special case
+    - Conditional probability of binary outcomes
+    - Probit, Logit
+- MLE can be shown consistent and asymptotically normal if data comes from true model
+- Otherwise, it estimates a best predictor
+    - Use robust variance estimator
+
+## Next Time
+
+- More about discrete choice estimation
+    - Explaining and interpreting probit/logit
+    - Cases with more than 2 outcomes
+
+
+
+

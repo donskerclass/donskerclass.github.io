@@ -1,0 +1,43 @@
+---
+title: "Econometrics II"
+author: "David Childers"
+output: html_document
+---
+
+## Course Description
+
+This is an advanced undergraduate course on Econometrics with a focus on methods used in practice in contemporary empirical economic research. Topics include causal inference, panel data, nonlinear methods, and time series, with a focus on real data applications and code examples in R. As the name suggests, the course is designed to be a successor to Econometrics I, and so presumes familiarity with probability and statistics, linear regression, and the R statisitical programming language. The primary texts for the course are *Introductory Econometrics: A Modern Approach (4th edition)* by Jeffrey Wooldridge and *Mastering 'Metrics* by Joshua Angrist and Jörn-Steffen Pishke, with some coverage of additional topics not covered in these texts including the Directed Acyclic Graph (DAG) approach to causal inference (Lectures [6](EconometricsII/StructuralModels.html) and [7](EconometricsII/ControlandIV.html)) and nonparametric regression (Lecture [15](EconometricsII/Nonparametric.html)).
+
+
+## Course Materials
+
+The following files, derived from the lecture slides for the course and containing both text and R code, are provided as-is, as a resource for students and researchers interested in the topics. Additional course materials, including syllabi, problem sets, practice problems, and project assignments, may be available upon request. If you have questions, comments, or criticisms of the material, please [contact me](mailto:dchilder@andrew.cmu.edu).
+
+1. [Introduction and Regression](EconometricsII/Econometrics.html)
+2. [Multivariate Regression](EconometricsII/MultivariateRegression.html)
+3. [Misspecification in Linear Models](EconometricsII/Misspecification.html)
+4. [Inference and Causality](EconometricsII/InferenceandCausality.html)
+5. [Causality II: Experiments and Control](EconometricsII/CausalityII.html)
+6. [Causality III: Structural Models](EconometricsII/StructuralModels.html)
+7. [Control and Instrumental Variables](EconometricsII/ControlandIV.html)
+8. [Instrumental Variables: Potential Outcomes Approach](EconometricsII/InstrumentalVariables.html)
+9. [Multivariate Instrumental Variables](EconometricsII/MultivariateIV.html)
+10. [More Applications of Instrumental Variables](EconometricsII/MoreIV.html)
+11. [Panel Data, Event Studies, and Difference in Differences](EconometricsII/PanelDataI.html)
+12. [Panel Data II: Unobserved Effects](EconometricsII/PanelDataII.html)
+13. [Nonlinear Estimation](EconometricsII/NonlinearI.html)
+14. [Nonlinear Estimation II: Inference](EconometricsII/NonlinearII.html)
+15. [Nonparametric Regression](EconometricsII/Nonparametric.html)
+16. [Regression Discontinuity](EconometricsII/RegressionDiscontinuity.html)
+17. [Maximum Likelihood and Binary Choice](EconometricsII/MaximumLikelihood.html)
+18. [Maximum Likelihood II: Discrete Outcome Models](EconometricsII/DiscreteOutcomes.html)
+19. [Replication](EconometricsII/Replication.html)
+20. [Time Series](EconometricsII/TimeSeriesI.html)
+21. [Time Series II: Inference](EconometricsII/TimeSeriesII.html)
+22. [Nonstationary Time Series](EconometricsII/TimeSeriesNonstationarity.html)
+23. (Optional Topic) [Cointegration](EconometricsII/Cointegration.html)
+
+
+
+
+

@@ -1,0 +1,351 @@
+---
+title: 'Time Series II'
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+    
+## Today
+
+- Working with time series
+- Regression with dependent data
+- Inference under serial correlation
+- Ensuring data is stationary
+    - Trends, Seasonality
+- Covered in Ch 10-12 of Wooldridge    
+
+## Time Series
+
+- Time series present another design for data
+    - Series $(Y_t,X_t)$ $t=1\ldots T$ of ordered observations
+- Serial correlation makes usual inference difficult
+    - $Cov(Y_t,Y_{t+h})\neq 0$
+- But can model serial correlation to describe properties of data
+- Approach 1: finite sample properties via strict exogeneity
+    - Can do regressions using time series data and rely on finite sample properties
+- Approach 2: asymptotic theory under weak dependence   
+    - Weakly dependent series satisfy modified LLN and CLT
+    - Use this to show consistency and asymptotic normality of regression with dependent data
+- When the future is "like" the past and historical events are like present ones, we can use past to learn about future
+- True for i.i.d. data, stable ARMA processes, many more
+- Can fail if future fundamentally different from past    
+
+## Stationarity and Weak Dependence: Review
+
+- (Second order) **Stationarity**
+    - $E[Y_{t}]=E[Y_{s}]$ for all $t$, $s$
+    - $Cov(Y_{t},Y_{t+h})=Cov(Y_{s},Y_{s+h})$ for all $t$, $s$
+- **Weak dependence** 
+    - $Cov(Y_t,Y_{t+h})\rightarrow 0$ as $h\rightarrow \infty$
+    - $\sum_{h=-\infty}^{\infty}|Cov(Y_t,Y_{t+h})|<\infty$   
+- Stationarity and weak dependence imply
+    - **Ergodic Theorem** (law of large numbers for time series)
+$$\frac{1}{T}\sum_{t=1}^{T}y_t\overset{p}{\rightarrow}E[y_t]$$ 
+    - Time series **Central limit theorem**
+$$\frac{1}{\sqrt{T}}\sum_{t=1}^{T}(y_t-E[y_t])\overset{d}{\rightarrow}N(0,\Sigma)$$
+$$\Sigma=\sum_{h=-\infty}^{\infty}Cov(y_t,y_{t+h})=Var(Y_t)+2\sum_{h=1}^{\infty}Cov(y_t,y_{t+h})$$
+
+## Time Series Regression: Assumptions
+
+- (TS.1') Linear Model $(X_t,Y_t)$ drawn from model $Y_t=X_t^{\prime}\beta+u_t$ and satisfy stationarity and weak dependence
+- (TS.2') No perfect multicollinearity of $X_t$
+- (TS.3') Contemporaneous exogeneity $E[u_t|X_t]=0 \forall t$
+- or (TS 3'') $Cov(X_t,u_t)=0$
+- (TS.4') Comtemporaneous homoskedasticity: $Var(u_t|X_t)=\sigma^2$ $\forall\ t$
+- (TS.5') No serial correlation $E[u_tu_s|X_t,X_s]=0$ $\forall\ t\neq s$
+
+## Time Series Regression: Results
+
+ - Under (TS.1'),(TS.2'),(TS.3'') (or (TS.3'), which implies (TS.3'')), have consistency: 
+$$\widehat{\beta}\overset{p}{\rightarrow}\beta$$
+ - Under (TS.1')-(TS.5') have asymptotic normality with usual variance formula
+$$\sqrt{T}(\widehat{\beta}-\beta)\overset{d}{\rightarrow}N(0,\sigma^2(E[X_tX_t^\prime])^{-1})$$
+- Inference is exactly standard: t-statistics, Wald tests, CIs, etc
+- With serial correlation or heteroskedasticity, consistent but need modified standard errors
+    - Rely on time series CLT
+
+## Inference in Regression with dependent errors
+
+- Homoskedasticity assumption not critical
+    - Heteroskedasticity can be handled by using usual sandwich variance formula
+- Zero serial correlation in errors $E[u_tu_s|X_s,X_t]=0$ still needed
+- Strong assumption: given predictor variables, future values of outcome completely uncorrelated with past values
+- This might be true if we have included any past variables that are related to outcome
+    - May not want to or be able to include all relevant predictors
+- Don't need 0 serial correlation for consistency, normality
+- If $u_t$ stationary and weakly dependent, OLS asymptototically normal, with a variance that depends on correlation in errors
+- Follows from weakly dependent CLT
+- If we can estimate the variance, can perform t and Wald tests with new variance estimator
+
+
+## Variance estimation under autocorrelation
+
+- Asymptotic variance of $\widehat{\beta}_{OLS}$ when $u_t$ serially correlated follows from usual calculations: $\sqrt{T}(\widehat{\beta}-\beta)=$
+$$(\frac{1}{T}\sum_{t=1}^{T}X_tX_t^{\prime})^{-1}\frac{1}{\sqrt{T}}\sum_{t=1}^{T}X_tu_t\overset{d}{\rightarrow}N(0,E[X_tX_t^\prime]^{-1}\Sigma E[X_tX_t^\prime]^{-1})$$
+- $\frac{1}{T}\sum_{t=1}^{T}X_tX_t^{\prime}\overset{p}{\rightarrow}E[X_tX_t^\prime]$ by ergodic theorem
+- $\frac{1}{\sqrt{T}}\sum_{t=1}^{T}X_tu_t\overset{d}{\rightarrow}N(0,\Sigma)$ by weak dependent CLT
+- $\Sigma=Var(X_tu_t)+2Cov(X_tu_t,X_{t+1}u_{t+1})+2Cov(X_tu_t,X_{t+2}u_{t+2})+2Cov(X_tu_t,X_{t+3}u_{t+3})+\ldots$ long run variance
+- First part estimated by sample mean, but estimating second part hard since it is infinite sum
+- 2 options: come up with model for serial correlation, or estimate $\infty$ sum directly
+
+## Modeling Residual Serial Correlation
+
+- Can estimate long run variance if we have a model of serial correlation in errors
+- E.g. $u_t=\rho u_{t-1}+e_{t}$, $e_t\sim i.i.d.(0,\sigma_e^2)$ independent of $X$ then $Cov(u_t,u_{t+h})=\rho^h\sigma_e^2$
+- One parameter, can be estimated by two step procedure
+    - Regress $Y_t$ on $X_t$ to get residuals $\widehat{u}_t$
+    - Regress $\widehat{u}_t$ on $\widehat{u}_{t-1}$ to get $\widehat{\rho}$
+- With $\widehat{\rho}$, can use it to run weighted regression which eliminates serial correlation
+- Generalized least squares procedure is **Cochrane-Orcutt** (or, with slight modifications, **Prais-Winsten**) method
+- Gives efficient estimates if model of serial correlation is correct
+- Can extend to AR(2) model, etc
+- If model not correct, still consistent, but inference not accurate
+
+## Heteroskedasticity and Autocorrelation-Consistent inference
+
+- Long run variance can be estimated without a model
+- $\Sigma=Var(X_tu_t)+2Cov(X_tu_t,X_{t+1}u_{t+1})+2Cov(X_tu_t,X_{t+2}u_{t+2})+2Cov(X_tu_t,X_{t+3}u_{t+3})+\ldots$
+- By weak dependence, later covariance of far away observations close to 0
+- Estimate first $m$ terms by sample covariances, ignore the rest
+- Estimate biased by excluding later terms, but bias decreases if $m$ grows with sample size
+    - Bias-variance tradeoff just like kernel regression
+- Can also use weight rather than fixed window
+    - Just like in kernel regression
+- This method accounts for autocorrelation
+    - Also heteroskedasticity since sandwich form used
+- Called **HAC** estimate (m lag version called **Newey-West**)
+- In **R** as **vcovHAC** or **NeweyWest** in **sandwich** library
+
+## Practical HAC Estimation
+
+- Bandwidth can be chosen adaptively by approximate rules
+- Since convergence only with slowly growing m, often low accuracy in moderate sample sizes, especially if residuals highly persistent
+- Often results better using "prewhitening"
+    - Estimate parametric (e.g. AR(1)) model for errors
+    - *Then* apply kernel to residuals from this model
+    - Idea: parametric model close to right, kernel accounts for any misspecification
+    - Option *prewhite* in **vcovHAC**
+- Usually care about coefficients, not standard errors per se
+    - These methods ensure tests and CIs have accurate coverage
+
+## Example: Monetary Policy Reaction Function (Code)
+
+```{r, eval=FALSE}
+#Library to download data
+library(pdfetch)
+#Download quarterly series from FRED
+gdppot<-pdfetch_FRED("GDPPOT") # Potential GDP
+# Downloaded quarterly fed funds rate to file 
+# in directory: need this file to compile
+fefr<-read.csv("Data/FEDFUNDS.csv") 
+ffr<-ts(fefr[,2],start=c(1954,3),frequency=4)
+Lffr<-lag(ffr)
+```
+
+## Example: Monetary Policy Reaction Function (Code 2)
+
+```{r, eval=FALSE}
+# GDP Price Deflator (price Level)
+gdpdef<-pdfetch_FRED("GDPDEF") 
+gdpc1<-pdfetch_FRED("GDPC1") # Real GDP
+#Output Gap
+gap<-ts(100*(gdpc1-gdppot)/gdppot,
+      start=c(1949,2),frequency=4) 
+#Inflation, # Change from 1 year ago
+inf<-ts(100*(gdpdef-lag(gdpdef,4))/lag(gdpdef,4),
+      start=c(1947,2),frequency=4) 
+#Library for time series regression
+library(dynlm)
+taylorrule<-dynlm(ffr~L(ffr)+inf+gap)
+```
+
+## Example: Monetary Policy Reaction Function ("Taylor Rule")
+
+- Estimate monetary policy reaction function as before
+$$r_t=\beta_0+\beta_1 r_{t-1} + \beta_2 inf_t + \beta_3 gap_t + u_t$$
+- Use HAC robust standard errors to account for serial correlation, heteroskedasticity in interest rates not accounted for by predictors
+```{r,eval=FALSE}
+taylorrule<-dynlm(ffr~L(ffr)+inf+gap)
+coeftest(taylorrule,vcovHAC)
+```
+
+- Display usual, HAC, and prewhitened HAC SE estimates
+- All require stationarity and weak dependence
+    - Interest rate policy follows same rule over time
+    - Long ago interest rates (inflation, GDP Gap) have little relation to today's values
+    
+```{r, echo=FALSE}
+#Library to download data
+library(pdfetch)
+#Download quarterly series from FRED
+gdppot<-pdfetch_FRED("GDPPOT") # Potential GDP
+fefr<-read.csv("Data/FEDFUNDS.csv") # Downloaded quarterly fed funds rate to file in directory: need this file to compile
+ffr<-ts(fefr[,2],start=c(1954,3),frequency=4)
+Lffr<-lag(ffr)
+gdpdef<-pdfetch_FRED("GDPDEF") # GDP Price Deflator (price Level)
+gdpc1<-pdfetch_FRED("GDPC1") # Real GDP
+gap<-ts(100*(gdpc1-gdppot)/gdppot,start=c(1949,2),frequency=4) #Output Gap
+inf<-ts(100*(gdpdef-lag(gdpdef,4))/lag(gdpdef,4),start=c(1947,2),frequency=4) #Inflation, # Change from 1 year ago
+#Library for time series regression
+suppressWarnings(suppressMessages(library(dynlm)))
+taylorrule<-dynlm(ffr~L(ffr)+inf+gap)
+```
+
+## Estimates: Robust inference for Taylor Rule (Code)
+
+```{r, eval=FALSE}
+library(sandwich) #Standard error estimates
+library(lmtest) #Test statistics
+library(stargazer) #Tables
+taylorrobust<-coeftest(taylorrule,vcovHAC)
+taylorprewhite<-coeftest(taylorrule,
+    vcovHAC(taylorrule,prewhite=1))
+stargazer(taylorrule,taylorrobust,
+  taylorprewhite,type="html",header=FALSE,
+  omit.stat=c("ser","adj.rsq"),
+  title="Taylor Rule: Usual, HAC, 
+  prewhitened HAC standard errors")                
+```
+
+## Estimates: Robust inference for Taylor Rule
+
+```{r, echo=FALSE, results="asis"}
+suppressWarnings(suppressMessages(library(sandwich)))
+suppressWarnings(suppressMessages(library(lmtest)))
+suppressWarnings(suppressMessages(library(stargazer)))
+taylorrobust<-coeftest(taylorrule,vcovHAC)
+taylorprewhite<-coeftest(taylorrule,vcovHAC(taylorrule,prewhite=1))
+stargazer(taylorrule,taylorrobust,taylorprewhite,type="html",header=FALSE,
+    omit.stat=c("ser","adj.rsq"),
+    title="Taylor Rule: Usual, HAC, prewhitened HAC standard errors")                
+```
+
+## Sources of nonstationarity
+
+- Data nonstationary if $E[Y_t]\neq E[Y_s]$ or $Cov(Y_t,Y_{t+h})\neq Cov(Y_s,Y_{s+h})$ for $s\neq t$ 
+- Fails when value is deterministic function of time
+- Trends: many series grow (or shrink) over time
+    - Mean not a constant
+    - GDP much higher now than in past
+- Breaks: behavior of series differs after some time period
+    - Dollar price of gold constant at $35/oz 1945-1971, then increasing and highly variable after
+- Seasonality: behavior of series different in different quarters/months/day of the week
+    - Retail sales always largest in December
+- Fails when dynamics unstable
+    - Series has no well-defined mean or variance to return to
+    - E.g. Random walk: $Y_t=Y_{t-1}+e_t$, $E[e_t|Y_{t-1}]=0$ $\forall$ $t$
+    - Has conditional mean $E[Y_{t+h}|Y_t]=Y_t$ for $h>0$, but no time invariant distribution can satisfy above
+    - Same true of any unstable ARMA process
+
+## A trending time series: Prices, 1947-2019 (Code)
+
+```{r, eval=FALSE}
+plot(gdpdef, main="Price Level (GDP Deflator)", 
+     ylab="Price Level")
+```
+
+## A trending time series: Prices, 1947-2019 (code)
+
+```{r, echo=FALSE}
+plot(gdpdef, main="Price Level (GDP Deflator)", ylab="Price Level")
+```
+
+## Nonstationarity: why a big deal
+
+- Stationarity needed for consistency and inference
+- Without it, not clear what "average" or "convergence" means
+- One way to think about problem it causes
+    - Observations correlated with missing variable: *time*
+- If both $x$ and $y$ nonstationary, have omitted variable bias
+- Observe two series strongly related simply because both changing over time
+- This phenomenon is known as "spurious correlation"
+    - Yule (1926) called it "nonsense correlation"
+    - Striking because no relationship other than the fact that variables are time series need connect them
+    
+## Example Spurious Correlation
+
+![Marriage vs. Margarine](Images/MaineMargarine.png)
+
+
+## Dealing with nonstationary data
+
+- Running a regression using a nonstationary time series won't produce a consistent estimate
+- Tough luck for macroeconomists and forecasters
+    - No reason future has to be like the past
+- But there is hope, if source of nonstationarity is known
+    - Transform series so that transformed series is stationary
+- When mean and variance known deterministic functions of time $\mu_t$ and $\sigma_t^2$, can just normalize
+    - $\frac{Y_t-\mu_t}{\sigma_t^2}$ is stationary
+- In any model built out of stationary components, can solve for the stationary variable
+- For random walk $Y_t=Y_{t-1}+e_t$, $Y_t$ nonstationary but $\Delta Y_t=e_t$ is stationary
+- Transformed variables are stationary but regression equation may have different interpretation
+    - GDP not stationary but GDP growth might be
+- Differences, ratios, etc can be used
+
+## Trend stationarity
+
+- Simplest case is deterministic trend
+    - $Y_t = \beta_0 +\beta_1 t + u_t$ for some stationary (not necessarily independent) $u_t$
+- Can also do quadratic trend $\beta_0 +\beta_1 t +\beta_2 t^2$, exponential, etc
+- Usually better to take logs and model as linear trend for exponentially growing series like many macroeconomic variables
+- If we knew coefficients, we could just subtract trend
+- Solution: put trend as covariate in regression
+
+## Inference with time trends
+
+- With time trends, inference is nonstandard: don't trust, e.g. $R^2$
+- It's not stationary, so strictly speaking consistency/normality results for stationary data don't apply, but they do still hold
+- In fact, coefficient on trend converges faster than usual: for linear trend coefficient, estimation error asymptotically proportional to $\frac{1}{T^2}$ instead of $\frac{1}{T}$
+- Including trend as regressor equivalent to regressing both $Y$ and $X$ on $t$, running regression on residuals
+    - *Residuals* are then stationary
+- Usual (or robust, if errors heteroskedastic or serially correlated) standard errors from this equivalent procedure are asymptotically valid
+
+
+```{r, echo=FALSE}
+#This is just for myself: 
+# A simulation which demonstrates that the rate of converegence of OLS for estimating the coefficient on a linear trend is faster than the usual rate
+# For linear trends, the rate becomes Var(beta^hat)=O(1/T^2) instead of the usual O(1/T)
+# Exact rate depends on shape of trend: higher order polynomials are faster, lower order are slower
+#Detrending simulation
+n<-100
+Ti<-500
+b0<-1 #Coefficient on time trend
+#u<-rnorm(Ti)
+ys<-matrix(nrow=(Ti+1),ncol=n)
+tvec<-1:(Ti+1) #Time points
+bhvec<-vector(length=n) #coefficient for each simulation
+# Simulate length Ti series n times with linear trend and regress on time trend
+for (m in 1:(n)){
+  ys[1,m]<-0
+  for (s in 1:(Ti)){
+ys[s+1,m]<-b0*s+rnorm(1)
+  }
+  temp<-lm(ys[,m]~tvec)
+  bhvec[m]<-temp$coefficients[2]
+}
+```
+
+## Making data stationary 
+
+- Strategy of including deterministic function of time in regression generalizes
+- Seasonality
+    - Include dummy for month/quarter/day of week in regression to account for seasonal changes in mean
+- Breaks
+    - Include dummy for after/before break date
+- Other approach is transforming series directly
+    - Most government statistics reported already de-seasonalized
+    - Can also do something like $X_t-L^4X_t$
+        - Change in series over one year
+    - Since both in same season, seasonal mean removed
+
+
+## Summary
+
+- With dependent data, can still learn from standard regression methods
+- If data stationary and weakly dependent, have consistency and asymptotic normality
+- If errors still correlated, can use robust variance estimate
+- If nonstationary, can model form of nonstationarity, remove it
+    - Include time trend (or season dummies, etc) in regression
+    - Difference or transform data
+- Once stationarity and weak dependence restored, estimation, inference, interpretation similar to iid case, with modified error estimates   

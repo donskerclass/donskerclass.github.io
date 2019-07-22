@@ -1,0 +1,304 @@
+---
+title: "Introduction to Nonlinear Estimation"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+## Today
+
+- Nonlinear estimators
+- Nonlinear Least Squares Regression
+- Principles: consistency
+
+## Nonlinear Estimation
+
+- Many models have no convenient linear representation
+- Sometimes we know or believe our data have a particular nonlinear structure
+    - Want to exploit this for better estimation and inference
+- Simple example: instead of linear regression model
+
+$$Y=\beta_0+\beta_1X_1 +\beta_2X_2+\ldots+\beta_kX_k + u$$
+
+- We may believe in **nonlinear regression** model
+
+$$Y=f(X,\theta) +u$$
+
+- Here, $f(X,\theta)$ is *nonlinear* function of some parameters $\theta$
+- Requires applying more general principles for estimation
+
+## Examples
+
+- $Y$ might take on restricted set of values 
+    - e.g., 0 or 1, or non-negative real numbers, non-negative integers
+    - Linear regression model may predict values of $Y$ which are not logically possible
+    - Nonlinear models can enforce these restrictions
+- We may care about features of data not represented by conditional expectation
+    - Conditional probabilities, variances, or other moments
+- We may care about conditional expectation function, but believe it is nonlinear function of parameters
+    - Ex: $E[Y|X]=\beta_1exp(\gamma_1X_1) +\beta_2 exp(\gamma_2X_2)$, neither $\beta$  nor $\gamma$ known
+    - This is nonlinear regression model
+    - Focus only on this today, introduce other models later
+
+## Principles
+
+- In general a **model** is a description of the behavior of some **variables** in terms of some (possibly unknown) numbers called **parameters**
+- For any set of parameters, the model produces some implications for the distribution of data
+- Would like to use these implications to produce estimators of the parameters
+- Recall we showed that OLS could be justified by any of several related principles
+    - Empirical Risk Minimization
+    - Method of moments
+    - Maximum likelihood
+- All of these principles can be used to find estimators for nonlinear models also
+
+## Empirical Risk Minimization
+
+- Find best predictor of $Y$ among functions $f(X,\theta)$ with parameters $\theta\in\Theta$  
+- Measure "best" by **loss function** $\ell(Y,f(X))$
+    - E.g. $(Y-f(X,\theta))^2$  or $|Y-f(X,\theta)|$ (for real Y) or $-Y\log(f(X,\theta)) - (1-Y)\log(1-f(X,\theta))$ for binary $Y$
+- **Risk** is average loss over the distribution of data $E[\ell(Y,f(X,\theta))]$
+- Best predictor is the $\theta$ that makes this smallest $\theta_{0}=\underset{\theta\in\Theta}{\arg\min}E[\ell(Y,f(X,\theta))]$
+- Don't know risk, but can approximate it by **empirical risk** $\frac{1}{n}\sum_{i=1}^{n}\ell(Y_i,f(X_i))$
+- **Empirical risk minimizer** is $$\widehat{\theta}_{0}=\underset{\theta\in\Theta}{\arg\min}\frac{1}{n}\sum_{i=1}^{n}[\ell(Y_i,f(X_i,\theta))]$$
+- No need for $f(X,\theta)$ to be just linear functions
+
+## Maximum Likelihood
+
+- Sometimes model specifies entire joint (or at least conditional) distribution of the data, called **likelihood**
+- $(Y,X)\sim p(Y,X,\theta)$ or $p(Y|X;\theta)p(X)$
+- Fisher had idea that choosing $\theta$ under which observed data set is most probable would give good estimate of parameter for distribution that actually did generate the data
+- $(Y_i,X_i)$ iid means joint distribution is product of $p(.)$ 
+- Taking log turns this into sum but doesn't change arg max
+$$\widehat{\theta}_{MLE}=\underset{\theta\in\Theta}{\arg\max}(\sum_{i=1}^{n}log(p(Y_i|X_i,\theta)))$$
+- Likelihood for nonlinear regression with normal errors gives 
+$$p(Y|X,\theta)=\frac{1}{\sqrt{2\pi\sigma^2}}\exp(-(Y-f(X,\theta))^2/2\sigma^2)$$
+$$\widehat{\theta}_{MLE}=\underset{\theta\in\Theta}{\arg\max}(\sum_{i=1}^{n}-(Y-f(X,\theta))^2)$$
+
+
+## Method of Moments 
+
+- Model may imply that expectations of certain functions $g(Y,X,\theta)$ satisfy $E[g(Y,X,\theta)]=0$ when $\theta=\theta_0$
+- E.g. $Y=f(X,\theta_0)+u$ with $E[u|X]=0$ gives 
+
+$$E[(Y-f(X,\theta_0))t(X)]=0$$ 
+
+- for any functions $t(X)$ of $X$ (by def of conditional expectation)
+
+- If this is *only* true for $\theta=\theta_0$, we say that these moments *identify* $\theta$
+- Can solve nonlinear system of equations for $\theta$ that makes moment equations true
+- This must be $\theta_0$
+- To estimate, replace $E$ by $\frac{1}{n}\sum_{i=1}^{n}$
+- Estimate $\widehat{\theta}$ is solution to approximate system
+$$\frac{1}{n}\sum_{i=1}^{n}g(Y,X,\widehat{\theta})=0$$
+
+## Optimization Estimators and Method of moments
+
+- Can usually represent ERM or MLE by method of moments
+- Optimum given by solution of first order conditions
+    - Set derivative to 0
+- $\theta_0=\underset{\theta\in\Theta}{\arg\min}E[\ell(Y,f(X,\theta))]$ requires
+$$0=\frac{\partial}{\partial \theta}E[\ell(Y,f(X,\theta))]=E[\frac{\partial}{\partial f}\ell(Y,f(X,\theta))\frac{\partial}{\partial \theta}f(X,\theta)]$$
+- In NLLS case, this gives
+$$E[(Y-f(X,\theta))\frac{\partial}{\partial \theta}f(X,\theta)]=0$$
+- $\theta$ is a vector of k parameters
+    - System of $k$ equations in $k$ unknowns
+- May or may not have unique solution
+- In OLS case, unique solution condition known 
+    - "no multicollinearity"
+- For nonlinear estimators, analogous "unique solution" condition needed, but usually hard to express explicitly
+
+
+## Nonlinear Regression
+
+- Nonlinear least squares (NLLS) is special case of each method
+- Handy when model says a conditional expectation function takes a particular nonlinear form
+- NLLS, along with more general procedures (method of moments, MLE), often used in "structural" estimation of economic models
+    - Derive form of nonlinear relationship from model of individual and equilibrium behavior
+    - Means form of estimator looks different in each case
+
+## Doing more with linearity
+
+- Note that OLS can handle nonlinear CEF
+    - Use transformations of $X$ or $Y$
+- But must search over class of linear combinations of nonlinear transformations
+- You can match almost anything by including a high enough order polynomial
+- $X=(1,x,x^2,x^3,...,x^k)$
+- But for some functions you may need a really big $k$
+    - Maybe as big as number of data points
+- Standard OLS limit theory *not* applicable
+- Might instead choose some other class of transformations
+    - Piecewise polynomial (spline), or other exotic functions
+- Feasible and useful, will discuss more next week
+- But if you know you are in a certain nonlinear class, can use way fewer parameters by NLLS
+
+## Shared Principles
+
+- In terms of model formulation and interpretation, nonlinear least squares $Y=f(X,\theta)+u$ similar to OLS
+- Can also find $\theta_0$ such that $f(X,\theta_0)$ gives the best predictor in the nonlinear class of $Y$ given $X$
+- If the CEF correctly specified, $E[u|X]=0$, $f(x,\theta_0)$ gives it
+- For causal interpretation, need exogeneity condition for structural equation
+    - Can use NLLS to find CEF in adjustment formula
+    - Exact same conditions (backdoor criterion, etc) apply
+
+## Numerical Optimization
+
+- Parameter value solving minimization equation/nonlinear system not always available in closed form
+- Need to calculate optimum numerically
+- Many algorithms exist to minimize functions numerically
+- Basic idea: 
+    - Start at some point, 
+    - Move "downhill" in direction of steepest descent (gradient)
+    - Stop when you can't move any further
+- Works so long as function is convex: 
+    - Bowl shape means moving down always gets you to bottom 
+    - Problems if there are hills, ridges
+- Many details: how far to move each step, how many, etc
+- Standard software uses reasonable defaults
+
+## Simulation using nls command
+
+```{r}
+# Generate some data from a nonlinear model
+a0<-2
+b0<-0.5
+x<-5*runif(50)
+y<-a0*exp(b0*x)+rnorm(50) #Include normal noise
+#Estimate correctly specified model
+#Start minimization going downhill from some 
+#reasonable guess for parameter values
+model<-nls(formula=y~a*exp(b*x), start=list(a=1,b=1))
+```
+
+## Example: Results (code)
+```{r, eval=FALSE}
+(model)
+```
+
+## Example: Results
+```{r, echo=FALSE}
+(model)
+```
+
+## Graph
+```{r,eval=FALSE}
+#Generate points to plot predictions
+xn<-seq(0,5,length=1000)
+ee<-predict(model,list(x=xn)) #Predicted y
+plot(x,y,xlab="x",ylab="y",
+     main="Nonlinear Least Squares Fit")
+lines(xn,ee,lty=2,col="blue")
+
+```
+
+
+## Graph
+```{r,echo=FALSE}
+#Generate points to plot predictions
+xn<-seq(0,5,length=1000)
+ee<-predict(model,list(x=xn)) #Predicted y
+plot(x,y,xlab="x",ylab="y",main="Nonlinear Least Squares Fit")
+lines(xn,ee,lty=2,col="blue")
+
+```
+
+## Consistency: Assumptions
+
+- Suppose true parameter $\theta_0$ satisfies
+$$\theta_0=\underset{\theta\in\Theta}{\arg\min}Q(\theta)$$
+
+- Contains ERM, (negative of) MLE, can do method of moments
+
+- Consider general **extremum estimator** expressed as
+$$\widehat{\theta}=\underset{\theta\in\Theta}{\arg\min}\widehat{Q}(\theta)$$
+
+- $\widehat{Q}$ is some approximation of $Q(\theta)$
+
+- Consistency $Pr(|\widehat{\theta}-\theta_0|>\epsilon)\rightarrow 0$ follows under two conditions
+
+- **Identification**: $\theta_0$ strictly minimizes $Q$
+    - $\underset{|\theta-\theta_0|>\epsilon}{\inf}Q(\theta)>Q(\theta_0)$ for all $\epsilon$
+    - Any other point must be strictly larger 
+- **Uniform convergence** of $\widehat{Q}(\theta)$ to $Q(\theta)$
+    - $\underset{\theta\in\Theta}{\sup}|\widehat{Q}(\theta)-Q(\theta)|\overset{p}{\rightarrow}0$
+    - Approximate objective is close to true objective at all $\theta$, with high probability
+
+## Identification condition: Interpretation
+
+- Identification condition
+    - $\underset{|\theta-\theta_0|>\epsilon}{\inf}Q(\theta)>Q(\theta_0)$ for all $\epsilon$
+- Means there is a single value that minimizes risk/solves system of equations
+    - Not 2, not all along a continuum
+    - Rules out multicollinearity, other cases where multiple parameters solve system
+- In NLLS 
+$$Q(\theta)=E[(Y-f(X,\theta))^2]=E[(f(X,\theta_0)-f(X,\theta)+u)^2]$$
+$$=E[(f(X,\theta_0)-f(X,\theta))^2]+E[u^2]\geq E[u^2]=Q(\theta_0)$$
+
+- $Q(\theta)>Q(\theta_0)$ for $\theta\neq\theta_0$ so long as $f(X,\theta_0)\neq f(X,\theta)$ with positive probability
+- Only an issue if two parameters give same $f$
+    
+## Uniformity: interpretation
+
+$$\underset{\theta\in\Theta}{\sup}|\widehat{Q}(\theta)-Q(\theta)|\overset{p}{\rightarrow}0$$
+
+- What we want to show is that minimizer of approximately Q is approximately minimizer of Q
+- This works so long as $\widehat{Q}$ close enough that no point dips down far enough by random chance to be below true minimum
+- Since $\widehat{Q}(\theta)$ is sample average, close at any point by law of large numbers
+- Uniformity holds if $\Theta$ not SO big that you can always find some point which fits anything
+- E.g., if you allow arbitrary polynomial, can always fit some polynomial to match n points
+- In general, if you stop at fixed finite # of parameters smaller than sample size, this always holds
+
+
+## Neural Networks
+
+- Useful nonlinear functions for regression applications
+- Repeatedly compose sums of noninear functions and sums of linear functions
+- Single "neuron": take $k\times 1$ vector $X$ to scalar
+$$f_{j}(b_{0j}+b_{1j}x_1+b_{2j}x_2+\ldots+b_{kj}x_k)$$
+- $f_j(u)$ is a fixed nonlinear function
+    - E.g. $max(u,0)$ or $tanh(u)$ or $\frac{exp(u)}{1+exp(u)}$
+- A layer takes a sum of neurons: $F^{(1)}=\sum_{j=1}^{J}b^{(1)}_{j}f_j(X)$
+- Parameters are the $J\times K+1$ coefficients $b$
+- Can apply single layer function to inputs which are outputs of another layer, and so on
+    - $Y=F^{(L)}(... F^{(2)}( F^{(1)}(X))))$
+    - "Deep" Neural network
+    
+## Neural Network Modeling
+
+- Many choices when defining the function 
+    - What nonlinearity, how many layers, how big is $J$ in each, etc
+- Can represent just about any relationship, no matter how complicated (Hornik et al 1989)
+- Nonconvex: minimize by mix of moving downhill, picking random points/directions
+- Great results for applications with big $k$, complicated function 
+    - IF data set is huge
+- E.g., $X$ is $k$ pixel photograph, k very big
+    - y is indicator = 1 if photo contains a dog
+    - Millions of photos of dogs on internet, 
+    - Can get accurate prediction with some nonlinear function
+
+## Next Time
+
+- Inference for nonlinear models
+- More NLLS
+
+## Consistency: Proof (supplemental: graphical version on board)
+
+- By identification, there is some $\delta$ such that
+
+$$Pr(|\widehat{\theta}-\theta_0|>\epsilon)<Pr(Q(\widehat{\theta})-Q(\theta_0)>\delta)$$
+$$=Pr(Q(\widehat{\theta})-\widehat{Q}(\widehat{\theta})+\widehat{Q}(\widehat{\theta})-Q(\theta_0)>\delta)$$
+$$\leq Pr(Q(\widehat{\theta})-\widehat{Q}(\widehat{\theta})+\widehat{Q}(\theta_0)-Q(\theta_0)>\delta)$$
+
+- Since $\widehat{\theta}$ minimizes $\widehat{Q}()$
+
+$$\leq Pr(2\underset{\theta\in\Theta}{\sup}|\widehat{Q}(\theta)-Q(\theta)|>\delta)\rightarrow 0$$
+
+- By uniform convergence
+
+
+
+
+
+
+
+

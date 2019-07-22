@@ -1,0 +1,625 @@
+---
+title: "Panel Data: Event Studies, Difference in Differences, and Unobserved Effects"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+## New Topic
+
+**Panel Data**
+
+## Adding group structure to data
+
+- Up until now, we've assumed our data is drawn from a *random sample*
+    - $(Y_i,X_i)$ independent and identically distributed
+- In some types of data, this may not reflect the sampling process
+- Our sample can consist of *groups* of related observations
+- Call this structure **panel** or **longitudinal** **data**
+
+## Example Panel Data Sets
+
+- Individual or firm surveys visitng same respondents repeatedly
+    - Panel Study of Income Dynamics
+    - Longitudinal Business Database
+- States, counties, or country characteristics over time
+- Stock or financial asset prices and characteristics over time
+    - CRSP, Compustat
+- Household surveys 
+    - Can be grouped over time, also different members of same household
+    
+## Panel Structure
+
+- In each example, observations within a group share characteristics
+- If I ask "What is your favorite color?" then ask again 5 minutes later, answer unlikely to change very much
+- Difficulty: can't treat "you" and "you 5 minutes ago" as independent samples
+    - "You" and "you 5 minutes ago" share many unobserved characteristics
+- Advantage: can use differences **within** a group to learn about only those characteristics that *do* differ
+
+## Answering Questions with Panel Data
+
+- Effect of treatment on outcome, allowing treatment to vary within and between groups
+    - Effect of state-level policy on employment or growth
+    - Effect of firm announcements on stock prices
+    - Effect of tax policy on individual outcomes and welfare
+
+## Notation
+
+- Observations in panel data indexed by 2 or more indices
+    - one for unit/group: $i=1\ldots n$
+    - one for observation within unit: $t=1\ldots T$
+- Each unit $X_{i}=(X_{i,1},\ldots,X_{i,t},\ldots,X_{i,T})$
+- $X_{i,t}$ may itself be a vector of characteristics
+    - e.g. $(Income_{i,t}, age_{i,t}, \text{credit score}_{i,t}, \text{favorite color}_{i,t})$
+- May be represented on computer as list of $N=n*T$ observations, one for each index $i$ and $t$ (e.g. "unit" and "time")
+- Or in special panel data format with $T$ observations in each group
+    - Structure **pdata.frame** in library **plm** in R
+
+
+## Event Studies
+
+- Idea: compare outcomes within a unit before and after treatment
+- So long as there are no systematic changes over time except for treatment, difference can be interpreted as causal
+- $Y_{i,2}$ be outcome after treatment, $Y_{i,1}$ outcome before
+- $\frac{1}{n}\sum_{i=1}^{n}(Y_{i,2}-Y_{i,1})$ estimates average effect
+- Example: price of stock immediately before and after earnings announcement
+- Equivalent to $\beta$ in regression
+$$Y_{i,t}=\beta_0+\beta*After_{t}+u_{i,t}$$
+    - $After_{t}$ treatment is 1 if t=2, 0 if t=1
+
+## Unobserved Effects Model
+
+- Model outcome as $Y_{i,t}=\beta_0+\beta*After_{t} + a_i + u_{i,t}$
+    - $u_{i,t}$ is nonsystematic variation in outcome 
+    - $E[u_{i,t}After_{t}]=0$ means no unobserved factors changing over time on average
+    - $a_i$ is unit-specific characteristics that don't change over time
+    - $a_i$ called a **fixed effect** or **unobserved effect**
+    - Accounts for any possible covariates so long as they are fixed over time
+- Obtain $\frac{1}{n}\sum_{i=1}^{n}(Y_{i,2}-Y_{i,1})=\beta+\frac{1}{n}\sum_{i=1}^{n}(u_{i,2}-u_{i,1})$
+- Unbiased and consistent estimator of $\beta$
+
+## When to trust event studies
+
+- Event Study methodology takes care of selection on characteristics that *don't* change with time
+- Doesn't take care of things that do 
+    - Need there to be no other systematic changes at same time
+- Effectively need *conditionally* random assignment given $a_i$
+- Often reasonable with financial data: $t=2,t=1$ are in very short window right before and after: 
+    - No news aside from treatment (firm announces its earnings, stock is split, Fed announces new monetary policy) in very short window
+- Can become unreasonable if any systematic changes over time  
+
+## Extensions 
+
+- Can account for observed differences between treatment and control periods by including observed unit-specific controls $X_{i,t}$
+- Can also look at effect over multiple periods
+    - Instead of just before and after, have $d\tau_t$, dummy variable equal to 1 if $t=\tau$, 0 otherwise
+    - Called a **time dummy** or **time fixed effect**
+- Run regression 
+$$Y_{i,t}=\beta_0+\sum_{\tau=2}^{T}\beta_{\tau} d\tau_t + X_{i,t}^{\prime}\gamma+u_{i,t}$$
+    
+- If event occurs at $t=2$, $\beta_{\tau}$ is effect at time $\tau$
+- Can also include multiple periods before event with more time dummies
+
+## Example: "Coups, Corporations, and Classified Information"
+
+- Dube, Kaplan, Naidu (Quarterly Journal of Economics 2011) look at returns of stocks of politically connected firms in countries before and after day CIA secretly authorizes coup d'etat in that country
+- If no insider trading, and no important news released on day decision made, stock prices should be unaffected
+- If systematic effect exists, suggest CIA insiders trading off of knowlege of coup plan
+- Control for known observed factors predicting stock returns
+- Event study means don't need to worry that politically connected stocks different: just different on the day of coup authorization
+
+## Specification
+
+![Specification reported in paper](Images/DubeKaplanNaiduspecification.png)
+
+## Results
+
+![Results](Images/DubeKaplanNaiduresults.png)
+
+
+
+<!-- ## Panel Data -->
+
+<!-- - Recall, panel data is data sampled in groups -->
+<!-- - Multiple observations of the same variables over time -->
+<!-- - Sample $\{Y_{i,t},X_{i,t}\}_{t=1}^{T}$ independently over $i=1\ldots n$ -->
+<!-- - Exploit fact that observations related within the group to control for characteristics we can't observe -->
+<!-- - **Unobserved effects** or **fixed effects** $a_i$ are characteristics shared by all observations in a group -->
+<!-- - Everything about a person that doesn't change -->
+<!-- - Last time: event studies as way to handle issue -->
+<!-- - This time: more general methods -->
+
+## Event Study Limitations
+
+- Outcome $Y_{i,t}$ observed at two times
+    - Before and after an event
+- Difference before and after $$\frac{1}{n}\sum_{i=1}^{n}Y_{i,2}-\frac{1}{n}\sum_{i=1}^{n}Y_{i,1}$$
+- Measures effect of event
+- Controls for selection bias caused by unobserved heterogeneity in level of $Y_i$ across $i$
+- Doesn't get rid of selection bias caused by changes over time other than the event of interest
+
+## Accounting for systematic time variation
+
+- In general, all sorts of things are happening at the same time as a treatment changes
+- Outcome may be trending up or down over time for reasons unrelated to the treatment
+- If these are not observed, can't control for them directly
+- Often, we can control for them indirectly
+- Idea: Suppose two units experience same time-varying influences, but only one gets treatment in second period
+    - **Common trends assumption**
+- We can then compare change in treated to change in untreated unit    
+    
+## Differences in Differences    
+
+- **Difference-in-differences** estimator compares difference in pre-and post-treatment outcomes among treated units to difference among units that don't receive treatment
+- Equivalent to comparing difference between treatment and control units after treatment occurs to difference before
+- Difference between pre and post treatment outcomes controls for unit-specific fixed effects
+- Difference between units controls for unobserved common time trends
+
+## Estimator
+- Baseline value is $\beta_0$ in control group, 
+    - Estimable by pre-treatment average $\bar{Y}_{1,control}$,  
+- Treatment group differs in baseline period by $\beta_1$
+    - $\bar{Y}_{1,treat}$ estimates $\beta_1+\beta_0$
+- Effect of time is $\delta_0$ on treatment and control units
+    - $\bar{Y}_{2,control}$ estimates $\beta_0+\delta_0$
+- Treatment effect is $\delta_1$
+    - $\bar{Y}_{2,treat}$ estimates $\beta_0+\delta_0+\beta_1+\delta_1$
+$$\widehat{\delta}_1=(\bar{Y}_{2,treat}-\bar{Y}_{2,control})-(\bar{Y}_{1,treat}-\bar{Y}_{1,control})$$ 
+$$=(\bar{Y}_{2,treat}-\bar{Y}_{1,treat})-(\bar{Y}_{2,control}-\bar{Y}_{1,control})$$ 
+
+
+## Table of outcomes
+
+  Time / Unit         | Before   | After      | After-Before    |
+-----------|---------|-------------------|-------------|
+Control             | $\beta_0$| $\beta_0+\delta_0$ | $\delta_0$ |
+-----------|---------|------------------|------------|
+Treatment           | $\beta_0+\beta_1$| $\beta_0+\delta_0 +\beta_1+\delta_1$ | $\delta_0+\delta_1$ |
+-----------|---------|------------------|------------|
+Treatment - Control |$\beta_1$| $\beta_1+\delta_1$ | $\delta_1$ |
+
+## Example: Minimum wage in New Jersey and Pennsylvania
+- Card & Krueger (1994) study effect of rise in New Jersey minimum wage on employment in fast food restaurants
+- NJ raised minimum wage from $4.25 to $5.05 in 1992
+    - PA kept it the same
+- Compare employment in fast food stores near the border to control for common trends in employment 
+    - e.g. business cycle effects
+- Need to believe that NJ not growing faster/slower than PA
+
+## Employees per store by state and time (Card & Krueger Table 3)
+
+  Time / Unit         | 1991   | 1992      | After-Before    |
+-----------|---------|-------------------|-------------|
+PA             | 23.33| 21.17 | -2.16 |
+-----------|---------|------------------|------------|
+NJ           | 20.44| 21.03 | 0.59 |
+-----------|---------|------------------|------------|
+NJ - PA |-2.89| -0.14 | 2.76 |
+
+## Interpretation
+
+- PA fast food employment shrank, while NJ fast food employment grew slightly
+- If we believe nothing different going on in two states aside from minimum wage, this suggests minimum wage raised employment
+- Inconsistent with theory that higher minimum wage lowers unemployment
+
+## Regression Representation
+
+- Treat observations with same $i$ but different $t$ as different observations
+- Run OLS on "sample" of size $nT$
+- Recall regression model for event study
+$$Y_{i,t}=\beta_0+\beta After_{t}+u_{i,t}$$
+- Dif-in-dif also has equivalent representation as a regression
+$$Y_{i,t}=\beta_0+\beta_1*Treat_{i}+\delta_0*After_{t}+\delta_1*Treat_{i}*After_{t}+u_{i,t}$$
+    - $Treat_{i}$ is 1 if unit is the one that will get treated, in any time
+    - $After_{t}$ is 1 in the latter time period, 0 before
+    - $Treat_{i}*After_{t}$ interaction indicates post-treatment difference  
+- So long as $u_{i,t}$ independent over time and groups, just OLS
+    - Same estimation, inference, properties
+    - Within-group heterogeneity absorbed into averages
+- Also allows adding observable controls $X_{i,t}$    
+
+## More than 2 periods
+
+- If observed over many periods, have many more options
+- Simplest: combine outcomes from before periods, from after, and do standard DD estimate
+- If treatment has constant effect, let $Treat_{i,t}=1$ if treatment active in unit $i$ at time $t$, 0 otherwise 
+    - Same as $Treat_{i}*After_{t}$ in 2 period case
+- Use complete set of dummies $d\tau_{t}$ for periods, $dk_{i}$  for units
+- Run 
+$$Y_{i,t}=\beta_0+\delta_1*Treat_{i,t}+\sum_{\tau=2}^{T}\delta_{\tau}d\tau_{t}+\sum_{i=2}^{n}\beta_k dk_{i}+u_{i,t}$$
+
+
+## Heterogeneous trends
+
+- With many periods, can allow trends to differ between units 
+- Just need that trend is smooth
+    - Takes fewer parameters to describe than time periods
+    - E.g., linear trends (intercept+slope) need 3 or more time periods
+- Regression representation 
+$$Y_{i,t}=\beta_0+\delta_1*Treat_{i,t}+\sum_{\tau=2}^{T}\delta_{\tau}d\tau_{t}+\sum_{i=2}^{n}\beta_k dk_{i}+\sum_{i=2}^{n}\theta_k (dk_{i}\times t)+u_{i,t}$$
+- Permits, e.g., employment to be growing faster in some states, so long as there is not a discontinuous break at treatment date
+
+## Visualization (Code 1)
+
+```{r,eval=FALSE}
+# Plotting software for overlay graphics
+library(ggplot2)  
+xg<-seq(0,16,1) #x grid
+#Generate functions
+difdif1=function(x){
+  2+1.5*sin(0.5*x)+1*1+4*1*(x>=8)+0.5*x*1
+}
+difdif0=function(x){
+  2+1.5*sin(0.5*x)+1*0+4*0*(x>=8)+0.5*x*0
+}
+y1<-difdif1(xg)
+y2<-difdif0(xg)
+```
+
+## Visualization (Code 2)
+
+```{r,eval=FALSE}
+frame<-data.frame(xg,y1,y2) #Group in one data set
+
+graph<-ggplot(data=frame,aes(x=xg))+
+    geom_line(aes(y=y1),color="blue")
+  +geom_line(aes(y=y2),color="red") 
+  + ylab("Outcome") + xlab("Time")
+  +ggtitle("Differing Trends and Baselines: 
+           Blue line treated after t=8")
+graph #Display Graph
+```
+
+## Visualization
+
+```{r,echo=FALSE}
+suppressMessages(suppressWarnings(library(ggplot2)))  # Plotting software for overlay graphics
+xg<-seq(0,16,1) #x grid
+#Generate functions
+difdif1=function(x){
+  2+1.5*sin(0.5*x)+1*1+4*1*(x>=8)+0.5*x*1
+}
+difdif0=function(x){
+  2+1.5*sin(0.5*x)+1*0+4*0*(x>=8)+0.5*x*0
+}
+y1<-difdif1(xg)
+y2<-difdif0(xg)
+
+frame<-data.frame(xg,y1,y2) #Group in one data set
+
+graph<-ggplot(data=frame,aes(x=xg))+geom_line(aes(y=y1),color="blue")+geom_line(aes(y=y2),color="red") + ylab("Outcome") + xlab("Time")+ggtitle("Differing Trends and Baselines: Blue line treated after t=8")
+graph #Display Graph
+```
+
+## Sampling Issues
+
+- Sampling assumption for panel data: $X_{i}=(X_{i,1},\ldots,X_{i,t},\ldots,X_{i,T})$ drawn randomly (i.i.d.) from population of *groups*
+- If we treat $X_i$ as a length-T vector, this is exactly random sampling as usual
+- Law of large numbers, Central Limit Theorem continue to apply
+    - $\frac{1}{n}\sum_{i=1}^{n}f(X_i)\overset{p}{\rightarrow}E[f(X_i)]$
+    - $\frac{1}{\sqrt{n}}\sum_{i=1}^{n}f(X_i)\overset{d}{\rightarrow}N(E[f(X_i)],Var(f(X_i)))$
+- Only thing to be careful of: sample size is $n$, not $N=n*T$
+- Given this, can treat it like any other random sample we've seen so far in class
+- Difference is we allow correlation *within* a unit
+
+## Standard error issue: Serial correlation
+
+- In general, if $u_{i,t}$ i.i.d. over $i$ AND $t$, *can* use standard (or robust) OLS inference
+    - Unit-level covariates account for ALL persistence within groups
+    - Use **lm()** command on $N=n*T$ independent observations
+- With multiple periods, might have that $E[u_{i,s},u_{i,t}]\neq 0$
+    - Unobserved factors may affect outcome over time
+    - Called **serial correlation**
+- Solution is to use SE formula which allows correlation over time within units
+    - Called **clustered** (by unit) standard errors
+- A formula that looks like (and is derived same way as) sandwich formula can do this
+- Use **plm** package with **vcovHC** command, **cluster** option
+- Effective sample size becomes $n$ instead of $nT$: SEs usually much bigger
+
+<!-- ## Difference in Differences -->
+
+<!-- - Outcome $Y_{i,t}$ observed at two times and in two populations -->
+<!--     - Before and after event in population where event happens (treatment) -->
+<!--     - Before and after event in population where event doesn't happen (control) -->
+<!-- - Subtract difference before and after in no-event population from difference before and after in population that experiences event -->
+<!-- $$(\bar{Y}_{2,treat}-\bar{Y}_{1,treat})-(\bar{Y}_{2,control}-\bar{Y}_{1,control})$$ -->
+<!-- - Controls for selection bias caused by unobserved heterogeneity in level of $Y_i$ across $i$ -->
+<!-- - Also gets rid of selection bias caused by changes over time other than the event of interest, so long as those same changes occur in control group -->
+
+<!-- ## Estimation by pooled OLS -->
+
+<!-- - Treat observations with same $i$ but different $t$ as different observations -->
+<!-- - Run OLS on "sample" of size $nT$ -->
+<!-- - Regression model for event study -->
+<!-- $$Y_{i,t}=\beta_0+\beta After_{t}+u_{i,t}$$ -->
+<!-- - Regression model for Difference in Differences -->
+<!-- $$Y_{i,t}=\beta_0+\beta_1 Treat_{i}+\delta_0 After_{t} + \delta_1 Treat_{i} After_{t} + u_{i,t}$$ -->
+<!-- - So long as $u_{i,t}$ independent over time and groups, just OLS -->
+<!--     - Same estimation, inference, properties -->
+<!--     - Within-group heterogeneity absorbed into averages -->
+
+<!-- ## Repeated cross section data -->
+
+<!-- - We didn't really need matched observations within groups to run above regressions -->
+<!-- - Could work instead with **repeated cross sections** -->
+<!-- - Samples of $i=1\ldots n$ from each time $t=1\ldots T$ -->
+<!-- - E.g. census data: each period draw an independent random sample -->
+<!-- - So long as distribution of unobserved effects is the same in each time, estimated coefficients should be the same -->
+<!-- - Idea: average of $Y_{i,1}-Y_{i,0}$ same as average of $Y_{i,1}$ minus average of $Y_{i,0}$ -->
+<!-- - Useful if you can't track people over multiple times -->
+
+## General framework
+
+- Would like to deal with regressors more complicated than $before$ and $after$ some event
+- Move from binary treatment $X=1$ or $X=0$ framework to general regression framework
+- Will need to take fixed effects into account directly
+<!-- - Estimators will require panel data, not just repeated cross sections -->
+
+## Fixed effects model
+
+- Linear model with fixed effects
+$$Y_{i,t}=X_{i,t}^{\prime}\beta+\gamma_t+a_i+u_{i,t}$$
+
+- $X_{i,t}=(X_{i,t,1},\ldots,X_{i,t,k})$ are regressors whose effect we care about
+- $a_i$ are (group) fixed effects: not observed
+- $\gamma_t$ are time fixed effects
+- This is structural equation
+    - Describes what would happen if $X$ set at some level
+- Care about $\beta$: effect of our $X$ variables on outcome
+- If $X$ is indicator of treatment, $\beta$ can be estimated by previous methods
+
+## How do we estimate coefficients in Fixed Effects model?
+
+- Can represent $\gamma_t$ by $\gamma_{t}d\tau_t$
+    - $d\tau_t=1$ if $t=\tau$, $d\tau_t=0$ if $t\neq\tau$
+    - $T-1$ Time dummies (base period excluded)
+    - Adds $T-1$ extra variables: small fixed number
+- Rest depends on what we assume about $a_i$
+- Can rewrite error term as $e_{i,t}=a_i+u_{i,t}$
+- If $a_i$ correlated with $X_{i,t}$ and not observed, $E[e_{i,t}X_{i,t}]\neq 0$
+- OLS regression of $Y_{i,t}$ on $X_{i,t}$ and time dummies not consistent
+    - Essentially a missing variable problem
+- Need to find way to get rid of $a_i$ and estimate without it
+
+<!-- ## Handling fixed effects  -->
+
+<!-- - 3 ways to estimate $\beta$ in unobserved effects model -->
+<!-- (1) First Differences estimator -->
+<!-- (2) Fixed Effects Transform (Next Class) -->
+<!-- (3) Least Squares Dummy Variables Method (Next Class) -->
+
+<!-- - Find ways to get rid of $a_i$ and estimate without it -->
+
+## First Differences
+
+- Idea: run regression in *changes* instead of levels
+- Start in $T=2$ case for simplicity
+- Define *first difference operator* $\Delta$ as $\Delta X_2:=X_{2}-X_{1}$
+- Apply to $Y_{i,t}=X_{i,t}^{\prime}\beta+\gamma_td\tau_t+a_i+u_{i,t}$
+$$\Delta Y_{i,2}=\Delta X_{i,2}^{\prime}\beta+\gamma_2\Delta\tau_2+\Delta a_i+ \Delta u_{i,2}$$
+
+- Since $a_i$ same at times $t=2$ and $t=1$, $\Delta a_i=0$
+    - Differenced equation doesn't contain $a_i$
+- *Anything* that doesn't change over time disappears
+    - Constant term in $X_{i,t}$ goes away
+    - Any variable in $X_{i,t}$ that doesn't move (fixed characteristics) disappears
+- $\Delta d\tau_2$ becomes just a constant
+
+## First differences, interpretation
+
+- Result is a regression equation only in observable variables
+
+$$\Delta Y_{i,2}=\gamma_2 + \Delta X_{i,2}^{\prime}\beta + \Delta u_{i,2}$$
+
+- So long as this satisfies the OLS assumptions, can estimate it by OLS over the $n$ samples (not $nT=2n$)
+- Can't include any $\beta_j$ corresponding to constant or variables that don't change over time
+- Interpretation is simple
+    - Regress *change* in outcome on *change* in regressors
+- Constant term is average *growth* instead of level
+- Residuals are unobserved factors leading to *changes* in outcome
+- Exogeneity means changes in regressor uncorrelated with changes in unobserved factor across units
+- If $X_{i,t}$ is just a binary treatment, its coefficient is the difference-in-differences estimator
+
+<!-- ## Time-invariant variables and Heterogeneous Treatment Effects -->
+
+<!-- - We can't study effect of anything constant over time since we get rid of *everything* that doesn't change -->
+<!-- - Interpretation is that we are looking at effects of changes in the variables -->
+<!-- - If we have heterogeneous treatment effects, $\beta$ random -->
+<!-- - Still can use FD estimate to get a kind of local average treatment effect -->
+<!-- - If some $i$ don't change $X_i$, we don't see how their outcome changes -->
+<!-- - Average does not include these $i$, called **stayers** -->
+<!-- - Average only includes $X_i$ that do change, called **movers** -->
+<!-- - ATE for movers identified if change not correlated with changes in residuals -->
+<!-- - E.g., if change in $X_i$ is (conditionally) random  -->
+
+
+## Example: Chetty et al 2015
+
+- Consider effect of geographic area on wages 
+- People who live in one city probably not the same as those who live in another
+- Fixed effects account for that 
+- FD estimator gives you change in wages for people who move from one city to another
+- If people who move differ from general population, no problem 
+    - *so long as* differences have equal effect on wages in both cities
+- Estimate causal effect *of moving*
+- But if other wage-relevant individual characteristics change at same time as move, then can't distinguish
+
+
+## Time invariant characteristics
+
+- Suppose demographic used as part of $X_{i,t,j}$
+    - In most cases, these are constant
+- Effect of variables on outcome *not identified*
+    - Because it never changes
+- Don't know if it's, say, race or some other unchanging personal characteristic which leads to base level
+- If you do include something like this, it will be set as NA 
+    - As in multicollinearity case
+
+<!-- - Unless you have group for which this does change -->
+<!--     - Likely unrepresentative -->
+<!-- - Nix & Qian (2015) find individuals in census whose reported race changes  -->
+<!--     - Look at income changes -->
+<!-- - These are probably not "the" effect of race on income -->
+<!--     - At best, are "effect of passing on income" -->
+<!-- - Schilt & Wiswall (2008): Gender in FD wage regression -->
+
+## Multiple Time Periods
+
+- If $T>2$, can take differences $\Delta$ between $t=2$ and $t=1$, between $t=3$ and $t=2$, etc.
+- Applied to $Y_{i,t}=X_{i,t}^{\prime}\beta+\gamma_td\tau_t+a_i+u_{i,t}$ get
+$$\Delta Y_{i,t}=\gamma_t d\tau_t + \Delta X_{i,t}^{\prime}\beta + \Delta u_{i,t}$$
+
+- for $i=1\ldots n$, $t=2\ldots T$
+- Treat each $(i,t)$ as an observation: have $n(T-1)$ samples
+- Estimate by OLS
+- $a_i$ disappears due to differencing
+- Again we lose any $X_{i,t}$ which doesn't change over time
+
+<!-- ## Standard Errors -->
+
+<!-- - To have exogeneity in first difference equation, need $E[\Delta u_{i,t}\Delta X_{i,t}]=0$ -->
+<!-- - Sufficient for this is **strict exogeneity**: $E[u_{i,t}X_{i,s}]=0$ for any t,s -->
+<!-- - Says that residuals uncorrelated with current, past, or future covariates -->
+<!-- - Means that future treatment can't depend on past outcomes -->
+<!-- - $\Delta u_{i,t}=u_{i,t}-u_{i,t-1}$ and $\Delta u_{i,t+1}=u_{i,t+1}-u_{i,t}$ both contain $u_{i,t}$ -->
+<!--     - Often means errors are correlated across $t$ within $i$ -->
+<!--     - Need to account for this: cluster standard errors by time -->
+<!--     - Exception is if $u_{i,t}=u_{i,t-1}+e_{i,t}$ $e_{i,t}\sim\text{i.i.d.}$ -->
+<!--     - Called *random walk* model: growth is i.i.d. -->
+
+<!-- ## First Difference Assumptions -->
+<!-- - Just need to impose conditions for OLS to apply to changes -->
+
+<!-- - (FD1) $Y_{i,t}=X_{i,t}^{\prime}\beta+a_i+u_{i,t}$ -->
+<!-- - (FD2) $(Y_i,X_i)$ are a random sample from cross section -->
+<!-- - (FD3) No $X_i$ is constant over time, and also no perfect linear relationships between variables -->
+<!-- - (FD4) $E[u_{i,t}|a_i,X_i]=0$ for all t: Strict exogeneity  -->
+<!-- - Or (FD4') $E[\Delta u_{i,t} \Delta X_{i,t}]=0$ for $t=2\ldots T$ -->
+<!-- - (FD5) $Var(\Delta u_{i,t}|X_{i,t})=\sigma^2$ for all t -->
+<!-- - (FD6) $Cov(\Delta u_{i,t},\Delta u_{i,s}|X_{i})=0$ for all $t\neq s$ -->
+<!-- - (FD7) $\Delta u_{i,t}\sim\text{i.i.d.}N(0,\sigma^2)$ -->
+
+<!-- ## Results -->
+
+<!-- - Just apply usual results for OLS -->
+<!-- - (FD1-4') get consistency -->
+<!-- - (FD1-4) get unbiasedness: requires $X$ to be random with respect to all periods -->
+<!-- - (FD1-6) get homoskedastic inference: very strong, requires random walk in residual -->
+<!-- - (FD1-7) get finite sample normal distribution, exact t, F statistics -->
+
+<!-- - Usually don't believe homoskedasticity, no serial correlation, so use robust and clustered standard errors -->
+
+<!-- ## Fixed Effects Transform -->
+
+<!-- - Any transform which subtracts out the fixed effect term will produce a valid estimator -->
+<!-- - Instead of subtracting just last period, can subtract the average over all periods -->
+<!-- - $Ÿ_{i,t}=Y_{i,t}-\frac{1}{T}\sum_{t=1}^{T}Y_{i,t}$ -->
+<!-- - This is called the **Fixed Effects** transform or the **within** transform -->
+<!-- - Apply to both sides of fixed effects model to get -->
+<!-- $$ Ÿ_{i,t}=\gamma_t \ddot{d\tau}_t + \ddot{X}_{i,t}^{\prime}\beta +  \ddot{u}_{i,t}$$ -->
+<!-- - Have this equation for t in $T-1$ periods, e.g. $t=2\ldots T$ one period is redundant -->
+<!-- - Doesn't matter which period: all numerically identical -->
+<!-- - If $T=2$, estimator is same as first differencing -->
+<!-- - Estimate by OLS again -->
+
+<!-- ## Assumptions to use OLS -->
+
+<!-- - Again just need assumptions so OLS works -->
+<!-- - Exogeneity requires $E[\ddot{X}_{i,t}\ddot{u}_{i,t}]=0$ for any t -->
+<!-- - Not quite the same as in FD case, but both implied by strict exogeneity -->
+<!-- - Homoskedasticity requires constant conditional variance of $u_{i,t}$ and also that $Cov(u_{i,t}u_{i,s}|X_i,a_i)=0$  -->
+<!--     - Residuals in *level* are uncorrelated, instead of random walk (strongly correlated) -->
+
+
+<!-- ## Fixed Effects Assumptions -->
+<!-- - Just need to impose conditions for OLS to apply to transformed data -->
+
+<!-- - (FE1) $Y_{i,t}=X_{i,t}^{\prime}\beta+a_i+u_{i,t}$ -->
+<!-- - (FE2) $(Y_i,X_i)$ are a random sample from cross section -->
+<!-- - (FE3) No $X_i$ is constant over time, and also no perfect linear relationships between variables -->
+<!-- - (FE4) $E[u_{i,t}|a_i,X_i]=0$ for all t: Strict exogeneity  -->
+<!-- - Or (FE4') $E[\ddot{X}_{i,t}\ddot{u}_{i,t}]=0$ for $t=2\ldots T$ -->
+<!-- - (FE5) $Var(u_{i,t}|X_{i,t})=\sigma^2$ for all t -->
+<!-- - (FE6) $Cov(u_{i,t}, u_{i,s}|X_{i})=0$ for all $t\neq s$ -->
+<!-- - (FE7) $u_{i,t}\sim\text{i.i.d.}N(0,\sigma^2)$ -->
+
+<!-- ## FE vs. FD -->
+
+<!-- - With strict exogeneity, same model, FE and FD both consistent, unbiased -->
+<!-- - Exactly the same if T=2 -->
+<!-- - Efficiency depends on degree of serial correlation in residuals -->
+<!-- - If highly serially correlated, FD better -->
+<!-- - If not, FE more efficient -->
+<!-- - If using clustered SEs, both provide valid inference  -->
+
+<!-- ## Example: Union status and wages -->
+<!-- ```{r, echo=FALSE} -->
+<!-- #Load Libraries -->
+<!-- suppressWarnings(suppressMessages(library(plm))) -->
+<!-- suppressWarnings(suppressMessages(library(lmtest))) -->
+<!-- suppressWarnings(suppressMessages(library(stargazer))) -->
+<!-- #Load Data -->
+<!-- library(foreign) -->
+<!-- wagepan<-read.dta("http://fmwww.bc.edu/ec-p/data/wooldridge/wagepan.dta") -->
+<!-- #Turn into panel data set -->
+<!-- wagepan.p<-pdata.frame(wagepan, index=c("nr","year")) -->
+<!-- #Create Time dummies -->
+<!-- wagepan.p$yr<-factor(wagepan.p$year) -->
+<!-- ``` -->
+<!-- - Regress log wage on union status along with time invariant (race, previous education) and time-varying (experience, marital status) worker characteristics (and year dummies) by different methods -->
+<!-- ```{r, echo=FALSE} -->
+<!-- #Loaded data set, show what it looks like -->
+<!-- pdim(wagepan.p) -->
+<!-- ``` -->
+<!-- - FE and FD regression can be performed from **plm** package in R -->
+<!-- - Syntax for these regressions is **plm** command -->
+<!--     - model="within" for within/FE transform -->
+<!--     - model="fd" for first difference transform -->
+<!--     - model="pooling" for pooled OLS (no transforming to get rid of unobserved effects, just OLS) -->
+
+
+
+<!-- ## Results -->
+<!-- ```{r, echo=FALSE,results="asis"} -->
+<!-- # Run Pooled OLS -->
+<!-- olsreg<-(plm(lwage ~ union + I(exper^2)+married + -->
+<!--     educ + black + hisp + exper +           -->
+<!--     d81+d82+d83+d84+d85+d86+d87,  -->
+<!--              data=wagepan.p, model="pooling")) -->
+<!-- # Run First Differences -->
+<!-- fdreg<-(plm(lwage ~ 0+ union +   -->
+<!--     I(exper^2)+ married + -->
+<!--       educ + black + hisp +  exper + -->
+<!--       d81+d82+d83+d84+d85+d86+d87,  -->
+<!--              data=wagepan.p, model="fd")) -->
+<!-- # Run Fixed Effects -->
+<!-- fereg<-(plm(lwage ~ 0+ union + -->
+<!--      I(exper^2)+ married + educ + black + hisp + -->
+<!--       d81+d82+d83+d84+d85+d86+d87,  -->
+<!--              data=wagepan.p, model="within")) -->
+<!-- #fdreg$coefficients #Report FD -->
+<!-- #fereg$coefficients #Report FE -->
+<!-- #olsreg$coefficients #Report OLS -->
+
+<!-- stargazer(fdreg,fereg,olsreg,size="tiny", -->
+<!--     type="latex",header=FALSE,no.space=TRUE, -->
+<!--     title="FD, FE, Pooled OLS", -->
+<!--     column.sep.width=c("1pt"), -->
+<!--     omit=c("educ","black","hisp","d81","d82","d83","d84","d85","d86","d87"), -->
+<!--     #keep=c("union","married","exper^2"), -->
+<!--     omit.stat=c("f","rsq","adj.rsq"), -->
+<!--     omit.table.layout="n#") -->
+<!-- ``` -->
+
+## Next Time
+
+- More about panel data:
+    - Fixed Effects 
+    - Random Effects
+- Read Wooldridge Ch 13-14
+
+
+
+
+

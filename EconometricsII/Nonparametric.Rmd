@@ -1,0 +1,474 @@
+---
+title: "Nonparametric Regression"
+author: "73-374 Econometrics II"
+output:
+  html_document:
+    code_folding: show
+---
+
+## Today
+
+- Nonparametric Estimation
+    - Local Constant Regression
+    - Local Linear Regression
+    - Kernels
+- Not in your textbooks 
+    - But important part of modern data analysis
+- Reasonably accessible reference
+    - Ch 17 of Bruce Hansen's "Econometrics" textbook 
+    - <http://www.ssc.wisc.edu/~bhansen/econometrics/>
+
+## Nonlinear to nonparametric methods
+
+- Model: $Y=f(X)+u$
+- Interested in Conditional Expectation Function CEF
+    - $E[Y|X=x]=f(x)$
+- If $f(x)$ linear, estimate by OLS
+- If $f(x)$ nonlinear, with known form, estimate by nonlinear least squares
+- If $f(x)$ has completely unknown form, estimate by **nonparametric regression**
+- No longer have $f(X,\theta)$ 
+    - Not looking for coefficients or other parameters
+    - Hence *non*-parametric
+- Alternate view
+    - $f(x)$ *is* the parameter: one value for every $x$
+    - "Nonparametric" can mean *infinite* number of parameters
+
+## Local Estimation: Discrete case
+
+- How to estimate $f(x)$ without knowing form? 
+    - Many ways, one way very simple
+- Estimate $E[Y|X=x]$ by average of Y when $X=x$ 
+$$\widehat{f}(x)=\frac{\sum_{i=1}^{n}Y_i1\{X_i=x\}}{\sum_{i=1}^{n}1\{X_i=x\}}$$
+- This is a "local" sample average
+- Note that "sample size" for average is # of X's at a point $n_x=\sum_{i=1}^{n}1\{X_i=x\}$  
+    - Much smaller than total # of observations
+    - $Var(\widehat{f}(x)|X)$ proportional to $\frac{1}{n_x}$ instead of $\frac{1}{n}$
+- Works when $X$ has discrete distribution, takes on only small number of values
+- Doesn't work when $X$ has continuous distribution
+    - At any $x$, likely to have 1 or 0 observations: can't take average
+
+## Example: Education vs. log Wages (Code 1)
+```{r, eval=FALSE, results="hide"}
+#Load Libraries for nonparametric estimation
+#If not installed, uncomment to install 
+# "np" library for nonparametrics
+#install.packages("np",
+#  repos="http://cran.us.r-project.org")
+library(np)
+#Load data on Wages
+library(foreign)
+wagedat<-read.dta(
+  "http://fmwww.bc.edu/ec-p/data/wooldridge/wage1.dta")
+#Run nonparametric regression of wages on education
+#Use local average estimator
+# See np help files for syntax
+wagebw<-npregbw(ydat=wagedat$lwage,
+        xdat=ordered(wagedat$educ))
+```
+    
+## Example: Education vs. log Wages (Code 2)  
+
+```{r,eval=FALSE}
+#Pretty up Names
+wagebw$xnames<-"Years of Education"
+wagebw$ynames<-"Log Wage"
+# Plot with standard error estimates
+plot(wagebw, plot.errors.method="asymptotic",
+     main="Wages vs Education")
+## Add data points
+points(wagedat$educ,wagedat$lwage,
+       cex=0.2,col="blue")
+```
+
+## Example: Education vs. log Wages again
+```{r, echo=FALSE, results="hide"}
+#Load Libraries for nonparametric estimation
+#If not installed, uncomment to install "np" library for nonparametrics
+#install.packages("np",repos="http://cran.us.r-project.org")
+suppressWarnings(suppressMessages(library(np)))
+#Load data on Wages
+library(foreign)
+wagedat<-read.dta("http://fmwww.bc.edu/ec-p/data/wooldridge/wage1.dta")
+#Run nonparametric regression of wages on education
+#Use local average estimator
+# See np help files for syntax
+suppressWarnings(suppressMessages(wagebw<-npregbw(ydat=wagedat$lwage,xdat=ordered(wagedat$educ))))
+```
+
+```{r,echo=FALSE}
+#Pretty up Names
+wagebw$xnames<-"Years of Education"
+wagebw$ynames<-"Log Wage"
+# Plot with standard error estimates
+suppressWarnings(suppressMessages(plot(wagebw, plot.errors.method="asymptotic",main="Wages vs Education")))
+## Add data points
+points(wagedat$educ,wagedat$lwage,cex=0.2,col="blue")
+```
+
+## Local Estimation: Continuous Case
+
+- Suppose $f(x)$ continuous, maybe also differentiable
+- Then $Y_i$ when $X_i$ near $x$ also tell us about $f(x)$
+- Take average of $Y_i$ in small area (say, of width $h$) around $x$
+$$\widehat{f}(x)=\frac{\sum_{i=1}^{n}Y_i1\{X_i\in[x-\frac{h}{2},x+\frac{h}{2}]\}}{\sum_{i=1}^{n}1\{X_i\in[x-\frac{h}{2},x+\frac{h}{2}]\}}$$
+- Another local average, this time over $n_x=\sum_{i=1}^{n}1\{X_i\in[x-\frac{h}{2},x+\frac{h}{2}]\}$ data points
+- Can take average at any point $x$, getting estimate of function $f(x)$ by moving the "window"
+- Because data is shared between points $x$, $\widehat{f}(x)$ is smoothed out
+- Hence, procedure is called a "smoother"
+- Also called **local constant** regression, because it is exact if $f(x)$ constant in neighborhood
+- Sometimes also **Nadaraya-Watson** regression
+
+    
+## Principle: Bias-Variance Tradeoff
+
+- Making width $h$ larger raises sample size
+    - Reduces variance of estimate
+- But larger $h$ means including $x$ values where $f(x)$ not exactly the same as at desired $x$
+    - Estimate is biased
+- By continuity, as $x^\prime\rightarrow x$, $f(x^\prime)\rightarrow f(x)$
+- Can reduce bias by making $h$ smaller as sample size grows
+- Idea: pick $h$ big enough so average contains enough data points, but small enough so bias is limited 
+    - If $h\rightarrow 0$ bias disappears
+    - If $h$ shrinks slowly as sample grows, neighborhood can contain more and more data, and so variance will also shrink
+- Obtain a *consistent* estimate of $f(x)$ at each point
+- Cost is that by shrinking $h$, sample size used at each point has to grow slower than $n$
+    - Variance of nonparametric estimator goes to 0 at **rate** $nh$ instead of $n$
+
+## Local Linear Regression
+
+- If $f(x)$ differentiable, it has a slope at each point
+- Reduce bias due to points near x by controlling the slope
+- Run linear regression on points in width $h$ neighborhood of $x$
+- Even if $f(x)$ nonlinear, at any point line is a good approximation
+- Writing this down as a formula, get $(\widehat{\beta}_0(x),\widehat{\beta}_1(x))$
+$$=\underset{(\beta_0,\beta_1)}{\arg\min}\sum_{i=1}^{n}1\{X_i\in[x-\frac{h}{2},x+\frac{h}{2}]\}(Y_i-\beta_0-\beta_1(X_i-x))^2$$
+- Constant term $\widehat{\beta_0}(x)$ is **local linear** estimator of $f(x)$
+- For consistency, let $h$ go to 0 to reduce bias since not exactly linear, but slowly so variance also falls
+- $\widehat{\beta}_1(x)$ provides consistent estimate of derivative of $f(x)$
+- Can show that local constant regression formula same as
+$$\underset{\beta_0}{\arg\min}\sum_{i=1}^{n}1\{X_i\in[x-\frac{h}{2},x+\frac{h}{2}]\}(Y_i-\beta_0)^2$$
+
+## Example: Wages and Education, Smoothed (Code 1)
+```{r, eval=FALSE}
+#Estimate using package "np", one of many R packages 
+#Local Constant Estimator (regtype="lc")
+#Use arbitrary width h=2 instead of computer supplied one
+# (bws=c(2),bandwidth.compute=FALSE)
+#To estimate by formula above, use ckertype="uniform"
+localconstantwage<-npregbw(ydat=wagedat$lwage,
+  xdat=wagedat$educ, regtype="lc",bws=c(2),
+  bandwidth.compute=FALSE, ckertype="uniform")))
+#Local Linear estimator
+#Same, but local linear (regtype="ll")
+locallinearwage<-npregbw(ydat=wagedat$lwage,
+    xdat=wagedat$educ,regtype="ll",bws=c(2),
+    bandwidth.compute=FALSE, ckertype="uniform")))
+```
+
+## Example: Wages and Education, Smoothed (Code 2)
+```{r,eval=FALSE}
+#Pretty up Names
+localconstantwage$xnames<-"Years of Education"
+localconstantwage$ynames<-"Log Wage"
+# Plot
+plot(localconstantwage, main= 
+  "Wage vs Education: Local Constant Estimator, h=2")
+points(wagedat$educ,wagedat$lwage,cex=0.2,col="blue")
+```
+
+## Example: Wages and Education, Smoothed (Code 3)
+
+```{r,eval=FALSE}
+#Pretty up Names
+locallinearwage$xnames<-"Years of Education"
+locallinearwage$ynames<-"Log Wage"
+# Plot
+plot(locallinearwage, main= 
+    "Wage vs Education: Local Linear Estimator, h=2")
+points(wagedat$educ,wagedat$lwage,cex=0.2,col="blue")
+```
+
+
+## Example: Wages and Education, Smoothed
+```{r, results="hide", echo=FALSE}
+#Estimate using package "np", one of many R packages 
+#Local Constant Estimator (regtype="lc")
+#Use arbitrary width h=2 instead of computer supplied one
+# (bws=c(2),bandwidth.compute=FALSE)
+#To estimate by formula above, use ckertype="uniform"
+suppressWarnings(suppressMessages(localconstantwage<-
+                        npregbw(ydat=wagedat$lwage,xdat=wagedat$educ,
+                        regtype="lc",bws=c(2),bandwidth.compute=FALSE, ckertype="uniform")))
+
+#Local Linear estimator
+#Same, but local linear (regtype="ll")
+suppressWarnings(suppressMessages(locallinearwage<-
+                        npregbw(ydat=wagedat$lwage,xdat=wagedat$educ,
+                        regtype="ll",bws=c(2),bandwidth.compute=FALSE, ckertype="uniform")))
+```
+
+```{r,echo=FALSE}
+#Pretty up Names
+localconstantwage$xnames<-"Years of Education"
+localconstantwage$ynames<-"Log Wage"
+# Plot
+suppressWarnings(suppressMessages(plot(localconstantwage, main= "Wage vs Education: Local Constant Estimator, h=2")))
+points(wagedat$educ,wagedat$lwage,cex=0.2,col="blue")
+```
+
+## Example: Wages and Education, Smoothed
+
+```{r,echo=FALSE}
+#Pretty up Names
+locallinearwage$xnames<-"Years of Education"
+locallinearwage$ynames<-"Log Wage"
+# Plot
+suppressWarnings(suppressMessages(plot(locallinearwage, main= "Wage vs Education: Local Linear Estimator, h=2")))
+points(wagedat$educ,wagedat$lwage,cex=0.2,col="blue")
+```
+
+## Choosing the "bandwidth"
+
+- In practice, $h$, called the "bandwidth" matters a lot
+- At $h=\infty$, local constant estimator is just mean of Y, local linear estimator is just OLS
+- At $h=0$, local constant estimator is just average at a point
+- Bias-variance tradeoff tells us where it should be
+- If just predicting, goal is often to minimize mean squared error loss
+$$E[(\widehat{f}(x)-f(x))^2] = E[(\widehat{f}(x))^2]-2E[\widehat{f}(x)]f(x)+f^2(x)$$
+$$= (E[(\widehat{f}(x))^2]-E[\widehat{f}(x)]^2)+(E[\widehat{f}(x)]^2-2E[\widehat{f}(x)]f(x)+f^2(x))$$
+$$= Var(\widehat{f}(x))+(Bias(\widehat{f}(x)))^2$$
+- Variance decreases with $h$, Bias increases
+    
+## Correct Rate
+
+- Variance is variance of an average (or OLS) on $nh$ data points
+    - Proportional to $\frac{1}{nh}$
+- Bias depends on how smooth $f(x)$ is
+- If twice differentiable, can Taylor expand
+    - $f(x+h)=f(x)+f^\prime(x)h+Remainder*h^2$
+    - Remainder in local linear approximation proportional to $h^2$
+- MSE(h)=$Bias^2$ + Variance is $c_1*h^4+c_2*\frac{1}{nh}$
+- Minimize by setting derivative to 0 
+    - $4c_1*h^3-c_2*\frac{1}{nh^2}=0$
+- $h$ proportional to $n^{-1/5}$ gives smallest error
+- Plugging back in, error proportional to $n^{-4/5}$
+- Compare to linear regression case
+    - Bias=0, variance proportional to $n^{-1}$ 
+- Cost of not knowing true form is needing more data
+- If goal is not prediction, may care more about bias than variance, so choose smaller $h$
+
+## Cross Validation
+
+- $h$ "proportional to" $n^{-1/5}$ result not so useful in practice
+    - Don't know constant of proportionality
+- In practice, choose $h$ by minimizing a proxy for MSE
+    - Split data into parts
+    - For every possible $h$
+        - Estimate $\widehat{f}(x)$ on part 1 using $h$
+        - Evaluate sample sum of squared errors on part 2
+    - Choose $h$ that gives smallest sum of squares
+- Can get even better estimate by flipping parts 1 and 2, using average of out of sample error to get MSE, minimizing the average
+- Even better, split in K parts, estimate on K-1, evaluate on last, and average K times
+- Called **K-fold cross validation**
+- K can be as large as $n$: called **leave-one-out cross-validation**
+- Done automatically by standard local regression software
+    
+## Aside: Code
+
+- Many $R$ programs will do nonparametric regression
+    - **np** library, **ksmooth** in **stats**, **locpoly**
+- **np** library has most options, but because of this a bit harder to use 
+    - Cross validation to choose bandwidth by **npregbw** command
+    - Local constant or linear regression by **npreg**
+
+## Example with cross-validated bandwidth (Code)
+
+```{r, eval=FALSE}
+#Local Linear estimator with cross validated bandwidth
+#Cross-validation is default, so no extra command
+cvwagereg<-npregbw(ydat=wagedat$lwage,
+    xdat=wagedat$educ,regtype="ll", 
+    ckertype="uniform")))
+#Display Results
+summary(cvwagereg)
+```
+
+
+## Example with cross-validated bandwidth
+```{r, results="hide", echo=FALSE}
+#Local Linear estimator with cross validated bandwidth
+#Cross-validation is default, so no extra command
+suppressWarnings(suppressMessages(cvwagereg<-
+                        npregbw(ydat=wagedat$lwage,xdat=wagedat$educ,
+                        regtype="ll", ckertype="uniform")))
+```
+
+```{r, echo=FALSE}
+summary(cvwagereg)
+```
+
+## Example: Wages and Education, Optimally Smoothed (Code)
+
+```{r,eval=FALSE}
+#Pretty up Names
+cvwagereg$xnames<-"Years of Education"
+cvwagereg$ynames<-"Log Wage"
+# Plot
+plot(cvwagereg, main= 
+  "Wage vs Education: Local Linear Estimator, optimal h")
+points(wagedat$educ,wagedat$lwage,cex=0.2,col="blue")
+```
+
+## Example: Wages and Education, Optimally Smoothed
+
+```{r,echo=FALSE}
+#Pretty up Names
+cvwagereg$xnames<-"Years of Education"
+cvwagereg$ynames<-"Log Wage"
+# Plot
+suppressWarnings(suppressMessages(plot(cvwagereg, main= "Wage vs Education: Local Linear Estimator, optimal h")))
+points(wagedat$educ,wagedat$lwage,cex=0.2,col="blue")
+```
+
+## Kernels
+
+- As described, local methods used a hard cutoff to decide which points are used to give information near $x$
+    - Weight 1 if within $h/2$ of $x$, 0 otherwise
+- Can get less jumpy results by using a soft cutoff
+    - Weight $K(u)$ which is smooth function of $u$, distance of $X_i$ from x
+    - Called a **Kernel**
+- Any function which gives higher weight to near points can work
+- Standard to use a density which integrates to 1
+    - Like a Gaussian $K(u)=\frac{1}{\sqrt{2\pi}}exp(-u^2/2)$
+- Bandwidth enters as $K(\frac{u}{h})$
+- Smaller bandwidth means weight more peaked near center
+- Estimator becomes
+$$(\widehat{\beta}_0(x),\widehat{\beta}_1(x))=\underset{(\beta_0,\beta_1)}{\arg\min}\sum_{i=1}^{n}K(\frac{X_i-x}{h})(Y_i-\beta_0-\beta_1(X_i-x))^2$$
+
+
+## Kernel Regression
+
+- Using kernel weighting function changes none of practical issues
+- $1\{X_i\in[x-\frac{h}{2},x+\frac{h}{2}]\}$ corresponds to $K(u)=1\{u\leq\frac{1}{2}\}$
+    - Uniform density, sometimes called "Boxcar kernel"
+- Bias and variance calculations similar
+- Now depend on function $K(u)$
+- Usually rates are the same ($n^{-4/5}$ if $f(x)$ twice differentiable), but can sometimes get better constant by using different kernel
+
+## Multivariate Nonparametric Regression
+
+- If $X$ is a vector, same principles apply
+- $f(x_1,x_2)$ can be estimated by local version of multivariate regression
+- Difference is "local" means close in both $x_1$ and $x_2$ directions
+- Don't need to choose same bandwidth for each
+- Can do $K(u_1/h_1,u_2/h_2)$
+- E.g. $1\{X_{1i}\in[x_1-\frac{h_1}{2},x_1+\frac{h_1}{2}]\}1\{X_{2i}\in[x_2-\frac{h_2}{2},x_2+\frac{h_2}{2}]\}$
+- Common choice is product of 1d kernels, e.g. $K(u_1/h_1,u_2/h_2)=K(u_1/h_1)K(u_2/h_2)$
+- Local linear regression now weighted multivariate regression
+
+## Curse of Dimensionality
+
+- As dimension $d$ of $X$ grows, area in a (hyper)-cube of constant side length declines exponentially in $d$
+- Number of points in interval of length $h$ in one direction becomes very small
+- Need much larger width for same variance, but then bias grows
+- Result is rate of convergence depends on $d$. 
+- Can show, with 2 derivatives in each dimension, MSE declines at rate $n^{-4/(4+d)}$
+- Means that if $d$ bigger than a handful, need a huge amount of data to get precise estimates
+- This is not a problem with estimator: just difficult in general
+
+## Example: Wages vs Education, Experience, and Tenure (Code 1)
+
+```{r, eval=FALSE}
+#Local Linear estimator with cross validated bandwidth
+#Cross-validation is default, so no extra command
+multiplenpreg<-npregbw(formula=wagedat$lwage~ 
+  wagedat$educ + wagedat$exper + 
+  wagedat$tenure,regtype="ll")))
+```
+
+## Example: Wages vs Education, Experience, and Tenure (Code 2)
+
+```{r,eval=FALSE}
+#Pretty up Names
+multiplenpreg$xnames<-c("Years of Education",
+  "Years of Experience","Years in Current Job")
+
+multiplenpreg$ynames<-"Log Wage"
+#Display info
+(summary(multiplenpreg))
+```
+
+## Example: Wages vs Education, Experience, and Tenure
+
+```{r, results="hide", echo=FALSE}
+#Local Linear estimator with cross validated bandwidth
+#Cross-validation is default, so no extra command
+suppressWarnings(suppressMessages(multiplenpreg<-
+        npregbw(formula=wagedat$lwage~ wagedat$educ + wagedat$exper + wagedat$tenure,
+                        regtype="ll")))
+```
+
+
+```{r,echo=FALSE}
+#Pretty up Names
+multiplenpreg$xnames<-c("Years of Education","Years of Experience","Years in Current Job")
+
+multiplenpreg$ynames<-"Log Wage"
+#Display info
+(summary(multiplenpreg))
+```
+
+## Wage vs Education, Experience, Tenure at median of others (Code)
+```{r,eval=FALSE}
+# Plot
+plot(multiplenpreg, main= "Wage vs Covariates")
+```
+
+## Wage vs Education, Experience, Tenure at median of others
+```{r,echo=FALSE}
+# Plot
+suppressWarnings(suppressMessages(plot(multiplenpreg, main= "Wage vs Covariates")))
+```
+
+## Summary
+
+- By estimating average or regression near a point $x$, can obtain estimates of conditional expectation function without knowing functional form
+- Need to choose how close is "near": trade off bias and variance
+- Cross validation can give good choice in practice
+- Not knowing form means less precise estimates, slower convergence to truth
+    - Not a disadvantage of these methods, 
+    - If form unknown, OLS and NLLS converge only to best predictor in their class 
+    - This is biased estimate of CEF 
+
+
+## Next Class
+
+- Regression Discontinuity
+    - An application of nonparametric regression to causal inference
+    - Angrist and Pischke Chapter 4
+    
+## Bonus Slide: Alternative: Series Regression
+
+- Instead of local regression, could just use OLS with many nonlinear terms
+   - **Series regression**
+- Polynomials, piecewise polynomials (splines), etc
+- OLS only unbiased if CEF truly in class
+- Otherwise, has bias term
+- Can take it to 0 by using more and more functions with sample
+- Tradeoff is variance goes up 
+    - To see this, note finite sample variance has degrees of freedom correction for # of regressors
+- Get similar performance to kernels if functions and number chosen optimally
+- Can use cross-validation to pick order
+- Do not use standard OLS inference: rate is slower since not letting variance go to 0 as quickly    
+    
+## Bonus Slide: Higher Order Regression
+
+- If function $f(x)$ very smooth, can do a bit better than $n^{-4/5}$
+- Idea is that you can go to higher order in Taylor expansion, try to exactly cancel out those terms
+- Do this by using quadratic function in local regression, or cubic, etc
+- Called "local polynomial" regression
+- Interpolates between series and local methods: capture nonlinearity both through window and by functional form
+- Since degree of smoothness not known, and adding terms raises variance when reducing bias, only sometimes helpful
+- Can achieve similar effect with special choices of $K(u)$ called higher order kernels    
+
+
