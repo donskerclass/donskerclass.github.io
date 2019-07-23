@@ -374,7 +374,7 @@ yy&lt;-as.ts(cay_current$y)</code></pre>
 <li>Use usual unit root tests (ADF, PP, etc) with appropriate corrections for trends, serial correlation, etc</li>
 <li>If <span class="math inline">\(\beta\)</span> not known, can replace by OLS estimate, run unit root test on <span class="math inline">\(Y_t-\widehat{\beta}X_t\)</span></li>
 <li>Since <span class="math inline">\(\widehat{\beta}\)</span> not consistent under <span class="math inline">\(H_0\)</span>, critical values are weird, but software will calculate them for you</li>
-<li>Version using ADF statistic called <strong>Engle-Granger</strong> test, version with robust PP statistic called <strong>Philips-Ouliaris</strong> test</li>
+<li>Version using ADF statistic called <strong>Engle-Granger</strong> test, version with robust PP statistic called <strong>Phillips-Ouliaris</strong> test</li>
 <li>All in <strong>urca</strong> (or <strong>tseries</strong>) library in R</li>
 <li>For more than 2 series, there can be more than one stationary cointegrating relationship</li>
 <li>Won’t describe, but <strong>Johansen test</strong> can determine this</li>
@@ -555,7 +555,7 @@ stargazer(dynresults,header=FALSE,type=&quot;html&quot;,
 <h2>Dynamic OLS estimates of cointegrating coefficients</h2>
 <ul>
 <li>Assuming cointegration tests hadn’t failed, could estimate by</li>
-<li>Regress <span class="math inline">\(c_t\)</span> on <span class="math inline">\(y_t\)</span>, <span class="math inline">\(a_t\)</span> and 4 leads and lags of <span class="math inline">\(\Delta y_t\)</span>, <span class="math inline">\(\Delta x_t\)</span></li>
+<li>Regress <span class="math inline">\(c_t\)</span> on <span class="math inline">\(y_t\)</span>, <span class="math inline">\(a_t\)</span> and 4 leads and lags of <span class="math inline">\(\Delta y_t\)</span>, <span class="math inline">\(\Delta a_t\)</span></li>
 <li>Using HAC standard errors t-stats are asymptotically normal</li>
 </ul>
 <table style="text-align:center">

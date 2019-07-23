@@ -15,7 +15,7 @@ output:
 - Not in your textbooks 
     - But important part of modern data analysis
 - Reasonably accessible reference
-    - Ch 17 of Bruce Hansen's "Econometrics" textbook 
+    - Ch 20 of Bruce Hansen's "Econometrics" textbook 
     - <http://www.ssc.wisc.edu/~bhansen/econometrics/>
 
 ## Nonlinear to nonparametric methods
@@ -247,7 +247,7 @@ $$= Var(\widehat{f}(x))+(Bias(\widehat{f}(x)))^2$$
 - If twice differentiable, can Taylor expand
     - $f(x+h)=f(x)+f^\prime(x)h+Remainder*h^2$
     - Remainder in local linear approximation proportional to $h^2$
-- MSE(h)=$Bias^2$ + Variance is $c_1*h^4+c_2*\frac{1}{nh}$
+- MSE(h)=$\text{Bias}^2$ + Variance is $c_1*h^4+c_2*\frac{1}{nh}$
 - Minimize by setting derivative to 0 
     - $4c_1*h^3-c_2*\frac{1}{nh^2}=0$
 - $h$ proportional to $n^{-1/5}$ gives smallest error

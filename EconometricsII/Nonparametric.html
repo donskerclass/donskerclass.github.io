@@ -156,7 +156,7 @@ $(document).ready(function () {
 </ul></li>
 <li>Reasonably accessible reference
 <ul>
-<li>Ch 17 of Bruce Hansen’s “Econometrics” textbook</li>
+<li>Ch 20 of Bruce Hansen’s “Econometrics” textbook</li>
 <li><a href="http://www.ssc.wisc.edu/~bhansen/econometrics/" class="uri">http://www.ssc.wisc.edu/~bhansen/econometrics/</a></li>
 </ul></li>
 </ul>
@@ -360,7 +360,7 @@ points(wagedat$educ,wagedat$lwage,cex=0.2,col=&quot;blue&quot;)</code></pre>
 <li><span class="math inline">\(f(x+h)=f(x)+f^\prime(x)h+Remainder*h^2\)</span></li>
 <li>Remainder in local linear approximation proportional to <span class="math inline">\(h^2\)</span></li>
 </ul></li>
-<li>MSE(h)=<span class="math inline">\(Bias^2\)</span> + Variance is <span class="math inline">\(c_1*h^4+c_2*\frac{1}{nh}\)</span></li>
+<li>MSE(h)=<span class="math inline">\(\text{Bias}^2\)</span> + Variance is <span class="math inline">\(c_1*h^4+c_2*\frac{1}{nh}\)</span></li>
 <li>Minimize by setting derivative to 0
 <ul>
 <li><span class="math inline">\(4c_1*h^3-c_2*\frac{1}{nh^2}=0\)</span></li>
@@ -437,7 +437,7 @@ summary(cvwagereg)</code></pre>
 ## 
 ## Continuous Kernel Type: Uniform
 ## No. Continuous Explanatory Vars.: 1
-## Estimation Time: 0.345 seconds</code></pre>
+## Estimation Time: 0.349 seconds</code></pre>
 </div>
 <div id="example-wages-and-education-optimally-smoothed-code" class="section level2">
 <h2>Example: Wages and Education, Optimally Smoothed (Code)</h2>
@@ -548,7 +548,7 @@ multiplenpreg$ynames&lt;-&quot;Log Wage&quot;
 ## 
 ## Continuous Kernel Type: Second-Order Gaussian
 ## No. Continuous Explanatory Vars.: 3
-## Estimation Time: 21.661 seconds</code></pre>
+## Estimation Time: 21.427 seconds</code></pre>
 <pre><code>## NULL</code></pre>
 </div>
 <div id="wage-vs-education-experience-tenure-at-median-of-others-code" class="section level2">

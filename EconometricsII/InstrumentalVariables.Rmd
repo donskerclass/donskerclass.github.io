@@ -175,7 +175,7 @@ stargazer(fm_ols.results,fm_ivreg.results,
     type="html", 
     title="Cigarette Demand Elasticity: OLS, 
       IV, Reduced Form, First Stage",
-    header=FALSE, size="tiny",
+    header=FALSE,
     column.labels=c("log(packs)","log(packs)",
                     "log(packs)","log(price)"),
     omit.table.layout="n")
@@ -223,7 +223,7 @@ reducedform.results<-coeftest(reducedform,
 suppressWarnings(suppressMessages(library(stargazer)))
 stargazer(fm_ols.results,fm_ivreg.results,reducedform.results,firststage.results,
     type="html", title="Cigarette Demand Elasticity: OLS, IV, Reduced Form, First Stage",
-    header=FALSE, size="tiny",
+    header=FALSE,
     column.labels=c("log(packs)","log(packs)","log(packs)","log(price)"),
     omit.table.layout="n")
 ```
