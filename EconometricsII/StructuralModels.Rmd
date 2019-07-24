@@ -99,7 +99,7 @@ ggdag(yxdag)+theme_dag_blank()+labs(title="X causes Y",subtitle="X is a parent o
 - $U_1,U_2$ not shown explicitly: $X$ and $Y$ are variables of interest, with exogenous random variation caused by $U_1,U_2$
 
 
-## Implications of strucutural equations models
+## Implications of structural equations models
 
 - To go from an SEM to distribution of data, *solve* the system of equations
     - Find endogenous variables $Y$ as function of only exogenous variables $U$
