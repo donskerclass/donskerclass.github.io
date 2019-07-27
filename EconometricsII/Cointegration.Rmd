@@ -35,7 +35,7 @@ output:
 - Omitted variables can induce relationships between otherwise unconnected variables
 - What's the omitted variable here? 
 - Should we assume there is some hidden force relating sociologists and space exploration, and try to find it?
-- Alternately, should we assume that these large correralations are just highly unlikely sampling variability?
+- Alternately, should we assume that these large correlations are just highly unlikely sampling variability?
 - For both, probably not
   - Reason is related to features that make time series relationships different from cross sectional ones
 - With time series, Correlation may not even reflect correlation!
