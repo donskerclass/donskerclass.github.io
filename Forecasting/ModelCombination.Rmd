@@ -1,0 +1,752 @@
+---
+title: "Model Combination"
+author: "73-423 Forecasting for Economics and Business"
+output:
+  html_document:
+    code_folding: hide
+---
+
+## Model Combination
+
+- Handling multiple forecasts or models
+    - Model Selection
+    - Model Averaging
+    - Model Combination
+- Bayesian and dynamic approaches
+- Applications
+    
+<!-- - Model Selection -->
+<!--     - Statistical approach -->
+<!--         - ERM: Non-nested models -->
+<!--         - Information Criteria: Nested Models -->
+<!--         - Penalized Risk Minimization: either -->
+<!--         - Cross validation -->
+<!--     - Forecast comparison (Diebold Mariano, etc) -->
+<!--     - Bayesian approach -->
+<!--         - Bayes factor (pros and cons) -->
+<!--         - Posterior predictive checks -->
+<!--     - Onine approach -->
+<!--         - Hedge -->
+<!-- - Model Averaging -->
+<!--     - "Morgan Freeman principle" -->
+<!--     - Equal weights (Granger) -->
+<!--     - ERM approach -->
+<!--     - Bayesian Model Averaging -->
+<!--     - Exponential Weights -->
+<!-- - General Combination Approaches  -->
+<!--     - Regression Combination -->
+<!--     - Model Expansion -->
+<!--     - Stacking (predictive density combination) -->
+<!--     - Fitting methods (Stat/Bayes/online. Sample splitting/CV) -->
+<!-- - Dynamic combinations? -->
+<!-- - Applications -->
+<!--     - Ensemble methods almost always win contests     -->
+    
+## Combining Forecasts
+
+- By now, we have seen a wide variety of forecasting methods and models
+- Differences in procedure partly come from differences in goals
+    - Express in terms of loss functions and approach (worst-case or average risk, regret)
+- Other differences come from class of models or predictors used
+    - ARIMA, State Space, ETS, Additive, nonlinear, judgmental, etc
+- Often, different methids will lead to fairly different results  
+- Given many forecasts, what can we do with them? (At least) 3 Choices
+    - Model **Selection**: Pick one "best" forecast
+    - Model **Averaging**: Take some (weighted) combination
+    - Model **Combination**: Put together in some way which need not be an average
+- In forecasting competitions (Kaggle, Netflix Prize, etc) extremely common that winning entry is some combination of other entries  
+    - **Ensembles** of models can outperform even the best *individual model*
+
+## A Unified Framework
+
+- Let $\mathcal{F}=\{f_m(\mathcal{Y}_{T}):\ m=1\ldots M\}$ be a set of forecasts or forecast rules
+    - These may be simple fixed rules, or the result of some complicated forecasting procedure
+- Let $\mathcal{S}\subset\mathbb{R}^{m}$ be a set of possible ways to combine the forecasts. 
+- A forecast combination is then a rule $f^{s}(\mathcal{Y}_T)=\sum_{m=1}^{M}s_{m}f_m(\mathcal{Y}_T)$ for some $s\in\mathcal{S}$
+- A forecast combination procedure is a method for choosing a rule $s\in\mathcal{S}$
+    - $\mathcal{S}_0=\{s\in\{0,1\}^m:\ \sum_{m=1}^{M}s_m=1\}$ is **model selection**
+    - $\mathcal{S}_1=\{s\in[0,1]^m:\ \sum_{m=1}^{M}s_m=1\}$ is **model averaging**
+    - $\mathcal{S}_2=\{s\in\mathbb{R}^m\}$ is **model combination**
+- A variety of methods and perspectives can be used to define a procedure for choosing $s\in\mathcal{S}$
+
+## Model Selection
+
+- In cases where $\mathcal{F}$ consists of fixed functions, model selection procedures with good statistical properties already known
+    - Empirical Risk Minimization solves $m^*=\underset{m\in 1\ldots M}{\arg\min}\sum_{t=1}^{T-h}\ell(y_{t+h},f_m(\mathcal{Y}_t))$
+- A more interesting case occurs where each model $m=1\ldots M$ is itself a procedure based on a selection rule
+- E.g., $\{\mathcal{F}_m\}_{m=1}^{M}$ is a set of sets of rules
+    - Rules can be *nested*, in which case $\mathcal{F}_m\subseteq\mathcal{F}_{m+1}$, or non-nested 
+    - Non-nested sets which are *disjoint* satisfy $\mathcal{F}_m\cap\mathcal{F}_n=0$ for $n\neq m$
+- ERM over the ERM estimates from each set is equivalent to ERM over the union of sets $\cup_{m=1}^{M}\mathcal{F}_m$
+    - Performance depends on complexity of class of all possible models that could be chosen
+    - In the disjoint case, this selects a single $m^*$ as the "best" model
+    - In cases where rule sets overlap, may not single out a particular $\mathcal{F}_m$ uniquely
+        - Fine if you don't need it
+- If you want to distinguish, or worry about performance loss from complex joint model class, can perform *penalized empirical risk minimization*
+- Use an **information criterion** (AIC(c), BIC, etc) which depends on model $m$ chosen to decide between models
+    
+## Model Averaging - Equal Weights
+
+- Case where $\mathcal{S}=\mathcal{S}_1$, the probability simplex, brings us away from previous methods
+- Simplest model averaging procedure, and one with surprisingly good performance, is **equal weights**
+    - $s=(\frac{1}{m},\frac{1}{m},\ldots,\frac{1}{m})$, no matter what data is used
+- If we have several forecasting methods and don't have a particularly good reason to think one should be much better or worse than others, average may do well
+- Combination may even do better than best individual forecast, from risk persepective
+    - Combination has lower variance than any individual forecast, making results more precise, especially if forecasts not perfectly correlated
+        - $Var(\frac{1}{M}\sum_{m=1}^{M}\widehat{y}_{t+h,m})=\frac{1}{M^2}\left(\sum_{m=1}^{M}Var(\widehat{y}_{t+h,m})+\sum_{m=1}^{M}\sum_{n\neq m}Cov(\widehat{y}_{t+h,m},\widehat{y}_{t+h,n})\right)$
+    - If forecasts each have low bias $\mathbf{E}[y_{t+h}-\widehat{y}_{t+h,m}]\approx 0$, this increase in precision improves square loss risk
+- What is special about equal weights? (cf Diebold 2017)
+    - Allows each method to contribute, without putting excessive confidence in any particular method
+        - If all methods are making similar forecasts, result is not so different than any one, if some are fairly different, result is incorporated, but only partially
+    - Simplicity: because not dependent on data, reduces chance of overfitting and variance of forecast
+    - Minmax perspective: it minimizes max risk over possible error distributions among all weighted averages of unbiased forecasts
+- Equal weights is a good way to combine a set of diverse, individually good but possibly imprecise forecasts
+
+## Model Averaging - Risk Minimization
+
+- In cases where models may be of differing quality, with some possibly way better or worse than others, may do better by using data to choose a combination
+- Choose $s\in\mathcal{S}$ to minimize measure of loss $\underset{s\in\mathcal{S}}{\arg\min}\sum_{t=1}^{T-h}\ell(y_{t+h},\sum_{m=1}^{M}s_mf_m(\mathcal{Y}_{t}))$
+- Weights act like new parameter, to be chosen alongside other parameters of the model
+- Reproduces ERM when $\mathcal{S}=\mathcal{S}_0$, but in $\mathcal{S}_1$ case produces new model: may fit better than any one model in set
+    - If each $f_m$ is ERM over $\mathcal{F}_m=\{f(,\theta):\ \theta\in\Theta_m\}$, combination is ERM over $\{\sum_{m=1}^{M}s_mf_{\theta}(\mathcal{Y}_T):\ s\in\mathcal{S},\theta\in\Theta_m\}$
+    - Produces low risk relative to best model in **combined class** under usual ERM conditions (stationarity, weak dependence, low complexity)
+- Especially if models are very different, new model class may be able to produce very different results than any individual rule, at cost of small increase in complexity
+    - Useful especially if model classes non-nested, nonlinear, less so otherwise  
+    - E.g., if classes are different orders of autoregression model, combination still an autoregression model and so no help
+    - But if one is, e.g., an ETS model and one is an autoregression, combination need not be in either class
+- Choosing weights allows variance reduction benefits like equal weights does, but can use performance to ensure bias is also controlled, in case set contains some bad models
+    - Cost is a bit of additional variance since weight choice adds complexity
+    
+## Alternate Selection Approaches
+
+- Equivalence to some form of ERM holds when $s\in\mathcal{S}$ chosen by risk minimization over set $\mathcal{F}$ consisting of fixed set of functions or $M$ separate ERM estimates
+- If models are nested, using empirical risk in choosing $s$ does not usually allow distinguishing between models
+    - If largest class is also **convex**, model averaging just picks model from within largest possible class
+- If $s\in\mathcal{S}$ chosen by alternate criterion, can produce a non-equivalent procedure
+    - Allows weight to be given to predictor $\widehat{f}_m$ for any $m$, capturing benefits for risk of reduced complexity
+- Risk approximable by **Cross Validation**: $\widehat{R}^{TSCV}(s)=\sum_{t=1}^{T-h}\ell(y_{t+h},\sum_{m=1}^{M}s_mf_m(\mathcal{Y}_{t}))$
+    - May provide better estimate of risk of different combinations, accounting for properties of $f_m$ as a function of the data
+    - Can also use other forms of cross validation (like K-fold), or a split into a training and validation set, to measure risk
+- Different data used to optimize over $\mathcal{S}$ than to construct $f_m$
+    - Reduces complexity and so amount of overfitting relative to case of joint combination
+- Also allows capturing qualities of $f_m$ *not* defined as an empirical risk minimizer 
+    - E.g. methods coming from expert judgment, penalized approaches, or machine learning methods
+    - Like smaller models in nested setting, these often have good risk performance due to way model chosen in a way not captured by empirical risk
+
+## Model Combination
+
+- In principle, the best possible combination of models could lie *outside* the set of weighted averages
+- Sometimes, a model should have **negative** weight: better to predict opposite of what it recommends
+- A model could also be given a weight **more than one**: go *even farther* in the direction it recommends
+- Case for weights outside $[0,1]$ stronger when using multiple models in combination
+    - *Given the other models*, there may be additional information in another model, but remaining variation might need to be rescaled or reversed 
+- All of these can be accommodated by setting $\mathcal{S}=\mathbb{R}^M$
+- Sometimes called **regression** combination, because $\sum_{m=1}^{M}s_mf_m(\mathcal{Y}_t)$ is the same form as a regression function $\sum_{j=1}^{J}b_jz_j$ with coefficients $s_m$ and predictors $f_m$
+    - If predictors are fixed sequences, choosing weights is exactly regression: can add a constant by including the constant forecast
+- If forecasts $f_m$ are generated by some procedure, can use empirical or some cross-validation risk to pick a good combo
+    - Properties similar to averaging case, now with a different function class
+- Can be useful to penalize choice of weights by adding penalty $\lambda\mathcal{P}(s)$ to (empirical or CV) risk estimate
+    - E.g. $\mathcal{P}(s)=\sum_{m=1}^M|s_m|$ gives Lasso estimate, which downweights low quality forecasts to 0
+    - Penalization reduces variance of weight choices and overfitting, which can be quite bad in regression case where weights completely unbounded
+
+## Application: Model Combination for Oil Price Forecasting
+
+- Consider forecasting monthly growth in price of West Texas Intermediate Crude Oil, in $/barrel
+    - Measure of Oil Prices at point for import to US, before refining
+- Apply 3 possible models: ARMA(1,1), ARCH(2), and AR(1)-ARCH(2)
+    - ARCH model has formula $y_t=\mu+\sigma_te_t$, $\sigma_t=\sqrt{\omega+b_1(y_{t-1}-\mu)^2+b_2(y_{t-2}-\mu)^2}$ with non-negative coefficients
+        - Simple way to model changing variance over time
+    - AR-ARCH model is ARCH model applied to residuals of AR model
+    - ARCH and AR-ARCH models are nested, but ARMA model isn't: captures different features of data
+- Compare model selection, averaging, and combination, all using mean squared error criterion
+    - Compare both case where parameters of each estimated on whole series, and where risk of combinations estimated by cross validation
+
+
+
+
+## Model predictions and combinations
+
+```{r,message=FALSE,warning=FALSE}
+library(knitr)
+library(kableExtra)
+library(fredr) #FRED data
+library(fpp2) #Forecasting
+library(tseries) #Time series commands, including ARCH models
+library(rugarch) #Many versions of ARCH models and other variance fitting models
+library(rstan) #Bayesian estimation
+library(loo) #Bayesian Model selection
+library(bridgesampling) #Bayesian model comparison and averaging
+library(mgcv) #Contains methods for fitting constrained regression, including best weighted average problems
+library(gridExtra) #Graph Display
+
+fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
+
+WTI<-fredr(series_id = "MCOILWTICO",units="chg") #Monthly Growth in West Texas Intermediate Crude Oil Price
+      #Measure of Oil Prices at point for import to US, before refining
+
+#Format the series as monthly time series object, starting at the first date
+oilgrowth<-window(ts(WTI$value,frequency=12,start=c(1986,1),names="OilPrice"),start=c(1986,2))
+
+# Fit a set of models to the series
+
+# ARMA(1,1)
+armaog<-arima(oilgrowth,order=c(1,0,1))
+
+# ARMA(1,1) Forecast
+
+armaogfc<-forecast(armaog,h=5)
+
+#ARCH(2)
+#y_t=e_t(b_1+b_2y_{t-1}^2+b_3y_{t-2}^2)
+
+#Use "garch" command in tseries library to fit by maximum likelihood
+#archog<-garch(oilgrowth,order=c(0,2))
+
+#Use rugarch library to fit ARCH(2) model with mean given by AR(1)
+
+spec <- ugarchspec(variance.model = list(model = "sGARCH", 
+                                         garchOrder = c(0,2), 
+                                         submodel = NULL, 
+                                         external.regressors = NULL, 
+                                         variance.targeting = FALSE), 
+
+                   mean.model     = list(armaOrder = c(1, 0), 
+                                         external.regressors = NULL, 
+                                         distribution.model = "norm", 
+                                         start.pars = list(), 
+                                         fixed.pars = list()))
+
+# Fit model by MLE
+archarog <- ugarchfit(spec = spec, data = oilgrowth, solver.control = list(trace=0))
+
+# Produce forecasts
+archarogfc <- ugarchforecast(archarog, n.ahead=5)
+
+#Use rugarch library to fit ARCH(2) model with mean given by constant
+
+spec1 <- ugarchspec(variance.model = list(model = "sGARCH", 
+                                         garchOrder = c(0,2), 
+                                         submodel = NULL, 
+                                         external.regressors = NULL, 
+                                         variance.targeting = FALSE), 
+
+                   mean.model     = list(armaOrder = c(0, 0), 
+                                         external.regressors = NULL, 
+                                         distribution.model = "norm", 
+                                         start.pars = list(), 
+                                         fixed.pars = list()))
+
+# Fit model by MLE
+archog <- ugarchfit(spec = spec1, data = oilgrowth, solver.control = list(trace=0))
+
+# Produce forecasts
+archogfc <- ugarchforecast(archog, n.ahead=5)
+
+# Produce series of predictions
+
+#Predicted values from ARMA model
+armaogpred<-oilgrowth-armaog$residuals 
+archogpred<-oilgrowth-archog@fit$residuals
+archarogpred<-oilgrowth-archarog@fit$residuals
+
+# Compare RMSE
+armaogerr<-accuracy(armaogpred,oilgrowth)
+archogerr<-accuracy(archogpred,oilgrowth)
+archarogerr<-accuracy(archarogpred,oilgrowth)
+
+s0<-c(1,0,0) #ARMA model minimizes MSE
+
+# Model combination
+
+#Unrestricted combination is linear regression
+mcombo<-lm(oilgrowth~0+armaogpred+archogpred+archarogpred)
+
+combopredict<-ts(predict(mcombo),frequency=12,start=c(1986,2))
+
+s2<-mcombo$coefficients
+
+#Restricted combo to weighted average fit by constrained least squares
+#See ?pcls help for syntax: below code ensures coefficients sum to 1 and are non-negative
+M<-list(X=matrix(0,length(oilgrowth),3),p=c(0.33,0.33,0.34),off=array(0,0),S=list(),
+Ain=matrix(0,3,3),bin=c(0,0,0),C=matrix(1,1,3),sp=array(0,0),y=oilgrowth,w=oilgrowth*0+1)
+M$X[,1]<-armaogpred
+M$X[,2]<-archogpred
+M$X[,3]<-archarogpred
+M$Ain[1,1]<-1
+M$Ain[2,2]<-1
+M$Ain[3,3]<-1
+#Find constrained least squares solution
+pcls(M)->M$p
+
+s1<-M$p #MSE optimizing weighted average of 3 models
+#Optimal average
+maverage<-s1[1]*armaogpred+s1[2]*archogpred+s1[3]*archarogpred
+
+#Plot series and predictions
+autoplot(oilgrowth)+autolayer(armaogpred)+autolayer(archogpred)+
+  autolayer(archarogpred)+autolayer(maverage)+autolayer(combopredict)+ggtitle("Oil Price Growth and Predicted Values")+
+  ylab("Change, Dollars per Barrel")
+```
+
+## Cross Validated Predictions and Optimal Combinations
+
+```{r,message=FALSE,warning=FALSE}
+## Produce time series CV forecast errors from each method
+
+farma <- function(x, h){forecast(Arima(x, order=c(1,0,1)), h=h)}
+e1 <- tsCV(oilgrowth, farma, h=1)
+
+#Produce predictions from rolling forecasts
+armacvpred<-window(oilgrowth,start=c(1987,1),end=c(2019,1))-window(e1,start=c(1987,1),end=c(2019,1))
+
+# rugarch library has its own function for tsCV forecasts, called ugrachroll
+# For computational speed, choose new parameters only every 5 data points
+
+#For basic ARCH(2) model
+mod1 = ugarchroll(spec1, data = oilgrowth, n.ahead = 1, 
+n.start = 10,  refit.every = 5, refit.window = "recursive", 
+solver = "hybrid", fit.control = list(), calculate.VaR = FALSE,
+keep.coef = TRUE)
+
+#Mean predictions
+archcvpred<-ts(mod1@forecast$density$Mu,frequency=12,start=c(1986,12))
+
+#For AR(1)-ARCH(2) model
+mod = ugarchroll(spec, data = oilgrowth, n.ahead = 1, 
+n.start = 10,  refit.every = 5, refit.window = "recursive", 
+solver = "hybrid", fit.control = list(), calculate.VaR = FALSE,
+keep.coef = TRUE)
+
+#Mean predictions
+archarcvpred<-ts(mod@forecast$density$Mu,frequency=12,start=c(1986,12))
+
+#Truncate series to window of predictions
+ogwindow<-window(oilgrowth,start=c(1987,1),end=c(2019,1))
+archcv<-window(archcvpred,start=c(1987,1),end=c(2019,1))
+archarcv<-window(archarcvpred,start=c(1987,1),end=c(2019,1))
+
+# Compare RMSE
+armacverr<-accuracy(armacvpred,ogwindow)
+archcverr<-accuracy(archcv,ogwindow)
+archarcverr<-accuracy(archarcv,ogwindow)
+
+s0cv<-c(1,0,0) #ARMA model still minimizes MSE
+
+#Unrestricted combination is linear regression
+mcombocv<-lm(ogwindow~0+armacvpred+archcv+archarcv)
+
+combocvpredict<-ts(predict(mcombocv),frequency=12,start=c(1987,1))
+
+s2cv<-mcombocv$coefficients
+
+#Restricted combo to weighted average fit by constrained least squares
+#See ?pcls help for syntax: below code ensures coefficients sum to 1 and are non-negative
+M2<-list(X=matrix(0,length(ogwindow),3),p=c(0.33,0.33,0.34),off=array(0,0),S=list(),
+Ain=matrix(0,3,3),bin=c(0,0,0),C=matrix(1,1,3),sp=array(0,0),y=ogwindow,w=ogwindow*0+1)
+M2$X[,1]<-armacvpred
+M2$X[,2]<-archcv
+M2$X[,3]<-archarcv
+M2$Ain[1,1]<-1
+M2$Ain[2,2]<-1
+M2$Ain[3,3]<-1
+#Find constrained least squares solution
+pcls(M2)->M2$p
+
+s1cv<-M2$p #MSE optimizing weighted average of 3 models
+
+#Optimal average
+maveragecv<-s1cv[1]*armacvpred+s1cv[2]*archcv+s1cv[3]*archarcv
+
+#Plot Forecasts and combinations
+
+autoplot(ogwindow)+autolayer(armacvpred)+autolayer(archcv)+autolayer(archarcv)+
+  autolayer(maveragecv)+autolayer(combocvpredict)+ggtitle("Oil Price Growth and CV Predicted Values")+
+  ylab("Change, Dollars per Barrel")
+```
+
+## Combination Results
+
+- Optimal combinations may take negative and strongly positive weights, because additional information in extra models may predict in wrong direction
+- ARCH model, nested in AR-ARCH, has low weight in non-CV case, but more important when CV used
+- ARMA model makes best predictions, but combining with AR-ARCH helpful in cross-validated case
+
+```{r,warning=FALSE}
+Weight<-c("ARMA(1,1)","ARCH(2)","AR(1)ARCH(2)")
+seltable<-data.frame(Weight,s0,s1,s2,s0cv,s1cv,s2cv)
+colnames(seltable)<-c("Model","Selection","Average","Combination",
+                       "Selection (CV)","Average (CV)","Combination (CV)")
+
+kable(seltable,
+  caption="Optimal Model Weights by Method") %>%
+  kable_styling(bootstrap_options = "striped")
+
+```
+
+## Bayesian Approach
+
+- In the Bayesian setting, different forecasts come from different *probability models*
+- Let $\mathcal{M}=\left\{\{p_m(.,\theta):\ \theta\in\Theta_m\}_{m=1}^{M},\{\pi_m(\theta)\}_{m=1}^{M}\right\}$ be a set of models $m=1\ldots M$ consisting of a likelihood $p_m$ and a prior $\pi_m$
+    - For example, ARIMA(p,d,q) models of different order, or state space models with different components, or different priors for the same model
+- How should we take the information contained in these different models and produce a good forecast?
+- Recall the Bayesian procedure for building a forecast using a *single* model
+- For each $m$, construct a posterior $\pi(\theta|\mathcal{Y}_T,m)$ and a posterior predictive distribution $p(y_{T+1}|\mathcal{Y}_{T},m)$ by Bayes rule
+- Given a loss function $\ell(,)$ can build point forecasts $\widehat{y}_{T+1,m}=f_m(\mathcal{Y}_T)$ by finding $\widehat{y}_{T+1,m}=\underset{\widehat{y}_{T+1}}{\arg\min}\int\ell(y_{T+1},\widehat{y}_{T+1})p(y_{T+1}|\mathcal{Y}_{T},m)dy_{T+1}$
+- $\{\widehat{y}_{T+1,m}\}_{m=1}^{M}$ are a set of forecast rules which can be combined by any model combination procedure as before
+    - Can even be combined with non-Bayesian forecast approaches, as once model is reduced to single output, no need to know where it came from
+- Alternately, can use combination methods which use the additional information provided by Bayesian models   
+
+## Bayesian Model Averaging
+
+- Given a set $\mathcal{M}$ of probability models, the fully Bayesian approach is to put a prior over it
+- Let $\nu(m)$ be a prior weight attached to model $m\in\mathcal{M}$, reflecting information about the plausibility of different models
+- For each $m$, $p(\tilde{\mathcal{Y}}_T|m)=\int_{\theta\in\mathcal{\Theta_m}} p_m(\tilde{\mathcal{Y}}_T,\theta)\pi_m(\theta)d\theta$ is the prior probability of observing data set $\tilde{\mathcal{Y}}_T$
+    - Evaluated at $\tilde{\mathcal{Y}}_T=\mathcal{Y}_T$, it gives us the **marginal likelihood** of the data given the model $m$
+- Applying Bayes rule, one can construct a posterior distibution over the set of models
+    - $\nu(m|\mathcal{Y}_T)=\frac{p(\mathcal{Y}_T|m)\nu(m)}{\sum_{j=1}^{M}p(\mathcal{Y}_t|j)\nu(j)}$ is posterior weight of model $m$
+- Given a posterior distribution, posterior predictive distribution is $\sum_{m=1}^{M}p(y_{T+1}|\mathcal{Y}_T,m)\nu(m|\mathcal{Y}_T)$ 
+    - This is a weighted average of posterior predictive distributions of each model
+- Optimal forecast is $\underset{\widehat{y}_{T+1}}{\arg\min}\int\ell(y_{T+1},\widehat{y}_{T+1})\sum_{m=1}^{M}p(y_{T+1}|\mathcal{Y}_T,m)\nu(m|\mathcal{Y}_T)dy_{T+1}$    
+- *Exactly* the same prediction as when $m$ is a parameter and Bayes applied with priors $\pi(\theta,m)=\pi_m(\theta)\nu(m)$
+    - Bayesian model averaging is just Bayes!
+    - Not generally the same as $\sum_{m=1}^{M}\widehat{y}_{T+1,m}\nu(m|\mathcal{Y}_{T+1})$: we average the posteriors, not the forecasts themselves
+  
+<!-- - Answers question: What is the chance that data $\mathcal{Y}_T$ came from model $m$?     -->
+    
+## Bayes Factors
+
+- For model *selection*, might want to select the model with the highest posterior probability
+- For comparing two models, one can look at the ratio $\frac{p(j|\mathcal{Y}_T)}{p(k|\mathcal{Y}_T)}=\frac{p(\mathcal{Y}_T|j)\nu(j)}{p(\mathcal{Y}_T|k)\nu(k)}$
+- Taking logs, this is given by $\log  p(\mathcal{Y}_T|j)-\log p(\mathcal{Y}_T|k) +\log\nu(j)-\log\nu(k)$
+    - With equal priors, $\log\nu(j)-\log\nu(k)=0$, and difference is just difference in log marginal likelihood
+    - This difference $\log  p(\mathcal{Y}_T|j)-\log p(\mathcal{Y}_T|k)$ is called the **Bayes Factor**
+- Can use marginal likelihoods, just like information criteria, to choose between Bayesian models
+- A large value suggests observed data would be much more likely to be seen under model $j$ than model $k$
+    - If prior information in favor of one model exists, can adjust Bayes factor by prior differences
+
+## Limitations of Bayes Factors
+
+- Bayes factor uses particular interpretation of "good model", using *log probability* as loss function
+    - Very sensitive to avoiding assigning low probability to events actually seen
+- Empirically, this often means that in cases where none of the models describes data particularly well, it will choose the one with higher variance or thicker tails
+    - Will tend to like models with wide forecast intervals rather than models which do better in terms of, e.g., mean or median
+- Suppose Model 1 is a point mass on exact conditional mean, and Model 2 is a normal distribution centered at 0 always
+    - Bayes factor will **always** choose model 2, with infinite difference, even though model 1 gives way better mean forecasts
+    - In fact, so will Bayesian model averaging: posterior weight of model 1 is 0 if one ever observes a distribution not exactly at the mean
+- Note that predicting using just the model $m^{*}$ with the highest Bayes factor is *not* a Bayesian forecast
+    - Does not, e.g., produce low average risk with respect to a loss function
+    - Can be thought of as a conditional forecast given selected model
+- One useful thing to look at when comparing Bayesian models, but be careful if goal is not log probability loss 
+
+## Combining Bayesian Forecasts
+
+- When model set $\mathcal{M}$ does not contain distribution $p(\mathcal{Y}_T)$ of data, Bayes approaches may not perform well
+- Often a problem because you need to model full distribution, but attention may be focused to only some parts
+    - For example, almost all the models we described (additive, ARIMA, linear state space) model conditional mean 
+    - But rest of distribution is same every period: e.g. residuals $e_t\sim N(0,\sigma^2)$
+    - Can try to model variance (e.g. with ARCH models), but maybe other features also different: may have heavy tails (lots of outliers), skewness, etc
+- Principled Bayesian approach: think really hard about all features of distribution and try to put them in your models
+    - Fine, but a lot of work, and often our models of parts we care about (e.g. conditional means) are pretty good already
+- Alternate approach: combine Bayesian approach, which gives a distribution, with statistical approaches
+- Example: use cross-validation based on posterior predictive distributions as measure of expected loss
+    - $\widehat{R}^{CV}(m)=\frac{1}{T-1}\sum_{t=1}^{T-1}\int \ell(y_{t+1},\widehat{y}_{t+1})p_m(\widehat{y}_{t+1}|Y_{t})d\widehat{y}_{t+1}$ measures performance of posterior predictive distributions for loss you care about
+    - Computationally challenging, so approximations often used: see `loo` library in R
+- Can also combine models by using an *average* of posterior predictive distributions $p^s(y_{T+1}|\mathcal{Y}_{T})=\sum_{m=1}^{M}s_mp_m(y_{T+1}|\mathcal{Y}_{T})$
+    - Use, e.g., CV estimate of loss to choose best $s\in\mathcal{S}_1$
+    - Allows including models which help with some feature of distribution, but are not good models of whole distribution
+    
+## Application: Bayesian Evaluation of Oil Price Models
+
+- Using Oil Price growth data, fit 3 Bayesian models: AR(3), ARCH(2), and AR(1)-ARCH(2)
+    - Put N(0,1) priors on all parameters of each model
+- Latter two models are nested, first is not    
+- Construct individual forecasts in Stan, calculate marginal likelihoods using library `bridgesampling` 
+- Result: comparing marginal likelihoods, both ARCH models blow AR model out of the water
+    - Differ by over 30, which is would require $\approx e^{30}$ higher prior weight to overcome
+    - This is in spite of fact that ARCH(2) model always predicts a constant mean
+    - Reason is that volatility not well matched by a model which predicts a constant variance, like AR
+- Using a (1/3,1/3,1/3) prior over models, posterior $\approx(0,0,1)$
+    - Model average and model selection essentially identical
+- Useful if we want to know under which model data we have seen is more probable
+    - If all models not great, may prefer less extreme weighting 
+    
+
+```{r,message=FALSE,warning=FALSE}
+
+options(mc.cores = parallel::detectCores()) #Use parallel computing when running MCMC
+rstan_options(auto_write = TRUE) #Do not recompile Stan code every time file is saved
+
+#Write code for AR(1)-ARCH(2) model in Stan
+#Follows Stan User's Guide Ch 2.1-2.2, with modifications
+stan_code_ararch<-"
+data {
+  int<lower=0> T;
+  real r[T];
+}
+parameters {
+  real mu;
+  real<lower=-1,upper=1> ar1;
+  real<lower=0> omega;
+  real<lower=0,upper=1> beta1;
+  real<lower=0,upper=(1-beta1)> beta2;
+
+}
+transformed parameters {
+  real<lower=0> sigma[T-3];
+  real lagval[T-1];
+  for (t in 1:(T-1))
+    lagval[t] = mu + ar1*r[t];
+  for (t in 4:T)
+    sigma[t-3] = sqrt(omega
+                     + beta1 * pow(r[t-1] - lagval[t-2], 2)
+                     + beta2 * pow(r[t-2] - lagval[t-3], 2));
+}
+model {
+  // Priors: N(0,1) on everything: use target syntax because otherwise likelihood calculated only up to constant
+  target += normal_lpdf(mu | 0, 1);
+  target += normal_lpdf(ar1 | 0, 1);
+  target += normal_lpdf(omega | 0, 1);
+  target += normal_lpdf(beta1 | 0, 1);
+  target += normal_lpdf(beta2 | 0, 1);
+  // Likelihood: Normal, with mean given by AR, variance by ARCH
+  target += normal_lpdf(r[4:T] | lagval[3:(T-1)], sigma);
+  // Equivalent to r[4:T] ~ normal(lagval[3:(T-1)], sigma); for posterior, but not likelihood
+}
+
+generated quantities {
+real r_tilde; // Samples from posterior predictive distribution
+
+r_tilde = normal_rng(mu + ar1*r[T],sqrt(omega
+                     + beta1 * pow(r[T] - mu - ar1*r[T-1], 2)
+                     + beta2 * pow(r[T-1] - mu - ar1*r[T-2], 2)));  //Simulate draw from period T+1 conditional likelihood 
+
+// vector[T-3] log_lik; //Value of log likelihood at parameter draws
+// for (t in 4:T) log_lik[t] = normal_lpdf(r[t] | lagval[t-1], sigma[t-3]);
+}"
+
+
+#Write code for ARCH(2) model in Stan
+#Follows Stan User's Guide Ch 2.1-2.2, with modifications
+#Sampling seems to fail for this model: not sure why yet
+stan_code_arch<-"
+data {
+  int<lower=0> T;
+  real r[T];
+}
+parameters {
+  real mu;
+  real<lower=0> omega;
+  real<lower=0,upper=1> beta1;
+  real<lower=0,upper=(1-beta1)> beta2;
+
+}
+transformed parameters {
+  real<lower=0> sigma[T-3];
+  real lagval[T-1];
+  for (t in 1:(T-1))
+    lagval[t] = mu;
+  for (t in 4:T)
+    sigma[t-3] = sqrt(omega
+                     + beta1 * pow(r[t-1] - lagval[t-2], 2)
+                     + beta2 * pow(r[t-2] - lagval[t-3], 2));
+}
+model {
+  // Priors: N(0,1) on everything: use target syntax because otherwise likelihood calculated only up to constant
+  target += normal_lpdf(mu | 0, 1);
+  target += normal_lpdf(omega | 0, 1);
+  target += normal_lpdf(beta1 | 0, 1);
+  target += normal_lpdf(beta2 | 0, 1);
+  // Likelihood: Normal, with mean given by AR, variance by ARCH
+  target += normal_lpdf(r[4:T] | lagval[3:(T-1)], sigma);
+  // Equivalent to r[4:T] ~ normal(lagval[3:(T-1)], sigma); for posterior, but not likelihood
+}
+
+generated quantities {
+real r_tilde; // Samples from posterior predictive distribution
+
+r_tilde = normal_rng(mu,sqrt(omega
+                     + beta1 * pow(r[T] - mu, 2)
+                     + beta2 * pow(r[T-1] - mu, 2)));  //Simulate draw from period T+1 conditional likelihood 
+
+// vector[T-3] log_lik; //Value of log likelihood at parameter draws
+// for (t in 4:T) log_lik[t] = normal_lpdf(r[t] | lagval[t-1], sigma[t-3]);
+}"
+
+
+#AR(3) Model for comparison
+stan_code_ar<-"
+data {
+  int<lower=0> T;
+  vector[T] r;
+}
+parameters {
+  real alpha;
+  real beta;
+  real gamma;
+  real delta;
+  real<lower=0> sigma;
+}
+model {
+  target += normal_lpdf(alpha | 0, 1);
+  target += normal_lpdf(beta | 0, 1);
+  target += normal_lpdf(gamma | 0, 1);
+  target += normal_lpdf(delta | 0, 1);
+  target += normal_lpdf(r[4:T] | alpha+beta*r[3:(T-1)]+gamma*r[2:(T-2)]+delta*r[1:(T-3)], sigma);
+}
+generated quantities {
+real r_tilde; // Samples from posterior predictive distribution
+
+r_tilde = normal_rng(alpha+beta*r[T]+gamma*r[T-1]+delta*r[T-2],sigma);  //Simulate draw from period T+1 conditional likelihood 
+}"
+
+#Steal code for ARMA(1,1) from Stan manual
+#Fun fact: this code has major problems with sampling, making MCMC results unreliable
+#All diagnostics suggest not to trust it, so exclude it from out set of models
+stan_code_arma<-"
+data {
+  int<lower=1> T;            // num observations
+  real r[T];                 // observed outputs
+}
+parameters {
+  real mu;                   // mean coeff
+  real phi;                  // autoregression coeff
+  real theta;                // moving avg coeff
+  real<lower=0> sigma;       // noise scale
+}
+transformed parameters {
+  vector[T] nu;              // prediction for time t
+  vector[T] err;             // error for time t
+  nu[1] = mu + phi * mu;    // assume err[0] == 0
+  err[1] = r[1] - nu[1];
+  for (t in 2:T) {
+    nu[t] = mu + phi * r[t-1] + theta * err[t-1];
+    err[t] = r[t] - nu[t];
+  }
+}
+model {
+  target += normal_lpdf(mu | 0, 1);         // priors
+  target += normal_lpdf(phi | 0, 1);
+  target += normal_lpdf(theta | 0, 1);
+  target += normal_lpdf(sigma | 0, 1);
+  target += normal_lpdf(err | 0, sigma);    // likelihood
+}
+generated quantities {
+real r_tilde; // Samples from posterior predictive distribution
+
+r_tilde = normal_rng(mu + phi * r[T] + theta * err[T],sigma);  //Simulate draw from period T+1 conditional likelihood 
+}
+"
+
+stan_model_ararch<-stan_model(model_code = stan_code_ararch,model_name = "ARARCHModel") 
+stan_model_arch<-stan_model(model_code = stan_code_arch,model_name = "ARCHModel") 
+stan_model_ar<-stan_model(model_code = stan_code_ar,model_name = "ARModel") 
+#stan_model_arma<-stan_model(model_code = stan_code_arma,model_name = "ARMAModel") 
+
+```
+
+```{r,message=FALSE,warning=FALSE}
+Tlength<-length(oilgrowth)
+# Format data as list to feed to model
+stan_data<-list(T=Tlength, r=oilgrowth)
+
+# Run the code to draw samples from the posteriors
+fit_ararch<-sampling(object = stan_model_ararch,data = stan_data, chains = 4, iter = 2000, seed = 4567)
+fit_arch<-sampling(object = stan_model_arch,data = stan_data, chains = 4, iter = 2000, seed = 4567)
+fit_ar<-sampling(object = stan_model_ar,data = stan_data, chains = 4, iter = 2000, seed = 4567)
+#fit_arma<-sampling(object = stan_model_arma,data = stan_data, chains = 4, iter = 2000, seed = 4567, 
+#                   control=list(adapt_delta=0.94,max_treedepth=16))
+
+#Display parameter estimates
+#print(fit_ararch,pars=c("mu","ar1","omega","beta1","beta2","lp__"),digits_summary=4)
+#print(fit_arch,pars=c("mu","omega","beta1","beta2","lp__"),digits_summary=4)
+#print(fit_ar,pars=c("alpha","beta","gamma","delta","lp__"),digits_summary=4)
+
+#print(fit_arma,pars=c("mu","phi","theta","sigma","lp__"),digits_summary=4)
+
+#Display posterior predictive distributions
+postpredplot<-list()
+postpredplot[[1]]<-stan_hist(fit_ararch,pars="r_tilde",bins=70)+ggtitle("AR-ARCH")+xlab("Oil Price Growth")
+postpredplot[[2]]<-stan_hist(fit_arch,pars="r_tilde",bins=70)+ggtitle("ARCH")+xlab("Oil Price Growth")
+postpredplot[[3]]<-stan_hist(fit_ar,pars="r_tilde",bins=70)+ggtitle("AR(3)")+xlab("Oil Price Growth")
+
+#stan_hist(fit_arma,pars="r_tilde",bins=70)+ggtitle("Posterior Density y_{T+1}, ARMA model")+xlab("Oil Price Growth")
+
+# Compute log marginal likelihood via bridge sampling for models using "bridgesampling" library
+M3.bridge <- bridge_sampler(fit_ararch, silent = TRUE)
+M2.bridge <- bridge_sampler(fit_arch, silent = TRUE)
+M1.bridge <- bridge_sampler(fit_ar, silent = TRUE)
+#Obtain Log marginal likelihood
+ml3<-M3.bridge$logml
+ml2<-M2.bridge$logml
+ml1<-M1.bridge$logml
+
+modelposterior<-post_prob(M1.bridge,M2.bridge,M3.bridge)
+```
+
+## Marginal Likelihoods and T+1 Posterior Predictive distributions    
+
+```{r}
+marglikelihood<-c(ml1,ml2,ml3)
+models<-c("AR(3)","ARCH(2)","AR(1)-ARCH(2)")
+
+bayestable<-data.frame(models,marglikelihood,modelposterior)
+
+colnames(bayestable)<-c("Model","Marginal Likelihood","Posterior Model Weight")
+
+kable(bayestable,
+  caption="Bayesian Combinations of Oil Price Growth Models") %>%
+  kable_styling(bootstrap_options = "striped")
+
+grid.arrange(grobs=postpredplot,nrow=1,ncol=3)
+```
+
+## Dynamic Model Combination
+
+- If producing a *sequence* of forecasts, $\{\widehat{y}_{t+1}\}_{t=1}^{T}$, and in posession of a sequence of forecast rules or models $\mathcal{F}_t$, 
+    - Can combine using a *different* $s_t\in\mathcal{S}$ every period $t$ to produce a **dynamic model combination**
+- Simplest approach to this is just to run one of previous approaches given data available up to a fixed time
+    - Use model selection, averaging or combination based on empirical risk, CV risk, or penalized risk
+    - Use Bayesian model averaging, but update prior $\nu(m)$ using Bayes rule given incoming data
+- Above approaches are sensible given stationarity and enough initial data to ensure good approximation of risk
+    - At start, with no or little data, performance not guaranteed, so need good starting values
+    - In Bayesian approach, can use prior information to set initial guesses
+    - In statistical approach, start with reasonable starting value, like equal weights, and use heavy penalization to regularize
+- Weights can be made to depend on context by fitting an explicitly time dependent model $\widehat{s}_t(\mathcal{Y}_t)$
+    - Called **regime switching** models when performing selection each period
+    - E.g., use one prediction rule in recession or crisis periods, and another in normal times
+    
+## Online Approaches
+
+- If goal is regret rather than max or average risk, or data nonstationary, online approaches become attractive
+- Follow the Regularized Leader is **exactly** penalized ERM each period
+    - **Hedge** performs model selection each period, and **exponential weights** performs model averaging
+        - Both with entropy penalty $\sum_{m=1}^{M}s_m\log s_m$
+    - Online regression can be implemented by online (projected) gradient descent, corresponding to ridge penalty
+- Methods can also be made equivalent to Bayesian procedures with appropriate choice of likelihood and priors
+    - Maximum A Posteriori estimate is Penalized ERM with loss equal to log likelihood and penalty given by log prior
+- Equivalence of online and statistical approaches suggests robust performance whether goal is regret or risk
+    - Penalization useful to ensure stability against arbitrary sequences, which reduces both regret and excess risk
+
+
+## Conclusions
+
+- We have now seen a wide variety of forecast methods, each with pros and cons
+- With many forecasts, can combine them to produce potentially better forecasts
+    - Selection rules pick a single one
+    - Averaging rules create weighted combinations
+    - Regression approaches create combinations outside set of averages
+- Larger sets of combinations can yield improvements on any individual forecast
+- Can choose combination based on measures of performance
+    - Empirical, penalized empirical, or cross validated Risk in statistical approach
+    - Posterior updating over models for Bayes approach
+    - Dynamic and online combinations
+- Combinations of diverse methods can capture features not achievable with any one method    
+
+## References
+
+- Francis Diebold (2017) *[Forecasting in Economics, Business, Finance and Beyond](https://www.sas.upenn.edu/~fdiebold/Teaching221/Forecasting.pdf)*, Part IV: Forecast Evaluation and Combination
+    - Useful source on statistical approach to forecast combination
+
+
+
+    
+

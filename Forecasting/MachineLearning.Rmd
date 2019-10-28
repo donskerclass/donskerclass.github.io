@@ -1,0 +1,473 @@
+---
+title: "Machine Learning"
+author: "73-423 Forecasting for Economics and Business"
+output:
+  html_document:
+    code_folding: hide
+---
+
+
+## Outline
+
+- What is ML?
+- Trees
+    - Bagging 
+    - Random Forests
+    - Boosting 
+- Kernels
+
+
+<!-- - What is ML? -->
+<!--     - High Dimensional -->
+<!--     - Nonlinear -->
+<!--     - Prediction Focused -->
+<!-- - Trees -->
+<!--     - CART -->
+<!--     - Selection Approaches -->
+<!-- - Boosting  -->
+<!--     - Gradient Boosting/XG Boost -->
+<!-- - Bagging  -->
+<!--     - Forests -->
+<!-- - Regularized regression -->
+<!-- - Kernel Trick -->
+<!--     - SVMs -->
+<!--     - Regularized regression -->
+<!-- - Alternative approaches (mention existence) -->
+<!--     - Bayesian -->
+<!--     - Online -->
+    
+## Machine Learning for Forecasting
+
+- Recently, area of quantitative prediction has experienced substantial development
+- Often, results have been under the heading of **Machine Learning** (ML)
+    - Use and development of **algorithms** for automated construction of **predictions** and **decisions** using **data**
+- Precise characterization of what methods count as machine learning is contentious
+    - By many standards, many principles and methods in this class could be characterized as ML
+- Practically, "Machine Learning" is what Machine Learning researchers do
+- An eclectic variety of methods, with most salient characteristic is that they "work"
+- Performance usually defined in terms of statistical learning context
+    - Given a data set $\mathcal{Z}^{\text{Train}}_{T_1}=(\mathcal{Y}^{\text{Train}}_{T_1},\mathcal{X}^{\text{Train}}_{T_1})$ produce predictions $\widehat{f}$, by some method or another 
+    - Such that when faced with new data $\mathcal{Z}^{\text{Test}}_{T_2}=(\mathcal{Y}^{\text{Test}}_{T_2},\mathcal{X}^{\text{Test}}_{T_2})$, predictions are accurate, in sense that for loss function $\ell:\ \mathbf{Y}\times\mathbf{Y}\to\mathbb{R}^{+}$
+    - Average loss over *test set* $\frac{1}{T_2}\sum_{t=1}^{T_2}\ell(y_{t},\widehat{f}(X_t))$ is small
+- In forecasting case, $X_t$ contains past outcomes $\mathcal{Y}_{T-1}$ and observations are ordered in time
+    - In general, observations may be unordered: customers, products, files, etc
+
+    
+## Characteristics of Machine Learning Methods
+
+- Focused on prediction error
+    - Do not restrict attention to rules that are simple or interpretable or produce complete models of data and environment
+- Algorithmic
+    - Procedures are automated, not using human input to adjust or evaluate predictions
+    - Predictions may not even be expressed as functions you can write down, and can instead be produced by any series of steps that gives a number
+- Nonlinear or nonparametric
+    -  Prediction rules as described need not be written as linear functions, or even describable using a finite set of known nonlinear forms 
+- High dimensional
+    - Set of predictors used can be extremely large, including unconventional types of data like text, audio, or images
+    
+## Machine Learning Approaches
+
+- Befitting a topic for which there is an entire department at CMU, coverage will be selective and shallow
+    - A handful of popular methods, with limited discussion of theory or principles
+- Today: "last generation" machine learning, roughly defined as "what you find in Hastie, Tibshirani, and Friedman (2009)"
+- Some methods we have already discussed: e.g. regularized (structural) risk minimization
+    - Lasso and other penalized approaches permit using many predictors
+    - Cross validation is key tool for ensuring regularization chosen leads to low risk predictions
+- Regularized versions of linear or logistic regression allow many predictors, but still impose linearity
+    - Performance is okay, but usually can do much better with nonlinear methods
+- Simple, easy to use, and extremely effective nonlinear methods are based on **trees**
+    - Simplest possible nonlinear functions, used as building block in **boosting** and **bagging** for effective procedures
+- Will also briefly discuss **reproducing kernel** methods  
+    - Nonlinear approach posessing beautiful and elegant theory: Performance usually "just okay", but often better than simple linear methods
+- Next class: Neural networks and Deep Learning
+    - Dominant approach in last 7 years, notable for success with new **types** of data
+
+## Trees
+
+- Suppose we have data $(y_t,X_t)$ in $\mathbb{R}\times\mathbb{R}^{N}$ or $\{0,1\}\times\mathbb{R}^{N}$
+    - Former case is called **regression**, latter is called **classification**
+- A (decision) **tree** is a piecewise constant function, defined sequentially
+    - Pick some predictor $i\in 1\ldots N$, split space in two regions, where $x_{i,t}$ is above or below a threshold $s_1$ 
+    - Within each region $x_{i,t}<s_1$, $x_{i,t}\geq s_1$, pick another predictor in $1\ldots N$, and another threshold $s_2$, and split the region in two
+    - Continue choosing and splitting regions in two until space is split into $J$ non-overlapping rectangular subregions $\{R_j\}_{j=1}^{J}$
+- Once space is split up into subregions, for each region $j=1\ldots J$ prediction depends only on the region of $X_t$
+    - Formally, $f(X_t)=\sum_{j=1}^{J}b_j 1\{X_t\in R_j\}$ for some constants $b_j$
+    - For classification case, can let $b_j\in\{0,1\}$: either yes or no in that region
+- Prediction is then a sequence of yes-no decisions, like a game of 20 questions
+    - "Is it blue?" 
+    - If so, ask "Is it bigger than a breadbox?", If not ask "Does it have hair?"
+    - Keep on asking questions for some series of steps, and then finally make prediction based on sequence of questions
+
+## Fitting Trees
+
+- Trees are the functions $\mathcal{F}=\{f(X)=\sum_{j=1}^{J}b_j1\{X_t\in R_j\},\ \{R_j\}_{j=1}^{J} \text{ are rectangular partition of }\mathbb{R}^{N},\ b\in\mathbb{R}^{J}\}$
+- Class is not linear because thresholds defining the region also a choice, not just the coefficients on them
+- Given a class of functions like trees, could just do empirical risk minimization, but rarely done in practice 
+    - Finding the optimum is computationally (NP) hard: searching all combinations of orderings, thresholds, coefficients can take hours or days
+    - Goal is test set prediction, not in sample prediction, so effort only worth it if predictions better
+- Instead, trees usually fit by faster "greedy" algorithm: **recursive binary splitting**   
+    - For each predictor $x_{i,t}$ $i=1\ldots N$, pick a threshold $s$ to split into regions $R_1=\{X:\ X_i<s\}$, $R_2=\{X:\ X_i\geq s\}$ to minimize loss $\sum_{t: X_{t}\in R_1}(y_{t}-\widehat{y}_{R_1})^2+\sum_{t: X_{t}\in R_2}(y_{t}-\widehat{y}_{R_2})^2$ where $\widehat{y}_{R_1}$ is the mean of the outcome in $R_1$, $\widehat{y}_{R_2}$ is the mean of the outcome in $R_2$
+    - Choose the split $i\in1\ldots N$ with the smallest loss to define the chosen region
+    - Within each region split by same approach, and continue until a stopping criterion met, like max depth or min # of $X_t$ in final region 
+    - Prediction is sample mean within each final region
+- Mean squared error criterion for split is for regression: for other losses, like classification, can use other choice
+- Method is "greedy" because split used is best at each level, not best sequence of splits
+
+## Regularization and Evaluation
+
+- Recursive partitioning reduces the in-sample prediction error at every step
+- Although not finding the absolute minimum, method still has potential to overfit
+- Can handle this with form of regularization called **pruning**
+- Idea is that *once the tree is chosen by recursive partition*, can *remove* splits to find a smaller **subtree**
+- Can choose which splits to remove using an information criterion 
+- If $|J|$ is number of total subregions $\{R_{j}\}_{j=1}^{|J|}$ of a subtree criterion is  $\sum_{j=1}^{|J|}\sum_{\{x_t\in R_j\}}(y_t-\widehat{y}_{R_j})^2+\alpha |J|$
+    - Find the subtree with smallest criterion value, which trades off fit and complexity
+    - Can choose $\alpha$ by, e.g., cross-validation
+- Not the same as just doing regularized ERM over set of trees, since initial set chosen recursively
+- With initial fit to low error then pruning, trees have decent out-of-sample performance
+- Main advantage is interpretability: final rule is just sequence of yes-no steps
+
+
+## Application: Mortgage Loan Approval
+
+```{r,message=FALSE,warning=FALSE}
+library(rpart) # Fit Classification and Regression Trees (could also use "tree")
+library(randomForest) # Fit Random Forests
+#library(ranger) # Also fit random forests, but using faster method
+library(xgboost) # Fit Gradient Boosting
+library(kernlab) # Fit Reproducing Kernel Methods
+#library(KRLS) #Fit least squares regression with kernels
+library(caret) #Train and validate machine learning models
+library(plyr) #Data manipulation
+library(dplyr) # Data Manipulation
+
+
+ #Load Data Set on Mortgage Loan Application Approvals
+library(foreign) # Load data sets in Stata format
+#Data on loan applications: see http://fmwww.bc.edu/ec-p/data/wooldridge/loanapp.des for descriptions
+loanapps<-read.dta("http://fmwww.bc.edu/ec-p/data/wooldridge/loanapp.dta")
+
+#Remove "action", which is more refined outcome variable, to predict binary yes-no loan approval
+loanapp<-select(loanapps,-one_of("action","reject"))
+
+#Split data into train and test sets
+set.seed(998) #Ensure randomness is reproducible
+# Take 75% random sample of approved and non-approved each into training data, 25% into test data
+inTraining <- createDataPartition(loanapp$approve, p = .75, list = FALSE) #Function in "caret" library
+training <- loanapp[ inTraining,]
+testing  <- loanapp[-inTraining,]
+
+# Fit classification tree to mortgage loan data to see approval
+rpfit <- rpart(approve ~ ., data = training)
+
+
+# Now try to simplify tree by pruning
+# Use 10-fold cross-validation to fit complexity parameter, using caret library
+fitControl <- trainControl(## 10-fold CV
+                           method = "repeatedcv",
+                           number = 10,
+                           ## repeated ten times
+                           repeats = 10)
+
+#Cross-validate tuning parameters using RMSE
+rpfit1  <- train(approve ~ ., data = training, 
+                 method = "rpart", 
+                 trControl = fitControl,
+                 na.action = na.exclude)
+```
+
+- Use [data set](http://fmwww.bc.edu/ec-p/data/wooldridge/loanapp.des) of New York area applications for mortgage loans, containing 1989 applicants and 59 attributes
+    - Contains variety of demographic, housing and credit-related characteristics
+    - Split into training and test sets to compare models
+- Use regression tree to predict conditional probability of loan approval given applicant status
+    - Library **rpart** or **tree** can be used
+- Results tell a story: first significant preditor is whether applicant meets the bank's credit guidelines
+    - If not, moved into split with low probability of approval
+- Among those who do meet guidelines, next predictor is whether they qualify for private mortgage insurance
+- Sequence of additional characteristics adjusts probability up or down
+- Can prune tree to simplify model: use **caret** library, unified R interface for training, tuning, testing ML models
+    - 10 fold CV selects $\alpha=$ `r rpfit1$bestTune` with RMSE `r rpfit1$results$RMSE[1]`
+- Pruned tree reduced to just guidelines and private mortgage insurance as predictors
+
+## Decision Tree for Mortgage Approval, Before and After Pruning
+
+```{r,message=FALSE,warning=FALSE}
+#Plot sequence of partitions and outcomes
+par(mfrow = c(1,2), xpd = NA) # otherwise on some devices the text is clipped
+plot(rpfit)
+text(rpfit, use.n = FALSE,digits=2)
+
+#Plot pruned tree using CV-selected optimal tuning parameter
+plot(rpfit1$finalModel)
+text(rpfit1$finalModel, use.n = FALSE,digits=2)
+```
+
+
+## Model Combination
+
+- Trees make nonlinear predictions over moderately large number of predictors by splitting space into big rectangles on which to make constant predictions
+- In terms of quantitative precision, advantage over regression isn't spectacular
+- Reason trees are popular and effective method is that they work much better in model combination
+- A combination of linear regressions is still a linear regression, but a combination of trees need not be a tree
+    - Still piecewise constant, but regions don't have to be rectangles
+    - Can use model combination methods to combine multiple trees in a way that improves predictions
+- As with any other predictor, trees can be used in the model combination methods we used before
+    - E.g. averaging or regression combination or online methods like exponential weights
+- Machine learning researchers have developed alternative, *algorithmic* model combination methods
+    - Combine a very large number of simple models into one complex model with good performance
+
+## Bagging
+
+- Bagging, short for "bootstrap aggregation" is a way of performing regularization, by *averaging a model with itself*
+- Idea is that model fit to one set of data can overfit, producing high variability
+- If we had $2^{nd}$ data set, could fit model on that data and average prediction with that of the first model
+    - Even though both overfit, they do so to different data, so shared component reflects systematic variation
+- In practice, only have one data set, but can "pull yourself up by your own bootstraps" by **resampling** the data
+- From original data set $\mathcal{Z}_{T}$ draw observations $(y_t,X_t)$ independently *with replacement* to create new data set $\mathcal{Z}_{b}$ 
+    - Data set will on average have only about $\frac{2}{3}$ of original observations, with rest as duplicates  
+- Fit any model $\widehat{f}_b$ on data $\mathcal{Z}_{b}$, e.g., a decision tree by recursive partitions
+- Then draw with replacement again to create another data set and fit the same model again to the new data set
+- Repeat $B$ times, and use as the final model the average of all the models on different data sets $\mathcal{Z}_b$
+    - $\widehat{f}^{\text{Bagged}}=\frac{1}{B}\sum_{b=1}^{B}\widehat{f}_b$
+- Note each predictor fit to part of data set, so don't gain quite as much for each from large samples
+- But because errors produced this way nonsystematic, may get substantial better out of sample improvement, especially if using a complex model prone to overfitting like a deep decision tree
+
+
+## Random Forests
+
+- Bagging can be applied to any procedure, but does well when fit model is a tree
+- Large trees can incorporate info from many predictors, but variability can be high, which is helped by bagging
+- Further, because average of trees doesn't have to be a tree, bagging can also increase expressivity of model
+- In practice, because data is shared between bags, tree fit within each tends to be pretty similar
+- To increase expressivity of ensemble as a whole, force models to be different by only using a *random subset of features*
+    - In each bag, sample $m<N$ random elements of $(x_{1,t},x_{2,t},\ldots,x_{N,t})$ and fit tree using only those features
+    - Typically use $m\approx \frac{N}{3}$ for regression, $m\approx \sqrt{N}$ for classification
+- Since "top" features may be removed, forced to find best prediction with other features instead
+    - Each individual tree predicts less well, but with $B$ large, **combination** accounts for all features by including them in the average
+- Final predictor is based on random collection of trees, and so is called a **Random Forest**    
+- Allows *nonlinear* predictions from very large number of predictors, while controlling overfitting by averaging
+- In practice, for moderately sized data sets (100s-1000s of data points, features) random forests seem to give most accurate out of sample predictions of anything that runs "out-of-the-box"
+    - Can do better by careful modeling with advanced methods, but worth your time to try random forests first
+    
+
+## Bagging and Random Forests on Time Series Data
+
+- Resampling methods like bagging and random forests handle overfitting to in-sample data by removing random subsets of it and replacing with duplicate samples to produce method that does well on samples not in training data
+- With time series data, feature set $X_t$ often contains past values of $y$
+    - Removing subsets of $y_t$ would delete features used in prediction, making it not possible to fit
+    - Solve this issue by resampling $(y_t,X_t)$ **pairs**, with needed lags of $y_t$ included in $X_t$
+- Idea that random subsets of in-sample data are good proxies for out-of-sample relies on **stationarity**
+    - If data has trend, or periods which differ substantially, precisely which sample is used makes a difference
+    - More importantly, **test set** in forecasting problem is the future, which if nonstationary need not be like the past
+- For this reason, methods should be applied to stationary series, with differencing or detrending as needed
+- Other issue: samples removed may be correlated with remaining samples, so can still "overfit" to them even if not seen
+    - E.g., lagged features may still be kept as predictors, even if not as outcomes
+- Can alleviate this problem by resampling random consecutive **blocks** of observations, and fitting within blocks
+    - If series is **weak dependent** and blocks reasonably large, get better approximation to truly out of sample data
+    
+
+## Boosting
+
+- An alternative method for aggregating models, also often used with trees, is **boosting**
+- Bagging is designed for taking big complicated models prone to overfitting and stabilizing them by averaging
+- Boosting takes many small models with weak in-sample fit and combines to produce a more accurate model
+- Idea is to improve model sequentially by adjusting slightly in the direction of each new predictor
+    - By an amount $\lambda$, called "learning rate", often small, e.g., 0.01 or 0.001 each step
+- Start with $\widehat{f}=0$, $\mathcal{R}_{T}=\mathcal{Y}_{T}$, and for steps $b=1\ldots B$
+    - (1) Starting with data $(\mathcal{R}_{T},\mathcal{X}_{T})$ fit a decision tree $\widehat{f}^{b}$ by recursive partitioning with small number $d$ (eg 1, 2, etc) of maximum splits
+    - (2) Update $\widehat{f}(.)=\widehat{f}(.)+\lambda\widehat{f}^{b}(.)$
+    - (3) Obtain new **residuals** $r_t=r_t-\lambda\widehat{f}^{b}$ for all $r_t\in\mathcal{R}_{T}$
+- Final predictor $\widehat{f}(.)=\sum_{b=1}^{B}\lambda\widehat{f}^{b}(.)$ ensures good fit because each subsequent $\widehat{f}^{b}$ accounts for weaknesses of last
+- Because updates are slowed down by $\lambda$, avoid large oscillations and strong overfitting to noise 
+- Model complexity increases in $B$: should be $>>\lambda$ to get good in sample fit: use cross-validation for out-of-sample fit
+- $d$ determines degree of interaction between variables 
+    - $d=1$ ("decision stump") case fits additive model. Use $d=2,\ 3$ to get 2, 3-way interactions: can help to use 3-7
+
+## Gradient Boosting
+
+- Boosting as described above attempts to minimize mean squared error loss using sum of trees
+- It is special case of method for general loss functions and more general predictors in each step, **gradient boosting**
+- Start with $\widehat{f}=0$ $\mathcal{R}_{T}=\mathcal{Y}_{T}$, and for steps $b=1\ldots B$
+    - (1) Starting with data $(\mathcal{R}_{T},\mathcal{X}_{T})$ fit a predictor $\widehat{f}^{b}$ which may be a tree or other small model
+    - (2) (Optional): Update learning rate $\widehat{\gamma}=\underset{\gamma}{\arg\min}\sum_{t=1}^{T}\ell(y_t,\widehat{f}(.)+\gamma\widehat{f}^{b}(.))$
+    - (3) Update model $\widehat{f}(.)=\widehat{f}(.)+\widehat{\gamma}\widehat{f}^{b}(.)$
+    - (4) Obtain new **pseudo-residuals** $r_t=-\frac{\partial \ell(y_{t},\widehat{f}(x_t))}{\partial \widehat{f}(x_t)}$ for all $r_t\in\mathcal{R}_{T}$
+- Each boosting step can be seen as moving in direction of best marginal improvement to prediction 
+    - Optimizing rate allows data to determine speed
+- Allows boosting to be applied to classification problems and other cases where we use non-MSE loss
+- Fast implementation in **xgboost** library has made method popular, and like random forests, is a good default choice
+    - Maybe better overall performance, based on winning many forecasting competitions
+
+
+## Feature Maps and Engineering
+
+- Methods based on iterating a sequence of steps or random combinations work well in practice
+- But hard to analyze from perspective of principles we have seen, like ERM or Bayes
+- Benefit of ML methods is producing highly flexible predictors with large set of covariates without overfitting
+- Can we get these benefits by simply using a better predictor or model class in our known methods?
+- Consider adding nonlinearities in a linear prediction class $\mathcal{F}_1=\{f(x)=x_t\beta,\ \beta\in\mathbb{R}\}$ 
+    - Starting with $x_t\in \mathbb{R}$, to get a nonlinear predictor, add nonlinear functions of it like $x_t^2$
+    - This adds flexibility, but still quite restrictive, so add more features, $x_t^3$, $x_t^4$, \etc
+    - Resulting class $\mathcal{F}_P=\{f(x)=\sum_{p=1}^{P}x^{p}_t\beta_p,\ \beta\in\mathbb{R}^{P}\}$ gets more and more flexible, but parameters and complexity grow without bound, even if we restict $\Vert \beta\Vert<C$, and even worse if $x_t\in\mathbb{R}^{N}$
+    - Can think of transformation as defining a **feature map** $\Phi(x_t)=(x_t,x_t^2,\ldots)$ to space of predictors
+- ML methods purpose is basically to act like a good feature map
+    - Can mimic their performance if you know what kinds of features make good predictions
+    - ML people call this "feature engineering": use subject matter knowledge to transform predictors
+
+## Kernel Methods
+
+- Kernel methods work by defining an *infinite* feature map: a **function** called a **kernel function** $K(.,.):\ \mathcal{X}\times\mathcal{X}\to \mathbb{R}$
+    - For each data point $x_t$, feature map is the function $K(x_t,.):\ \mathcal{X}\to\mathbb{R}$
+- This seems like it would lead to great flexibility, but be impossible to work with
+- Would you need to compute infinite set of coefficients?
+    - If we choose $K(.,.)$ to have certain properties, and restrict to an appropriately bounded set, no!
+- Optimize $\widehat{\alpha}=\underset{\alpha\in\mathbb{R}^T}{\arg\min}\sum_{t=1}^{T}\ell(y_t,\sum_{t=1}^{T}\alpha_s K(x_s,x_t))$ over $\alpha$ such that $\sum_{s=1}^{T}\sum_{t=1}^{T}\alpha_s\alpha_tK(x_s,x_t)\leq C$
+    - Predictor has 1 coefficient per data point, with size bounded by constraint, and can be computed by evaluating kernel function at data points
+    - This can be shown to be equivalent to ERM over an infinite dimensional but bounded feature space
+    - Often used with special loss for speed improvements: **Support Vector Machine** results in sparse $\alpha$
+- Most useful thing is that since $K(.,.)$ is a function, $x_t$ can be *anything* and we can represent it by a finite set of numbers
+    - Want to use a photograph, an MP3, a brain scan, or the text from a website to predict? There's a kernel for that!
+- Example: Radial Basis kernel $K(x_s,x_t)=\frac{1}{\sqrt{2\pi}\sigma}\exp(-\frac{1}{2\sigma^2} d(x_s,x_t)^2)$ for distance $d$ between two points
+    - Prediction function is sum of "bumps" which take similar values in neighborhood of an example
+
+```{r,message=FALSE,warning=FALSE}
+
+# Fit a Random Forest using randomForest package, accessed through caret train function
+# Caret provides additional diagnostics, but since no CV used here, mostly just for comparability
+# We fit regression even though outcome is binary because goal is eliciting probabilities
+
+forestControl <- trainControl(method = "none") ## Use Default Parameters all the Way
+
+rffit1  <- train(approve ~ ., data = training, 
+                 method = "rf", 
+                 trControl = forestControl,
+                 na.action = na.exclude)
+
+splitspertree<-rffit1$finalModel$mtry
+numbertrees<-rffit1$finalModel$ntree
+
+
+
+## Commented out cross-validation because very slow, and don't want it to run every time I recompile
+# # Use 10-fold cross-validation to fit parameters, using caret library
+# xgbfitControl <- trainControl(## 10-fold CV
+#                            method = "repeatedcv",
+#                            number = 10,
+#                            ## repeated ten times
+#                            repeats = 10)
+# 
+# #Fit tuning parameters by cross-validation
+# xgbfit1  <- train(approve ~ ., data = training, 
+#                  method = "xgbTree", 
+#                  trControl = xgbfitControl,
+#                  na.action = na.exclude)
+
+
+# Set parameters: learning rate eta, # of splits max.depth, MSE loss and rmse evaluation,etc 
+# Set parameters to be hard-coded at value chosen by cross validation
+cvparam <- list(max_depth = 1, eta = 0.3, gamma=0, colsample_bytree=0.8,
+                min_child_weight=1, subsample=1, objective = "reg:linear", eval_metric = "rmse")
+
+## Syntax to train xgboost directly
+
+# Extract features from training and test data
+trainfeat<-select(training,-one_of("approve"))
+testfeat<-select(testing,-one_of("approve"))
+#Transform data into format needed for xgboost command
+dtrain <- xgb.DMatrix(as.matrix(trainfeat), label=training$approve)
+dtest <- xgb.DMatrix(as.matrix(testfeat), label = testing$approve)
+#Set training and test sets for evaluation
+watchlist <- list(train = dtrain, eval = dtest)
+
+# Fit gradient boosted trees using xgboost
+bst <- xgb.train(params=cvparam, data=dtrain,verbose=0,nrounds=50,watchlist=watchlist)
+
+
+#Fit a radial basis kernel regression using kernlab and KRLS, again fit through caret
+
+kernControl <- trainControl(## 10-fold CV
+                            method = "repeatedcv",
+                            number = 10,
+                            ## repeated ten times
+                            repeats = 10) ## Use Default Parameters all the Way
+
+#Fit Support Vector Regression to centered and scaled data, and cross-validate constraint C and radial basis width sigma
+kernfit  <- train(approve ~ ., data = training, 
+                 method = "svmRadial", 
+                 preProc = c("center", "scale"),
+                 metric = "RMSE",
+                 trControl = kernControl,
+                 na.action = na.exclude)
+
+```
+
+## Application: Mortgage Approval Prediction Again
+
+- Apply random forest, boosted decision trees, and kernel method using radial basis function kernel to same data set
+- Random forests by **randomForest** using default settings: trees of depth `r rffit1$finalModel$mtry` combined over `r rffit1$finalModel$ntree` resamples of data
+- Boosting trees with mean squared error loss by **xgboost**, using 10-fold CV to pick options: `r bst$niter` iterations of depth `r bst$params$max_depth` with a learning rate of `r bst$params$eta`
+- Kernel regression with support vector regression loss over normalized data fit by **kernlab** using 10-fold CV to pick $\sigma=$ `r kernfit$bestTune[1]` in kernel and bound $C=$ `r kernfit$bestTune[2]` on max norm of coefficients
+- Performance in sample okay for all, but kernel method performs worse in test set
+- Boosting wins overall, but just barely, after long CV fit to choose parameters
+- Random forests, in contrast, do nearly as well using default settings, in seconds
+
+```{r,message=FALSE,warning=FALSE}
+#Construct test set predictions and RMSE for each
+rppreds<-predict(rpfit1$finalModel, newdata = testing) #Decision Tree
+#Use approximate imputation for missing values in random forest prediction, rather than excluding
+rfpreds<-predict(rffit1$finalModel, newdata = na.roughfix(testing)) #Random Forest
+bstpreds<-predict(bst,newdata=as.matrix(testfeat)) #Tree Boosting
+kernpreds<-predict(kernfit$finalModel, newdata = testfeat) #Kernel Support Vector Regression
+
+#Squared errors
+prederrors<-data.frame((rppreds-testing$approve)^2,(rfpreds-testing$approve)^2,
+                       (bstpreds-testing$approve)^2,(kernpreds-testing$approve)^2)
+
+MSEvec<-colMeans(prederrors,na.rm=TRUE) #Mean Squared Errors
+
+
+TestRMSE<-sqrt(MSEvec) #Test Set Root Mean Squared Errors
+
+#Compute Training Set RMSE
+rprmse<-rpfit1$results$RMSE[1] #Take from CV fit
+rfrmse<-sqrt(rffit1$finalModel$mse[500]) #Take from model fit at last random forest
+bstrmse<-bst$evaluation_log$train_rmse[50] #Take from model fit at last boosting iteration
+kernrmse<-kernfit$results$RMSE[2] #Take from CV fit
+
+TrainRMSE<-c(rprmse,rfrmse,bstrmse,kernrmse)
+resmat<-as.matrix(data.frame(TestRMSE,TrainRMSE))
+fitresults<-data.frame(t(resmat))
+
+colnames(fitresults)<-c("Tree","Random Forest", "Boosting","Kernel SVM")
+
+
+library(knitr)
+library(kableExtra)
+kable(fitresults,
+  caption="Prediction Performance of ML Methods") %>%
+  kable_styling(bootstrap_options = "striped")
+```  
+
+
+## Conclusions
+
+- Wide variety of machine learning methods have been developed for prediction
+    - Work well with large sets of predictors and complicated nonlinearities while maintaining out of sample performance
+- Tree based methods split space of predictors recursively into regions to produce simple chain of yes-no rules
+-  Improve variance and overfitting of large nonlinear models by combining within resampled subsets of data: **bagging**
+    - Applied to trees, with predictors also random, get **random forests**
+- Small simple models can be fit sequentially to compensate for individual weak performance to produce strong overall model: **boosting**
+- Kernels allow complex nonlinearities and high dimensional data without too much overfitting, by feature mapping
+- These and dozens of other methods designed for similar tasks can be fit and compared using `caret` library
+
+## References
+
+- Trevor Hastie, Robert Tibshirani, and Jerome Friedman (2009)  " [The Elements of Statistical Learning: Data Mining, Inference, and Prediction](https://web.stanford.edu/~hastie/Papers/ESLII.pdf)" 2nd ed. Springer.
+    - Classic reference on applied machine learning
+- Gareth James, Daniela Witten, Trevor Hastie and Robert Tibshirani (2013) "[An Introduction to Statistical Learning with Applications in R](https://www-bcf.usc.edu/~gareth/ISL/ISLR%20Seventh%20Printing.pdf)" Springer   
+    - Same basic topics as above, but simpler exposition and R code
+    - Today's notes mostly correspond to Chapter 8, on tree models
+    
+
+
+    

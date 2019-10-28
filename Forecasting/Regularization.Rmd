@@ -1,0 +1,576 @@
+---
+title: "Regularization"
+author: "73-423 Forecasting for Economics and Business"
+output:
+  html_document:
+    code_folding: hide
+---
+
+## Regularization
+
+- Review of Generalization Problem and ERM
+- Structural Risk Minimization Principle
+    - Cross Validation
+    - Penalized Estimation    
+- Penalization vs testing/model evaluation
+    
+<!-- - Review of Generalization Problem and ERM -->
+<!-- - Structural Risk Minimization Principle -->
+<!-- - Estimates of Risk -->
+<!--     - Cross Validation (and friends!) -->
+<!-- - Penalized Estimation     -->
+<!--     - Based on Number of Parameters: AIC/BIC -->
+<!--     - Based on Size of Parameters: LASSO/Ridge/Elastic Net -->
+<!--         - Other Penalties (weighted LASSO/group lasso/etc) -->
+<!--     - Based on prediction function (Eg squared derivatives) -->
+<!--         - Smoothing Splines! -->
+<!--     - Duality between penalization and parameter space restriction -->
+<!-- - Penalty selection -->
+<!-- - Distinction between penalization and testing/model evaluation -->
+<!--     - Residual Diagnostics, etc     -->
+    
+## Risk Minimization
+
+- In statistical learning approach, goal is to produce rule $f\in\mathcal{F}$ with low **risk** for true distribution
+    - $R_p(f)=E_p\ell(y_{T+h},f(\mathcal{Y}_{T}))$
+- Empirical Risk Minimizer based on minimizing risk for empirical distribution $\widehat{R}(f)=\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\mathcal{Y}_{t}))$ 
+- The difference between what we want and what we achieve is the *generalization error*
+    - $R_p(\widehat{f})=\widehat{R}(\widehat{f})+(R_p(\widehat{f})-\widehat{R}(\widehat{f}))$
+    - Data can tell you whether first term is small: minimized by ERM
+    - Theory required to ensure second term also small
+- Can we do better by being more explicit about generalization error?
+    - Sometimes not much: "Fundamental Theorem of Machine Learning" (Mohri et al 2012)
+- Under same conditions that ERM has strong performance bound, no method can do "substantially better"
+    - In particular, if $\mathcal{F}$ has "low complexity", excess risk, which is already small, cannot be made much smaller
+- Does this mean we may as well always go with ERM?
+    - Not really! Especially for small samples $T$ or classes with "high complexity"
+    
+    
+## Structural Risk Minimization
+
+- Ideal method would take into account both empirical risk and generalization error
+- Impossible to do exactly since generalization error part not known 
+    - But it can be approximated or bounded!
+- Idea: Find a term related to generalization error, called a **penalty** $\mathcal{J}(f)$
+- Use a forecasting rule, called a **Structural Risk Minimizer** which minimizes empirical risk plus penalty
+$$\widehat{f}^{SRM}=\underset{f\in\mathcal{F}}{\arg\min}(\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\mathcal{Y}_{t}))+\mathcal{J}(f))$$
+- If penalty exactly equals generalization error, this is *exactly* the oracle estimator
+- If penalized risk is a better approximation than the empirical risk, may still outperform ERM
+- So, how do we find a good penalty?
+    - Many proposed methods
+    - Today: A selection of popular penalties and discussion of their properties
+    
+## Cross Validation
+
+- We have already seen cross validation as a way to *assess* forecast quality of a forecasting method $\widehat{f}(\mathcal{Y}_{t})$
+- Use a forecasting rule *constructed on a training sample* and estimates risk on different **test sample**
+    - May do this for many test and training samples, then average the results
+    - E.g. Risk estimated from a rolling forecast origin (cf `tsCV`)
+$$\widehat{R}^{tsCV}(\widehat{f})=\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},\widehat{f}(\mathcal{Y}_{t}))$$
+- Many versions exist: test and samples can be blocks, weighted in different ways, etc
+- Eg: K-fold CV for ERM over independent data $\{(y_t,z_t)\}_{t=1}^{T}$
+    - Split sample into K sets $\mathcal{T}_k$ of size $T/K$
+    - For $k=1\ldots K$ estimate $\widehat{f}^{(-k)}=\underset{f\in\mathcal{F}}{\arg\min}\frac{1}{T-T/K}\sum_{t\notin\mathcal{T}_k}\ell(y_t,f(z_t))$
+    - $\widehat{R}^{kfoldCV}=\frac{1}{T}\sum_{k=1}^{K}\sum_{t\in\mathcal{T}_k}\ell(y_t,\widehat{f}^{(-k)}(z_t))$
+    - For k=T, called "Leave One Out" Cross Validation
+- CV reduces bias from overfitting by using different samples for evaluation and testing    
+
+
+## Cross validation over multiple hypothesis classes
+
+- Cross validation can also be used as a way to *choose between* forecasting methods
+    - Simply choose the method that minimizes the cross-validation estimate of risk
+    - If methods $\widehat{f}$ are just fixed functions, for tsCV this is just ERM again
+- Case where CV is useful: when we have *multiple hypothesis classes* of rules $\{\mathcal{F}_c:c\in\mathcal{C}\}$   
+    - $c$ is a **tuning parameter** affecting some aspect of the procedure, often a measure of complexity
+    - Eg for AR(p) classes, $\mathcal{F}_c=\{\beta_0+\sum_{j=1}^{p}\beta_{j}y_{t-j}:\ \beta\in\mathcal{R}^{p+1}\}$, tuning parameter is $p$
+    - For each $c\in\mathcal{C}$, run ERM over $\mathcal{F}_c$  
+$$\widehat{f}^{c}(\mathcal{Y}_t)=\underset{f\in\mathcal{F}_c}{\arg\min}\frac{1}{t-h}\sum_{s=1}^{t-h}\ell(y_{s+h},f(\mathcal{Y}_{s}))$$
+    - Choose $\widehat{c}^{CV}$ by minimizing Cross-Validation risk of $\widehat{f}^{c}()$
+$$\widehat{c}^{CV}=\underset{c\in\mathcal{C}}{\arg\min}\widehat{R}^{CV}(\widehat{f}^{c})$$
+    - Forecast using $\widehat{f}^{\widehat{c}^{CV}}$
+
+## Evaluating Cross Validation
+
+- Cross validation over multiple classes not the same as ERM because $\widehat{f}^{c}$ is not a fixed function but depends on the data
+- Often, classes are **ordered**: $\mathcal{F}_{c_1}\subset \mathcal{F}_{c_2}$ if $c_1<c_2$
+    - Compare small classes of low complexity to big classes of high complexity: More lags, more covariates, etc
+- Low complexity classes may have high empirical risk but low error on test set, vice versa for high complexity classes
+- Cross validation accounts for these differences: won't always pick the highest complexity class
+- Still have some approximation error, because test set distribution $\neq$ future population distribution
+    - Error increases in complexity of $\mathcal{C}$, which is usually small: one or two parmeters
+    - Worse when training and test samples are dependent: helped slightly by using tsCV over k-fold
+- In general, provides fairly good approximation to generalization error but can be *extremely* costly to compute
+    - Solve an optimization problem for each $c\in\mathcal{C}$ for each $t$ in sample
+    - Can be hundreds or thousands of times as many computations as a single ERM forecast
+- Variants or special cases which are less costly but provide similar or not much worse performance may be preferred
+
+## Information Criteria
+
+- Look for a simple measure $\mathcal{J}()$ of generalization error of rule $f$ using a measure of complexity of class $\mathcal{F}_c$, $\mathcal{J}(\mathcal{F}_c)$
+- Note that in ERM, scale of risk doesn't matter: Applying increasing transform to risk gives same minimizer
+- With penalization, effect on minimizer does depend on *relative* scale of criterion and penalty
+- Use a *normalized* risk measure, called a *log likelihood* to ensure constant scale
+    - Takes form $-2\log(p(\mathcal{Y}_T,f))$ where $p(\mathcal{Y}_T,f)$ is a probability distribution over $\mathcal{Y}_T$
+    - Normalized form for square loss is $(T-h)\log(\frac{1}{T-h}\sum_{t=1}^{T-h}(y_{t+h}-f(.))^2)$
+    - Cross entropy loss for binary prediction already normalized    
+- A **penalized log likelihood** adds a penalty $\mathcal{J}$ to normalized risk
+- Criterion value of class $c$ is the minimum value of the penalized log likelihood $\underset{f\in\mathcal{F}_c}{\min}(-2\log(p(\mathcal{Y}_T,f)+\mathcal{J}(\mathcal{F}_c))$
+- Common penalties based on **number of parameters** p
+    - Akaike Information Criterion, **AIC**: $\mathcal{J}(\mathcal{F}_c))=2p$
+    - Bayesian Information Criterion, **BIC**: $\mathcal{J}(\mathcal{F}_c))=2p\log(T-h)$ (also called Schwarz Criterion, **SC**)
+- Choose a rule which minimizes the penalized log likelihood $\widehat{f}^{\mathcal{J}}=\underset{f\in\mathcal{F}_c,c\in\mathcal{C}}{\arg\min}(-2\log(p(\mathcal{Y}_T,f)+\mathcal{J}(\mathcal{F}_c))$
+
+## Evaluation and implementation
+
+- AIC and BIC designed to pick a rule with low risk
+- BIC has slightly larger penalty: downgrades more complex models more
+    - Under some very strong conditions, AIC "close to" true risk, at least when T is large
+    - BIC instead designed to pick "true model" when T is large
+- For forecasting usually care about formaer rather than latter goal
+    - For this reason, Hyndman & Athanasopolous text recommends AIC
+- But be cautious: result requires large samples, and in small samples AIC can be bad measure of risk
+    - For this reason, Diebold text recommends BIC, as slightly larger penalty accounts for chance of overfitting from misestimation of risk
+- Both estimates usually provide worse measure of risk than cross validation
+    - Sometimes faster: $\approx T$ times fewer optimizations
+        - Exception is linear models, where known formula simplifies CV calculations
+- Automatically reported with `Arima`, `VAR`, `ets`, etc, or ex post by `CV`   
+    - AIC also part of `auto.arima`, to choose between orders of AR
+    - `VARselect` computes AIC/BIC for VAR over loss $\log\det(\sum_{t=1}^{T-h}(y_{t+h}-\widehat{y}_{t})(y_{t+h}-\widehat{y}_{t})^\prime)$  
+
+
+<!-- - Criterion value of class $c$ is the value of the **penalized empirical risk** $$\underset{f\in\mathcal{F}_c}{\min}(\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\mathcal{Y}_{t}))+\mathcal{J}(\mathcal{F}_c))$$ -->
+<!-- - Choose $c\in\mathcal{C}$ to minimize penalized empirical risk, producing **penalized empirical risk minimizer** -->
+<!-- $$\widehat{f}^{\mathcal{J}}=\underset{f\in\mathcal{F}_c,c\in\mathcal{C}}{\arg\min}(\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\mathcal{Y}_{t}))+\mathcal{J}(\mathcal{F}_c))$$ -->
+
+## Parameter size based penalties
+
+- Penalization based on *number* of parameters require solving model for each parameter set $c\in\mathcal{C}$
+    - Fine if only a small number: once per lag order of AR/VAR up to max lag, hard if sets $\mathcal{F}_c$ are every possible subset of p regressors: $2^p$ regressions 
+- Works if best predictions come from ignoring all but a subset of predictors, and leaving rest unrestricted
+- Alternative: allow all predictors to matter, but reduce total **size** of parameters by penalizing their **norm**
+- Linear hypothesis classes $\mathcal{F}=\{\beta_0+\sum_{j=1}^m\beta_j z_j:\ \beta\in\mathbb{R}^{m+1}\}$, penalty is $\lambda\Vert\beta\Vert^p_p$
+- Norm $\Vert\beta\Vert_p$ is a measure of "size" of coefficients, e.g.
+    - L1 (LASSO) Penalty $\Vert\beta\Vert^1_1=\sum_{j=0}^d\|\beta_j\|$
+    - L2 (Ridge) Penalty $\Vert\beta\Vert^2_2=\sum_{j=0}^d(\beta_j)^2$
+    - Mixed L1/L2 (Elastic Net) Penalty $\Vert\beta\Vert_{1/2,a}=a\Vert\beta\Vert^1_1+(1-a)\Vert\beta\Vert^2_2$ for $a\in[0,1]$
+- $\lambda\geq 0$ decides size of penalty term
+    - Large value means strong restrictions: coefficients shrink a lot and class much simpler
+    - Small value allows more complexity, at cost of greater overfitting risk. 0 means no restrictions: estimator is just ERM
+- Penalized estimator solves $\widehat{f}^\lambda=\underset{f\in\mathcal{F}}{\min}(\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\mathcal{Y}_t))+\lambda\Vert\beta\Vert_p^p)$ 
+
+
+## Evaluation and Implementation
+
+- Norm penalized estimators address overfitting by preventing large fluctuations in values of parameters
+- Type of norm controls which kinds of fluctuations are more or less restricted
+- L2 penalty more strongly affected by very large values, less by small values
+    - All values partially shrink
+- L1 penalty equally strongly affected by small and large values
+    - Allows some larger coefficients, but shrinks a lot smaller ones, often to exactly 0: **sparsity**
+    - Acts like penalties on # of parameters, but non-0 coefficients also slightly shrunk
+- Elastic net in between, by amount controlled by $a$: small terms go to 0, but big terms also shrunk
+- For a fixed penalty size $\lambda$ computation is easy: one instead of many optimizations
+- Scale problem: how to choose $\lambda$?
+    - Typically, find $\widehat{f}^\lambda$ for many $\lambda$ and select $\widehat{\lambda}^{CV}$ by cross validation
+    - Efficient LARS algorithm makes computation for all $\lambda$ fast in linear model
+- Implemented for linear hypotheses and square loss, cross-entropy, multivariate square loss, etc in `glmnet`
+    - `cv.glmnet` implements cross validation parameter selection, but not time series version
+    
+## What kinds of model classes?
+
+- Penalizing size of parameters can substitute for using smaller number of parameters
+- Can include more predictors for same level of generalization error if penalized
+    - Can use many predictors, or nonlinear functions of predictors: polynomials, splines, etc
+    - Benefit is better ability to predict and get close to oracle predictor
+    - Cost is that values of parameters get distorted
+- How complicated can model class be?
+    - Depends on number of possible relevant predictors and how big complicated a model within that class
+- LASSO can handle more parameters than data points, if most are (close to) 0
+    - Up to exponentially many if very sparse and large $\lambda$ chosen
+- Ridge can handle arbitrary number of predictors
+    - But effects of each become progressively more muted
+- In practice, use LASSO with many weakly related predictors, of which only some might matter
+- Use ridge with many, possibly related predictors, each of which contributes a little bit to the forecast
+    - Often believable for lags, so common to use in (V)AR estimates
+    
+## Function based penalties
+
+- Rather than penalizing parameters of predictor $f()$, you can penalize $f$ directly
+- Penalized estimator solves, for $\lambda\Vert f\Vert$ some norm on $f$,
+    - $\widehat{f}^\lambda=\underset{f\in\mathcal{F}}{\min}(\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\mathcal{Y}_t))+\lambda\Vert f\Vert)$
+- For classes $\mathcal{F}$ defined by parameters, like linear hypothesis class, little essential difference
+    - (Usually) equivalent to some penalty on parameters
+- But if class $\mathcal{F}$ isn't dependent on a (finite) set of parameters, eg $\mathcal{F}=\{\text{all functions of Z}\}$, can be very different
+- Most prominent example: mean squared second derivative penalty $\Vert f\Vert=\int f^{\prime\prime}(z)^2dz$ 
+    - Penalizes "wiggliness" regardless of particular shape: minimal for straight line 
+- Amazing fact (cf Wahba 1990): penalized minimizer over class of all functions has known, computable form
+    - Called a "Smoothing Spline": piecewise cubic polynomial between data points
+    - Equivalent to ridge penalty over (T-dimensional) class of piecewise cubic polynomials
+- Implemented as `smooth.spline` as well as in specialized functions in libraries `gam` or `mgcv`   
+- Choose $\lambda$ by CV again: fast algorithm known for non-time series case
+
+## Smoothing Splines: GDP growth from Lagged GDP growth
+
+```{r,message=FALSE,warning=FALSE}
+library(fpp2) #Forecasting
+library(glmnet) #Lasso and Ridge
+library(vars) #Vector Autoregressions
+library(fredr) #Access FRED Data
+
+##Obtain and transform NIPA Data (cf Lecture 08)
+
+fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
+
+#US GDP components 
+GDP<-fredr(series_id = "GDP",
+           observation_start = as.Date("1947-01-01")) #Gross Domestic Product
+
+#US GDP components from NIPA tables (cf http://www.bea.gov/national/pdf/nipaguid.pdf)
+PCEC<-fredr(series_id = "PCEC",
+            observation_start = as.Date("1947-01-01")) #Personal consumption expenditures
+FPI<-fredr(series_id = "FPI",
+           observation_start = as.Date("1947-01-01")) #Fixed Private Investment
+CBI<-fredr(series_id = "CBI",
+           observation_start = as.Date("1947-01-01")) #Change in Private Inventories
+NETEXP<-fredr(series_id = "NETEXP",
+              observation_start = as.Date("1947-01-01")) #Net Exports of Goods and Services
+GCE<-fredr(series_id = "GCE",
+           observation_start = as.Date("1947-01-01")) #Government Consumption Expenditures and Gross Investment
+
+#Format the series as quarterly time series objects, starting at the first date
+gdp<-ts(GDP$value,frequency = 4,start=c(1947,1),names="Gross Domestic Product") 
+pcec<-ts(PCEC$value,frequency = 4,start=c(1947,1),names="Consumption")
+fpi<-ts(FPI$value,frequency = 4,start=c(1947,1),names="Fixed Investment")
+cbi<-ts(CBI$value,frequency = 4,start=c(1947,1),names="Inventory Growth")
+invest<-fpi+cbi #Private Investment
+netexp<-ts(NETEXP$value,frequency = 4,start=c(1947,1),names="Net Exports")
+gce<-ts(GCE$value,frequency = 4,start=c(1947,1),names="Government Spending")
+
+#Convert to log differences to ensure stationarity and collect in frame
+NIPAdata<-ts(data.frame(diff(log(gdp)),diff(log(pcec)),diff(log(invest)),diff(log(gce))),frequency = 4,start=c(1947,2))
+
+# Construct lags
+
+l1NIPA<-window(stats::lag(NIPAdata,-1),start=c(1949,2),end=c(2018,3))
+l2NIPA<-window(stats::lag(NIPAdata,-2),start=c(1949,2),end=c(2018,3))
+l3NIPA<-window(stats::lag(NIPAdata,-3),start=c(1949,2),end=c(2018,3))
+l4NIPA<-window(stats::lag(NIPAdata,-4),start=c(1949,2),end=c(2018,3))
+l5NIPA<-window(stats::lag(NIPAdata,-5),start=c(1949,2),end=c(2018,3))
+l6NIPA<-window(stats::lag(NIPAdata,-6),start=c(1949,2),end=c(2018,3))
+l7NIPA<-window(stats::lag(NIPAdata,-7),start=c(1949,2),end=c(2018,3))
+l8NIPA<-window(stats::lag(NIPAdata,-8),start=c(1949,2),end=c(2018,3))
+
+#convert to matrices
+xvarsdf<-data.frame(l1NIPA,l2NIPA,l3NIPA,l4NIPA,l5NIPA,l6NIPA,l7NIPA,l8NIPA)
+xvars<-as.matrix(xvarsdf)
+NIPAwindow<-matrix(window(NIPAdata,start=c(1949,2),end=c(2018,3)),length(l1NIPA[,1]),4)
+
+#Spline models, yeah?
+library(gam) #loads smoothing spline package
+lagDlogGDP<-xvars[,1]
+DlogGDP<-NIPAwindow[,1]
+#Smoothing spline Regression of GDP on lagged GDP
+# Default behavior fits penalty parameter by generalized Cross Validation
+```
+
+```{r,class.source='fold-show'}
+# Predict GDP growth using smoothing spline in lagged GDP growth
+gdp.spl<-smooth.spline(lagDlogGDP,DlogGDP)
+splinepredictions<-predict(gdp.spl)
+```
+- $\lambda=$ `r gdp.spl$lambda` chosen by (non-time series) cross validation gives almost exactly linear fit
+```{r,message=FALSE,warning=FALSE}
+#Build Plot
+gdpdata<-data.frame(xvars[,1],NIPAwindow[,1],splinepredictions$x,splinepredictions$y)
+colnames(gdpdata)<-c("LDlGDP","DlGDP","xspline","yspline")
+
+ggplot(gdpdata,aes(x=LDlGDP,y=DlGDP))+geom_point()+
+  geom_line(aes(x=xspline,y=yspline),color="red",size=1)+
+  ggtitle("Smoothing Spline Fit of This vs Last Quarter's GDP Growth",
+          subtitle="Almost exactly linear due to large optimal penalty for nonlinearity")+
+  xlab("Change in Log GDP, t-1")+ylab("Change in Log GDP, t")
+
+# An alternate approach which uses "gam" command to fit spline
+# Advantage is that it's built in to ggplot
+# Disadvantage is that it uses only default options, so not customizable
+# In this case, results are exactly the same
+
+# ggplot(gdpdata,aes(x=LDlGDP,y=DlGDP))+geom_point()+
+#   ggtitle("Spline and OLS Fit of This vs  Last Quarter's GDP Growth",
+#           subtitle="There are two lines which exactly overlap")+
+#   xlab("Change in Log GDP, t-1")+ylab("Change in Log GDP, t")+
+#   geom_smooth(method=gam,se=FALSE,color="blue")+
+#   geom_smooth(method=lm,se=FALSE,color="red")
+```
+
+## Exotic penalties
+
+- Example penalties I mentioned are just most common ones
+- New and different penalties can be used to emphasize different features of the prediction or type of data used
+    - Thousands in statistics/ML literature, and new ones every day
+- Parameter-based penalties can emphasize different sets of parameters or features of size or shape
+- Function based penalties can look at fine or large scale features, or multiple variables
+    - Cases which allow finite computable solution are called (reproducing) **kernel** methods
+- Shared principle: want to trade off flexible form to match patterns in observed data against size and complexity of class
+    - Different prediction tasks will call for different shapes, sizes of data, so specialized penalties can help
+    
+## Penalties versus Bounds
+
+- Alternately, can just run ERM over predictor class $\mathcal{F}$ with restriction that $\Vert f \Vert \leq c$ for some c
+    - $\widehat{f}^{ERM,c}=\underset{f\in\mathcal{F}, \Vert f \Vert\leq c}{\min}(\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\mathcal{Y}_t)))$
+- E.g. only look at functions with norm of predictors bounded $\mathcal{F}_c=\{\beta_0+\sum_{j=1}^d\beta_jz_j:\ \beta\in\mathbb{R}^{d+1}, \Vert\beta\Vert_p\leq c\}$
+- Can choose $c$ by cross-validation, just like with penalty
+- Claim: ERM over class with bound imposed is numerically identical to some penalized empirical risk minimizer
+- More formally, for any $c>0$, there is some $\widehat{\lambda}(c)$ such that
+    - $\widehat{f}^{ERM,c}=\underset{f\in\mathcal{F}}{\arg\min}(\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\mathcal{Y}_t))+\widehat{\lambda}(c)\Vert f\Vert)$
+- This is application of Lagrange multiplier theorem from constrained optimization
+- Slight difference is that $\widehat{\lambda}(c)$ may depend on the data, whereas it is fixed in penalized case
+    - Though since $c$ and $\lambda$ usually chosen based on data anyway, even this usually not a difference
+- Thus, penalization inherits properties of ERM, but with a new, restricted class of predictors
+    - Explains variety of possible penalties: just different functions of the data
+    
+
+## Regularization for GDP Forecasting
+
+```{r,message=FALSE,warning=FALSE}
+library(dplyr) #Data manipulation
+library(knitr) #Use knitr to make tables
+library(kableExtra) #Extra options for tables
+library(tibble) #More data manipulation
+#Calculate information criteria
+IC<-VARselect(NIPAdata,lag.max=8)
+
+# Fit Optimal VARs by AIC, BIC
+AICVAR<-VAR(NIPAdata,p=IC$selection[1])
+BICVAR<-VAR(NIPAdata,p=IC$selection[3])
+
+#Construct 1 period ahead foecasts
+AICpred<-forecast(AICVAR,h=1)$forecast
+BICpred<-forecast(BICVAR,h=1)$forecast
+
+#Extract point forecasts
+AICfcsts<-select(data.frame(AICpred),ends_with("Forecast"))
+BICfcsts<-select(data.frame(BICpred),ends_with("Forecast"))
+
+
+#Fit LASSO VAR in all variables up to 8 lags
+lassovar<-glmnet(xvars,NIPAwindow,family="mgaussian")
+
+#Show range of lambda values from unpenalized to where all variables gone
+#lassovar$lambda 
+
+#Show coefficients for large value of lambda (heavy penalization, most coefs gone)
+#coef(lassovar,s=0.02)
+
+#Show coefficients for intermediate value of lambda (medium penalization, some coefs gone)
+#coef(lassovar,s=0.008)
+
+#Show coefficients for small value of lambda (little penalization, most coefs remain)
+#coef(lassovar,s=0.001)
+
+## Fit LASSO VAR with 10-fold cross-validation
+lassovarCV<-cv.glmnet(xvars,NIPAwindow,family="mgaussian")
+
+#Lambda giving minimum 10-fold Cross Validation Error
+CVlambda<-lassovarCV$lambda.min
+
+#Baroque construction to take last period and format it for predict command
+#Somehow need 2 rows in prediction value or it throws a fit 
+#Presumably because matrix coerced to vector and then it thinks it can't multiply anymore
+newX<-t(as.matrix(data.frame(as.vector(t(NIPAwindow[270:277,])), as.vector(t(NIPAwindow[271:278,])))))
+
+#Predict 2018Q3 series
+cvlassopredictions<-window(ts(predict(lassovarCV,newx = newX)[,,1],start=c(2018,3),frequency=4),start=c(2018,4))
+
+#Fit L2 Penalized VAR in all variables up to 8 lags
+ridgevar<-glmnet(xvars,NIPAwindow,alpha=0,family="mgaussian")
+
+#Show range of lambda values from unpenalized to where all variables gone
+#ridgevar$lambda 
+
+#Show coefficients for large value of lambda (heavy penalization, coefs shrink a lot)
+#coef(ridgevar,s=10)
+
+#Show coefficients for intermediate value of lambda (medium penalization, coefs shrink a little)
+#coef(ridgevar,s=1)
+
+#Show coefficients for small value of lambda (little penalization, coefs close to OLS values)
+#coef(ridgevar,s=0.01)
+
+## Fit Ridge VAR with 10-fold cross-validation
+ridgevarCV<-cv.glmnet(xvars,NIPAwindow,alpha=0,family="mgaussian")
+
+#Lambda giving minimum 10-fold Cross Validation Error
+CVlambda2<-ridgevarCV$lambda.min
+
+#Predict 2018Q3 series
+cvridgepredictions<-window(ts(predict(ridgevarCV,newx = newX)[,,1],start=c(2018,3),frequency=4),start=c(2018,4))
+
+# #Plot Data Series
+# autoplot(window(NIPAdata,start=c(2012,4)))+
+#   autolayer(cvlassopredictions)+
+#   autolayer(cvridgepredictions)
+
+#  autolayer(AICpred$diff.log.gdp..$mean)+
+ # autolayer(BICpred$diff.log.gdp..$mean)
+```
+
+- Let's go back to our GDP forecasting example using history of changes in log of $Y$, $C$, $I$, $G$
+- Predictor class will be Vector Autoregressions in up to 8 lags of all 4 variables
+    - 33 parameters per equation, 132 total
+- Estimate by AIC, BIC, LASSO, and Ridge
+- AIC selects `r AICVAR$p` lags, BIC selects `r BICVAR$p` lag, reflecting smaller penalty for AIC
+- 10-fold cross validation selects $\lambda=$ `r CVlambda` for LASSO, $\lambda=$ `r CVlambda2` for ridge
+- LASSO keeps 32 nonzero parameters, while ridge chooses non-zero value for all 132 
+    - Compare 8 for BIC, 24 for AIC, but different choices from LASSO
+
+```{r}
+#Collect 2018Q4 Forecasts into a data frame
+var1table<-data.frame(
+  t(cvridgepredictions),
+  t(cvlassopredictions),
+  t(AICfcsts),
+  t(BICfcsts)
+)
+rownames(var1table)<-c("GDP","Consumption","Investment","Government")
+#Make Table of Estimated Coefficients
+kable(var1table,
+  col.names=c("Ridge","LASSO","AIC","BIC"),
+  caption="2018Q4 Forecasts from Different Methods") %>%
+  kable_styling(bootstrap_options = "striped", font_size = 16)
+```
+
+## Ridge Coefficients
+
+```{r}
+#Make Coefficient Table
+zzz<-data.frame(as.matrix(coef(ridgevarCV)$y1),
+                as.matrix(coef(ridgevarCV)$y2),
+                as.matrix(coef(ridgevarCV)$y3),
+                as.matrix(coef(ridgevarCV)$y4))
+
+
+rownames(zzz)<-rownames(data.frame(as.matrix(coef(ridgevarCV)$y1)))
+zzz %>%
+mutate_all(function(x) {
+    cell_spec(x, bold = T,
+              color = spec_color(x))
+  }) %>%
+  kable(escape=F,
+  col.names=c("GDP","C","I","G"),
+  caption="Coefficients in Ridge Regression") %>%
+  kable_styling(bootstrap_options = "striped", font_size=10)
+```
+
+## LASSO Coefficients
+
+```{r}
+#Make Coefficient Table
+zzz<-data.frame(as.matrix(coef(lassovarCV)$y1),
+                as.matrix(coef(lassovarCV)$y2),
+                as.matrix(coef(lassovarCV)$y3),
+                as.matrix(coef(lassovarCV)$y4))
+
+rownames(zzz)<-rownames(data.frame(as.matrix(coef(lassovarCV)$y1)))
+zzz %>%
+mutate_all(function(x) {
+    cell_spec(x, bold = T,
+              color = if_else(x!=0,"red","black"))
+  }) %>%
+  kable(escape=F,
+  col.names=c("GDP","C","I","G"),
+  caption="Coefficients in LASSO Regression") %>%
+  kable_styling(bootstrap_options = "striped", font_size=10)
+```
+
+## AIC Coefficients
+
+```{r}
+#Make Coefficient Table
+zzz<-data.frame(AICVAR$varresult$diff.log.gdp..$coefficients,
+                AICVAR$varresult$diff.log.pcec..$coefficients,
+                AICVAR$varresult$diff.log.invest..$coefficients,
+                AICVAR$varresult$diff.log.gce..$coefficients)
+
+rownames(zzz)<-rownames(data.frame(AICVAR$varresult$diff.log.gdp..$coefficients))
+zzz %>%
+mutate_all(function(x) {
+    cell_spec(x, bold = T,
+              color = if_else(x!=0,"red","black"))
+  }) %>%
+  kable(escape=F,
+  col.names=c("GDP","C","I","G"),
+  caption="Coefficients in AIC Regression") %>%
+  kable_styling(bootstrap_options = "striped", font_size=10)
+```
+
+## BIC Coefficients
+
+```{r}
+#Make Coefficient Table
+zzz<-data.frame(BICVAR$varresult$diff.log.gdp..$coefficients,
+                BICVAR$varresult$diff.log.pcec..$coefficients,
+                BICVAR$varresult$diff.log.invest..$coefficients,
+                BICVAR$varresult$diff.log.gce..$coefficients)
+
+rownames(zzz)<-rownames(data.frame(BICVAR$varresult$diff.log.gdp..$coefficients))
+zzz %>%
+mutate_all(function(x) {
+    cell_spec(x, bold = T,
+              color = if_else(x!=0,"red","black"))
+  }) %>%
+  kable(escape=F,
+  col.names=c("GDP","C","I","G"),
+  caption="Coefficients in BIC Regression") %>%
+  kable_styling(bootstrap_options = "striped", font_size=10)
+```
+
+## Evaluating Autoregressive Forecasts
+
+- Forecast residuals from *optimal* forecast $\widehat{e}_{t+1}=y_{t+1}-\widehat{y}_{t+1}$ are white noise in autoregressive model
+- This is in fact true when forecast rule is Bayes predictor in square loss for any stationary distribution
+    - Holds for VARs, regression, etc
+- So if you are using a rule which is approximately the Bayes rule, residuals should be close to white noise
+    - ACF of $\widehat{e}_{t+1}$ should be close to 0 everywhere
+    - Use `checkresiduals` to inspect and compare various measures of distance
+- Usually little reason to believe chosen family contains Bayes forecast rule
+    - May not be exactly linear, or may depend on information further back than number of lags used 
+    - Or even if it did that approximation is close enough that all properties of Bayes forecast hold for approximate rule
+- These two issues are in conflict
+    - Can always increase complexity of hypothesis class to try to get closer to Bayes forecaster
+    - But doing so can worsen overfitting, making rule actually chosen further away
+- Residual checks measure closeness of fit, but are unrelated to degree of overfitting
+    - Generally **not** a reliable tool for finding a good forecast, as opposed to checking ex post
+    - Prefer measures which account for all types of error
+    
+## Application to GDP Series in BIC VAR Prediction
+
+```{r,class.source='fold-show'}
+checkresiduals(BICVAR$varresult$diff.log.gdp..) #GDP Growth forecast residual diagnostic
+```
+- Patterns in residual plot and ACF, and formal test of white noise, suggest VAR(1) is not super close to white noise
+    - Suggests patterns in data may differ somewhat from VAR(1) model: in-sample fit could be improved
+    - To decide whether this or another forecast should be used, should compare loss measures 
+    
+    
+## Conclusions
+
+- ERM does well for choosing within a simple hypothesis classes
+- Minimizing penalized criterion is a sensible way to improve accounting for overfitting
+    - Based on number (AIC/BIC) or size (L1/L2) of parameters or functions
+- When choosing between multiple procedures, including ERM over multiple classes, can use measure of risk for each
+    - Cross-validation  
+- Penalization acts like restricting size of parameter class    
+    - Can choose penalty by cross-validating
+- Goal of regularization is to trade off in-sample and out-of-sample fit
+    - Other tools exist for finding the "right" descriptive model
+
+
+## References
+
+- Mehryar Mohri, Afshin Rostamizadeh, and Ameet Talwalkar. "Foundations of Machine Learning" MIT Press 2012
+- Grace Wahba "Spline Models for Observational Data" (1991)
+    - Overview of smoothing splines and penalization, 
+    - Explains how and why one can work with all differentiable functions
+    

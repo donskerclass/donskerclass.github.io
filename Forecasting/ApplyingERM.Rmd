@@ -1,0 +1,494 @@
+---
+title: "Applying ERM"
+author: "73-423 Forecasting for Economics and Business"
+output:
+  html_document:
+    code_folding: hide
+---
+
+
+## Empirical Risk Minimization
+
+- Empirical Risk Minimizer
+$$\widehat{f}^{ERM}(\mathcal{Y}_T)=\underset{f\in\mathcal{F}}{\arg\min}\frac{1}{T-h}\sum_{t=1}^{T}\ell(y_{t+h},f(\mathcal{Y}_t))$$
+- Saw in previous classes that empirical risk minimization can do a good job
+    - **Most of the time**, loss is small **on average** with respect to "true" distribution, **relative** to **empirical risk** or **oracle risk**
+    - If true distribution $p\in\mathcal{P}$ is **stationary** and **weak dependent** and hypothesis class $\mathcal{F}$ is **low complexity**
+- Today
+    - Examples of useful hypothesis classes
+    - Handling (some) cases of nonstationarity, strong dependence
+    
+    
+## Linear Function Classes
+
+- Let $\mathcal{Z}_T=\{z_t\}_{t=1}^{T}$, $z_t\in\mathbb{R}^d$ be some set of "predictor variables"
+- $z_t$ may include 
+    - Lagged values of series to be forecast $\{y_{t-k}\}_{k=0}^{p}$
+    - A constant term $1$
+    - Other variables known at time $t$
+$$\mathcal{F}(\mathbf{Z})=\{f(z)=\sum_{j=1}^dz_j\beta_j:\ \beta\in\mathbb{R}^{d}\}$$
+- Most commonly used function class by far in all areas of data analysis
+- ERM with linear class goes by many different names
+    - Square Loss: Ordinary Least Squares Regression
+    - Absolute Loss: Least Absolute Deviations Regression
+    - Categorical Cross-Entropy Loss: Logistic Regression
+
+
+## Predictors
+
+- Role of predictors $z_t$ is to provide information about $y_{t+h}$
+- Want $\mathcal{F}(\mathbf{Z})$ such that oracle risk $\underset{f\in\mathcal{F}(\mathbf{Z})}{\min}R_p(f)$ is small
+    - Choose variables such that $\sum_{j=1}^d\beta_jz_{jt}$ provides good description of $y_{t+h}$
+    - Use intuition, economic theory, and availability of measurements to find predictors
+- Past values of $y_t$ (almost) always available and often closely associated
+- Economically relevant variables depend on context
+    - Often $y_t$ related to other variables by accounting identity, e.g. $y_t=z_{1t}+z_{2t}$ by definition
+- Note that we need to predict $y_{t+h}$ using $z_t$, not $z_{t+h}$
+    - Can use past but not contemporaneous values, so knowing $y_t$ depends on $z_t$ not enough
+    - Can help to use multiple lags of $z_t$
+- Also want class such that generalization error is small
+    - Depends on sample size, model complexity, and dependence
+        - If sample small or strongly dependent, use simpler class
+        - All predictors need to satisfy stationarity and weak dependence: not just $y_t$
+    - Best class for ERM usually **not** class minimizing oracle risk
+    
+<!-- - Unless $z_{t+h}$ known in advance (or can be forecasted accurately!)  -->    
+    
+## Nonlinear predictors
+
+- Using a linear function class does not require linear relationship between variables
+- Can include nonlinear transformations of variables $z_t$ as predictors 
+$$\Phi(z_t)=\{\phi_j(z_t)\}_{j=1}^J$$
+- Class becomes $\mathcal{F}(\Phi(\mathbf{Z}))=\sum_{j=1}^{J}\beta_j\phi_j(z_t)$
+- Examples:
+    - Polynomials: $\phi_j(z)=z^{j-1}$
+    - Multivariate polynomials: $\phi_{j}(z)=z_1^{j_1}\cdot z_2^{j_2}\cdot\ldots z_d^{j_d}$
+    - Piecewise polynomials (splines): $\phi_{jk}(z)=z^k1\{t_{j-1}<z<t_{j}\}$
+    - Trigonometric functions (Fourier): $\phi_{j}(z)=cos(\pi jz)$
+    - Etc: Anything else you can think of!
+- Extremely general relationships can be modeled this way
+- Model complexity can blow up if many nonlinear terms used
+    - In multivariate case, # of parameters exponential in $d$
+    - Run into overfitting problems very quickly: can do very badly in practice
+
+## Linear regression
+
+- Ordinary Least Squares (OLS) regression solves ERM for square loss and linear function class
+$$\widehat{\beta}=\underset{\beta\in\mathbb{R}^d}{\arg\min}\frac{1}{T-h}\sum_{t=1}^{T-h}(y_{t+h}-\sum_{j=1}^dz_{jt}\beta_j)^2$$
+- Implementation: minimizer has known formula
+    - For case where predictors are past values, have `Arima`,`arima`, `Ar` commands
+    - For general predictors $z_t$, use `lm` (or `tslm` or `dynlm` when working with lags)
+
+```{r, eval=FALSE, class.source='fold-show'}
+#Select coefficients (b0,b1,b2,b3) by minimizing square loss
+regression<-lm(y~z1+z2+z3)
+#Produce forecasts by evaluating regression function at latest values
+regressionforecast<-forecast(regression,zt)
+#AR(2) forecast
+autoregression<-dynlm(y~L(y,1)+L(y,2)) 
+autoregressionforecast<-predict(autoregression,zt)
+```
+
+## Application: GDP Growth Forecasting
+
+- The US Bureau of Economic Analysis collects aggregate economic data in the National Income and Product Accounts
+- Gross Domestic Product (GDP) is measure of the market value of total output in the US economy
+    - Used as a measure of aggregate economic activity in all areas
+    - Forecasts used by policymakers and businesses to plan for level of expenditures
+- Composed, by definition, of sum of Consumption + Investment + Government Spending + Net Exports 
+    - Y = C + I + G + NX   
+- Predict quarterly log changes using lagged change and lags of changes in components (exclude one for redundancy)
+$$\underset{\beta\in\mathbb{R}^5}{\min}\frac{1}{T-1}\sum_{t=1}^{T-1}(\Delta Y_{t+1}-(\beta_0+\beta_1\Delta Y_{t}+\beta_2\Delta C_{t}+\beta_3\Delta I_{t}+\beta_4\Delta G_{t}))^2$$
+```{r, warning=FALSE, message=FALSE}
+##Empirical example: GDP and Recession forecasting
+
+library(fredr) #Access FRED, the Federal Reserve Economic Data
+library(fpp2) #Analysis and manipulation functions for forecasting
+library(dynlm) #Linear Model for Time Series Data
+library(quantreg) #quantile Regression
+fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
+
+#US GDP components 
+GDP<-fredr(series_id = "GDP",
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2019-02-12")) #Gross Domestic Product
+
+#US GDP components from NIPA tables (cf http://www.bea.gov/national/pdf/nipaguid.pdf)
+PCEC<-fredr(series_id = "PCEC",
+            observation_start = as.Date("1947-01-01"),
+            observation_end=as.Date("2019-02-12")) #Personal consumption expenditures
+FPI<-fredr(series_id = "FPI",
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2019-02-12")) #Fixed Private Investment
+CBI<-fredr(series_id = "CBI",
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2019-02-12")) #Change in Private Inventories
+NETEXP<-fredr(series_id = "NETEXP",
+              observation_start = as.Date("1947-01-01"),
+              observation_end=as.Date("2019-02-12")) #Net Exports of Goods and Services
+GCE<-fredr(series_id = "GCE",
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2019-02-12")) #Government Consumption Expenditures and Gross Investment
+
+#Format the series as quarterly time series objects, starting at the first date
+gdp<-ts(GDP$value,frequency = 4,start=c(1947,1),names="Gross Domestic Product") 
+pcec<-ts(PCEC$value,frequency = 4,start=c(1947,1),names="Consumption")
+fpi<-ts(FPI$value,frequency = 4,start=c(1947,1),names="Fixed Investment")
+cbi<-ts(CBI$value,frequency = 4,start=c(1947,1),names="Inventory Growth")
+invest<-fpi+cbi #Private Investment
+netexp<-ts(NETEXP$value,frequency = 4,start=c(1947,1),names="Net Exports")
+gce<-ts(GCE$value,frequency = 4,start=c(1947,1),names="Government Spending")
+
+# ## Plot Data 
+# 
+# autoplot(gdp, series="Gross Domestic Product")+
+#   autolayer(pcec,series="Consumption")+
+#   autolayer(invest,series="Investment")+
+#   autolayer(netexp,series="Net Exports")+
+#   autolayer(gce,series="Government Spending")+
+#   ggtitle("US GDP and NIPA Components") +
+#   ylab("Billions of Dollars")+xlab("Date")+
+#   guides(colour=guide_legend(title="NIPA Component"))
+
+## Predict using OLS on lagged predictors
+#gdpdynlm<-dynlm(d(gdp)~L(d(gdp))+L(d(pcec))+L(d(invest))+L(d(gce))+L(d(netexp)))
+
+#Restate as aligned variables of same length
+dgdp<-window(diff(log(gdp)),start=c(1947,3),end=c(2018,3))
+ldgdp<-window(lag(diff(log(gdp)),-1),end=c(2018,3))
+ldpcec<-window(lag(diff(log(pcec)),-1),end=c(2018,3))
+ldinvest<-window(lag(diff(log(invest)),-1),end=c(2018,3))
+ldgce<-window(lag(diff(log(gce)),-1),end=c(2018,3))
+#ldnetexp<-window(lag(diff(netexp),-1),end=c(2018,3)) #Exclude net exports, which is sometimes negative
+
+#Predict using OLS
+gdpOLS<-lm(dgdp~ldgdp+ldpcec+ldinvest+ldgce)
+
+#Collect Q32018 Data for Q42018 Forecast
+last<-length(diff(pcec)) #Index of last observation for all series, Q3 2018
+zt<-data.frame(diff(log(gdp))[last],diff(log(pcec))[last],diff(log(invest))[last],diff(log(gce))[last])
+colnames(zt)<-c("ldgdp","ldpcec","ldinvest","ldgce")
+
+#Predict 
+gdp2018Q4fcstOLS<-predict(gdpOLS,zt)
+
+```
+```{r,eval=FALSE,,class.source='fold-show'}
+#Use OLS to predict GDP growth from lagged component growth
+gdpOLS<-lm(dgdp~ldgdp+ldpcec+ldinvest+ldgce)
+#Predict value for 2018Q4, using Q3 data
+gdp2018Q4fcstOLS<-predict(gdpOLS,zt)
+```
+
+## Loss Guarantees for OLS
+
+- Bayes forecast for square loss is (conditional) expectation $m^*(\mathcal{Z}_T):=E_p[y_{t+h}|\mathcal{Z}_T]$
+- Oracle forecast rule solves $\underset{f\in\mathcal{F}(\mathbf{Z})}{\min}E_p[(m^*(\mathcal{Z}_T)-f(\mathcal{Z}_T))^2]$
+    - OLS approximates conditional mean: oracle risk smallest when $\mathcal{F}(\mathbf{Z})$ contains this 
+- For any $p\in\mathcal{P}$ such that $(y_{t+h},z_t)$ stationary and mixing with finite variance
+    - Probability that excess risk relative to oracle exceeds any fixed constant $c$ goes to 0 as $T\to\infty$
+    - p(($\frac{1}{T-h}\sum_{t=1}^{T-h}(y_{t+h}-\sum_{j=1}^dz_{jt}\widehat{\beta}^{\text{OLS}}_j)^2-\underset{f\in\mathcal{F}}{\min}E_p[(y_{t+h}-\sum_{j=1}^dz_{jt}\beta_j)^2])>c)\overset{T\to\infty}{\to}0$
+- Above conditions do not say anything about finite $T$ excess risk
+    - No uniform bounds
+    - "Its performance is... typically poor in most applications" (Mohri et al 2012, p246)
+    - Problem is that $\mathcal{F}$ unbounded: predictions could be anywhere
+- Simplicity, interpretability, ease of use make it popular method
+
+## Least Absolute Deviations regression
+
+- LAD regression solves ERM for absolute (MAE) loss and linear function class
+$$\widehat{\beta}=\underset{\beta\in\mathbb{R}^d}{\arg\min}\frac{1}{T-h}\sum_{t=1}^{T-h}\left|y_{t+h}-\sum_{j=1}^dz_{jt}\beta_j\right|$$
+- Absolute Error weights small forecast errors more and large forecast errors less than square loss
+    - Predictions tolerate more large errors but do better with typical case
+- Can show (won't prove) that best predictor is the (conditional) **median** of $y$ given $z$
+    - P(y<=median(y|z)|z)=P(y>=median(y|z)|z)=0.5
+    - Searches for a value so you are as likely to be wrong above as below
+- Implementation: minimizer computable by fast algorithm as a special case of quantile regression
+    - Use `rq` command in library `quantreg`
+```{r,class.source='fold-show'}
+#Select coefficients (b0,b1,b2,b3,b4) by minimizing absolute loss
+gdpLAD<-rq(dgdp~ldgdp+ldpcec+ldinvest+ldgce)
+#Produce forecasts by evaluating regression function at latest values
+gdp2018Q4fcstLAD<-predict(gdpLAD,zt)
+```
+
+## Application: Comparison of LAD and OLS Forecasts
+
+- Forecasts of log GDP growth in 2018Q4
+    - OLS: `r gdp2018Q4fcstOLS`
+    - LAD: `r gdp2018Q4fcstLAD`,  
+
+```{r,message=FALSE,warning=FALSE}
+library(knitr)
+library(kableExtra)
+
+#Table of results
+payemerrors<-data.frame(Coefficient=c("Constant",
+                  "Delta log(Y_{t-1})","Delta log(C_{t-1})","Delta log(I_{t-1})",
+                  "Delta log(G_{t-1})"),
+  OLScoeffs=gdpOLS$coefficients,
+  LADcoeffs=gdpLAD$coefficients)
+kable(payemerrors,
+  col.names=c("Coefficient","OLS",
+              "LAD"),
+  caption="Coefficients for ERM in GDP Growth Forecast")
+```
+- Predictions are fairly similar, but not the same
+    - Weight different events differently
+    - Bigger differences can occur if median far from mean
+    
+
+## Log GDP Growth and OLS vs LAD Predictions
+
+```{r}
+#Contemporaneous Predictions
+LADfcsts<-ts(predict(gdpLAD),frequency=4,start=c(1947,3))
+OLSfcsts<-ts(predict(gdpOLS),frequency=4,start=c(1947,3))
+
+autoplot(dgdp,series="Log GDP Growth")+
+  autolayer(LADfcsts,series="LAD Forecasts")+
+  autolayer(OLSfcsts,series="OLS Forecasts")+
+  ggtitle("Past GDP Growth Forecasts") +
+   ylab("Log Change (Billions of Dollars)")+xlab("Date")+
+   guides(colour=guide_legend(title="Series"))
+```
+
+## Binary Prediction
+
+- $y_t$ a binary (0,1) variable: 1 if something happened, 0 if it didn't
+    - Recession or no recession, default or no default, buy or don't buy
+- Could use loss function which is small if prediction right, large if wrong
+    - 0-1 Loss: $0$ if $\widehat{y}_t=y_t$, $1$ if $\widehat{y}_t\neq y_t$
+    - Useful if forecast must be a **classifier**: make binary decision based on outcome
+- Alternately: allow forecasts $\widehat{y}\in[0,1]$ and use loss based on closeness to $y$
+    - Useful if goal is to learn probability of outcome 
+- **Categorical cross-entropy loss** $\ell(y,\widehat{y})=y\log(\widehat{y})+(1-y)\log(1-\widehat{y})$
+    - 0 if $\widehat{y}=y$, $\infty$ if $\widehat{y}=1-y$
+    - $E_p[\ell(y,\widehat{y})]$ minimized at $\widehat{y}=p(y=1)$
+- **Brier score** is name given to square loss for binary prediction
+    - $E_p[(y-\widehat{y})^2]$ also minimized at $\widehat{y}=p(y=1)$  
+- Can turn $\widehat{y}\in[0,1]$ to classifier $\in\{0,1\}$  by thresholding
+    - Predict $1\{\widehat{y}>c\}$, usually for $c=0.5$
+
+
+## Logistic Regression
+
+- To make prediction in $[0,1]$, apply monotone transformation $F:\ \mathbb{R}\to[0,1]$ to linear predictor class 
+    - Typical choice: **Logistic** (or **softmax**) function $F(x)=\frac{\exp(x)}{1+\exp(x)}$
+    - Apply ERM to loss $y\log(F(f))+(1-y)\log(1-F(f))$
+- **Logistic regression** solves ERM for cross-entropy loss and softmax applied to linear function class 
+$$\widehat{\beta}=\underset{\beta\in\mathbb{R}^d}{\arg\min}\frac{1}{T-h}\sum_{t=1}^{T-h}(y_{t+h}\log(F(\sum_{j=1}^dz_{jt}\beta_j))+(1-y_{t+h})\log(1-F(\sum_{j=1}^dz_{jt}\beta_j)))$$
+- Implementation: minimizer computable by fast algorithm
+    - Use `glm` command with option `family=binomial(link="logit")`
+```{r, eval=FALSE,class.source='fold-show'}
+#Select coefficients (b0,b1,b2,b3) by minimizing categorical cross-entropy loss
+logitregression<-glm(y~z1+z2+z3,family=binomial(link="logit"))
+#Produce forecasts by evaluating regression function at latest values
+logitregressionforecast<-predict(logitregression,zt,type="response")
+```    
+
+<!-- ## Linear regression Properties -->
+
+<!-- - Previously justified ERM based on small generalization or oracle risk -->
+<!-- - What does this look like for square loss -->
+<!-- $$R_p(\mathcal{F})=E_p[(y_{t+h}-f(z_t))^2]=E_p[E_p[(y_{t+h}-f(z_t))^2|z_t]]$$ -->
+<!-- $$=E_p[E_p[(y^2_{t+h}-2y_{t+h}f(z_t)+f^2(z_t)|z_t]]$$ -->
+<!-- $$=E_p[y^2_{t+h}-2E_p[y_{t+h}|z_t]f(z_t)+f^2(z_t)]$$ -->
+<!-- $$\underset{f\in\mathcal{F}}{\min}E_p[y^2_{t+h}-2E_p[y_{t+h}|z_t]f(z_t)+f^2(z_t)]=\underset{f(z)}{\min}$$ -->
+
+
+<!-- ## OLS approximation -->
+<!-- - What does this look like for linear regression -->
+<!-- $$R^*_p(\mathcal{F})=\underset{f\in\mathcal{F}}{\min}E_p[(y_{t+h}-\sum_{j=1}^dz_{jt}\beta_j)^2]$$ -->
+<!-- $$\underset{f\in\mathcal{F}}{\arg\min}E_p[y^{2}_{t+h}-2y_{t+h}(\sum_{j=1}^dz_{jt}\beta_j)+(\sum_{j=1}^dz_{jt}\beta_j)^2]$$ -->
+<!-- - Take first order conditions with respect to $\beta_k$ -->
+<!-- $$E_p[y_{t+h}z_{kt}]=E_p[z_{kt}\sum_{j=1}^dz_{jt}\beta_j]$$ -->
+
+## Application: Recession Forecasting
+
+- A recession is a period of sustained economic contraction
+    - Characterized informally as "a sequence of two or more quarters of negative output growth"
+- Official dates are declared by the National Bureau of Economic Research (NBER) Business Cycle Dating Committee
+    - Monthly $(0,1)$ variable going back to 1854
+- Use logistic regression with 2 lags of past indicator as predictors
+```{r}
+#The NBER recession indicator has FRED ID "USREC"
+#1 in NBER declared recession, 0 in any other date
+USREC<-fredr(series_id = "USREC")
+usrec<-ts(USREC$value,frequency=12,start=c(1854,12)) #Convert to time series
+#Produce lagged values
+l1usrec<-window(lag(usrec,-1),start=c(1855,2),end=c(2019,1))
+l2usrec<-window(lag(usrec,-2),start=c(1855,2),end=c(2019,1))
+recession<-window(usrec,start=c(1855,2),end=c(2019,1))
+```
+```{r}
+recessionlogit<-glm(recession~l1usrec+l2usrec,family=binomial(link="logit"))
+```
+```{r}
+recessionlogit$coefficients
+```
+- Coefficients go into softmax function to produce a probability of recession
+    - Being in a recession this month predicts higher chance next month
+    - But being in a recession two months ago predicts lower chance
+
+## Recessions, Predicted and Observed
+
+```{r}
+probs<-predict(recessionlogit,type="response")
+recessionprobs<-ts(probs,frequency=12,start=c(1855,2))
+autoplot(usrec,series="NBER Recession Indicator")+
+  autolayer(recessionprobs,series="Predicted Probability of Recession")+
+  ggtitle("NBER Recessions and Logit Autoregression Forecasted Probabilities") +
+   ylab("Probability of Recession")+xlab("Date")+
+   guides(colour=guide_legend(title="Series"))
+```
+
+## What if my data isn't stationary or weak dependent?
+
+- Principle of ERM relies on assumptions
+    - Future data will be like past data
+    - Sample averages are good approximation of future averages
+- There are infinite ways this can be violated
+    - Nothing says that data that looks "well behaved" now will continue to be so in the future
+    - If this is a major concern, there is little the statistical approach can offer
+    - Online learning approach (much later) can help, but only by changing objective
+- Often, we face slightly simpler problems
+    - Stationarity or weak dependence fail, but in detectable and correctable ways
+    - At least for these, important to check and perform the needed corrections
+
+    
+## Nonstationary probability models
+
+- A probability model $p$ is nonstationary if $p(y_{t})\neq p(y_{s})$
+    - Distribution $p_t(y_t)$ depends on time $t$
+- Goal becomes to find rule $f_{t}$ to achieve small **time-dependent risk** 
+$$R_{p_{T+h}}(f):=E_{p_{T+h}}\ell(y_{T+h},f_{T}(\mathcal{Y}_T))$$    
+- One model of nonstationarity: **additive components model**
+    - $y_t=\tilde{y}_t+T(t)$, $\tilde{y}_t\sim\tilde{p}(.)$ stationary and weak dependent, $T(t)$ a deterministic function of time
+- If $\log(y_t)$ is additive components model, call it multiplicative components model     
+- Examples    
+    - Linear Trend: $T(t)=ct$ for a constant $c$
+    - Deterministic Seasonality: $T(t)=\sum_{j=1}^{k}a_j1\{t\mod k=j\}$ (eg, add $a_j$ in month $j$)
+    - Structural breaks: $T(t)=c\cdot 1\{T\geq k\}$ for constant c, break date $k$
+    - Outliers: $T(t)=c1\{T=k\}$ add c at date $k$
+    - Smooth Trend: $T(t)$ is an arbitrary "smooth" (eg 2x differentiable) function
+    
+
+## Restoring stationarity
+
+- If way that distribution depends on time is **known**, can use this to make predictions
+- One possible solution: find invertible transform $\tilde{\mathcal{Y}}_t=T(\mathcal{Y}_t,t)$ so that $\tilde{\mathcal{Y}}_t$ is stationary
+- In additive components model, just subtract nonstationary part $T(t)$
+    - $\tilde{y}_t=y_t-T(t)$ is stationary and weak dependent
+- Goes by different names depending on form of nonstationarity
+    - Detrending, deseasonalizing, break removal    
+- Other models may require other transformations
+- Differencing: $\Delta y_t=y_{t}-y_{t-1}$
+    - Turns linear trends into constant $Delta(ct)=c$, random walk $y_{t}=y_{t-1}+e_{t}$ into $e_t$, stationary series 
+- Double (triple, etc) differencing   $\Delta^{k}y_t=\Delta\Delta\ldots\Delta{y}_t$
+    - Removes linear and quadratic (cubic, etc) trends
+    - If difference of series is a random walk, double difference is stationary
+- Seasonal differencing: $y_{t}-y_{t-k}$
+    - Removes additive seasonality at frequency $k$
+
+
+## Applying ERM with detrending
+
+- Detrended ERM Procedure
+    1. Detrend data $\tilde{\mathcal{Y}}_T=\{\tilde{y}_t\}_{t=1}^{T}$
+    2. Apply ERM to detrended data $\widehat{f}^{ERM}(\tilde{\mathcal{Y}}_T)=\underset{f\in\mathcal{F}}{\arg\min}\frac{1}{T-h}\sum_{t=1}^{T}\ell(\tilde{y}_{t+h},f(\tilde{\mathcal{Y}}_t))$
+    3. Add trend back to make prediction $\widehat{y}_{T+h}=\widehat{f}^{ERM}(\tilde{\mathcal{Y}}_T)+T(T+h)$
+- Suppose loss function depends only on distance $\ell(x,y)=\ell(x-y,0)$
+    - True for square loss, absolute loss, etc
+- Then $E_{p_{T+h}}\ell(y_{T+h},\widehat{y}_{T+h})$ $=E_{p}\ell(y_{T+h}-T(T+h),\widehat{f}^{ERM}(\tilde{\mathcal{Y}}_T))$ $=E_{p}\ell(\tilde{y}_{T+h},\widehat{f}^{ERM}(\tilde{\mathcal{Y}}_T))$
+- Result: risk guarantees for $y_t$ are same as those for $\tilde{y}_t$, which satisfies usual ERM conditions 
+ 
+## What if source of nonstationarity not known?
+
+- In some cases, theory or prior knowledge tells you about trend
+    - Stock variables likely to contain linear trends or random walk behavior
+    - Efficient Market Hypothesis: Prices in financial markets are random walks
+    - Solution: forecast differences instead of levels!
+    - Add differences back to get levels if needed
+- In other cases, some parameters $\theta$ of trend $T(t,\theta)$ not known
+    - Slope $c$ of linear trend $ct$, size $a_j$ of month/quarter seasonal effects,etc
+- Posssible solution: estimate $T(t,\theta)$ by procedure $T(.,\widehat{\theta})$ using data
+- Method 1: detrend then apply ERM
+    1. Estimate trend $\widehat{\theta}=\underset{\theta}{\arg\min}\frac{1}{T}\sum_{t=1}^{T}\ell(y_t,T(t,\theta))$
+    2. Run ERM on approximate detrended data $\widehat{f}^{ERM}(\tilde{\mathcal{Y}}_T)=\underset{f\in\mathcal{F}}{\arg\min}\frac{1}{T-h}\sum_{t=1}^{T}\ell(y_{t+h}-T(.,\widehat{\theta}),f(\mathcal{Y}_t-T(.,\widehat{\theta})))$
+- Method 2: Apply ERM including trend
+    1. $(\widehat{f}^{ERM}(\tilde{\mathcal{Y}}_T),\widehat{\theta})=\underset{(f\in\mathcal{F},\theta)}{\arg\min}\frac{1}{T-h}\sum_{t=1}^{T}\ell(y_{t+h},f(\mathcal{Y}_t)+T(.,\theta))$
+   
+   
+## Implementation
+
+- Joint procedure extremely easy to implement for linear model class
+    - Just add $T(.,\theta)$ to regression equation
+- Commands `dynlm`, `tslm` can include linear trend, seasonality, etc in ordinary least squares formula    
+```{r,eval=FALSE,class.source='fold-show'}
+#OLS with prediction rule b_0+b1*z1_t+b2*y_{t-1}+c*t+sum(a_j*season_j)
+regression<-dynlm(y~z1+L(y)+trend(y)+season(y))
+```
+- Or just create variables and include in prediction equation
+
+
+## When does this method work?
+
+- For ERM under usual conditions, do **not** have to assume that model $\mathcal{F}$ is "correct"
+    - Here "correct" means $\mathcal{F}$ contains the Bayes forecast rule
+    - Still approach best risk in class $\mathcal{F}$
+- In nonstationary case **do** need transformation $T(t)$ to be the correct one
+    - If $T(t)$ known exactly $\tilde{y}_t=y_t-T(t)$ is stationary
+    - If $\widehat{T}(t)$ is approximated, $\widehat{\tilde{y}}_t=y_t-\widehat{T}(t)$ is not stationary
+- ERM applied with approximate detrending does not have same guarantees
+    - Most straightforward problem: error from $\widehat{T}(T+h)-T(t+h)$ added
+    - Harder problem: if stationarity not exact, chosen $f$ may be affected
+- Hard to show general results, but in many cases, additional approximation error is small
+    - Linear (or polynomial) trends and seasonality known to have small effect on error of OLS
+    - Bonus slides give some sufficient conditions on $\ell$, $\mathcal{F}$, $\widehat{T}(.)$ for small error
+- In other cases additional approximation error known to be a big problem
+    - Especially for smooth trends (cf Hamilton 2018)
+
+
+## Conclusions
+
+- ERM with linear hypotheses provides simple and interpretable forecasting tool
+    - Can accomodate past values, external predictors, and nonlinearities
+- Performance usually okay with larger samples
+    - If data stationary and model not too complicated
+- Transforming, deseasonalizing, detrending, etc can be used to get back to stationarity
+- If nonstationaity takes additive form, this can be added as variable in linear predictor
+
+## References
+
+- James Hamilton "Why You Should Never Use the Hodrick-Prescott Filter" *Review of Economics and Statistics* 100 (December 2018): 831-843.
+    - Explains some serious problems that can arise for forecasting when using a smoothing spline to approximate a smooth trend (A process called "the Hodrick-Prescott Filter" by economists) 
+    
+## Bonus Slide: Risk From Approximate Detrending
+
+- Consider additive components model $y_t=\tilde{y}_t+T(t)$
+- Assume $\widehat{T}(.)$ converges to $T(t)$ with high probability in $p$
+    - w.p. $1-\delta$, $\underset{t\in1\ldots T+h}{\max}\left|\widehat{T}(t)-T(t)\right|\leq b(\delta,T)\overset{T\to\infty}{\to}0$ 
+    - Use some method to get uniformly accurate trend estimates
+- Let $\ell(y,\widehat{y})=\ell(y-\widehat{y},0)$ be $L_1$-Lipschitz
+    - $\left|\ell(x+a,0)-\ell(x,0)\right|\leq L_1\left|a\right|$ for all $x,a$
+    - Permits absolute loss but not square loss
+- Let all $f\in\mathcal{F}$ be $L_2$ Lipschitz in all $d$ arguments
+    - Permits linear predictors if coefficients bounded
+- Want to bound excess risk of post-detrending predictor relative to oracle with known $T(t)$ and distribution $p$
+$$\underset{f\in\mathcal{F}}{\min}\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\{y_s-\widehat{T}(s)\}_{s=1}^{t})+\widehat{T}(t+h))-\underset{f\in\mathcal{F}}{\min}E_{p}[\ell(y_{T+h},f(y_{t+h},f(\{y_s-T(s)\}_{s=1}^{T})+T(T+h))]$$
+
+## Bonus Slide 2: Proof of Bound
+
+- Consider approximate detrended empirical risk minus exactly detrended empirical risk
+$$\underset{f\in\mathcal{F}}{\min}\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\{y_s-\widehat{T}(s)\}_{s=1}^{t})+\widehat{T}(t+h))-\underset{f\in\mathcal{F}}{\min}\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\{y_s-T(s)\}_{s=1}^{t})-T(t+h))$$
+- Difference in min bounded by max of difference 
+$$\leq \underset{f\in\mathcal{F},t\in1\ldots T}{\sup}\left|\ell(y_{t+h},f(\{y_s-\widehat{T}(s)\}_{s=1}^{t})+\widehat{T}(t+h)-\ell(y_{t+h},f(\{y_s-T(s)\}_{s=1}^{t})+T(t+h)\right|$$
+- By Lipschitz conditions bound by $\leq dL_1L_2\underset{t\in1\ldots T+h}{\max}\left|\widehat{T}(t)-T(t)\right|$
+- Add and subtract exactly detrended empirical risk to bound excess risk by $dL_1L_2\underset{t\in1\ldots T+h}{\max}\left|\widehat{T}(t)-T(t)\right|+$
+$$(\underset{f\in\mathcal{F}}{\min}\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\{y_s-T(s)\}_{s=1}^{t})+T(t+h))-\underset{f\in\mathcal{F}}{\min}E_{p}[\ell(y_{T+h},f(y_{t+h},f(\{y_s-T(s)\}_{s=1}^{T})+T(T+h))])$$
+- Last term is excess risk or ERM for exactly detrended data
+    - Bounded with high probability by standard ERM inequality under usual assumptions 
+- First term bounded with high probability by (uniform) consistency of detrending method
+
+

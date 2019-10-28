@@ -1,0 +1,318 @@
+---
+title: "Online Learning and Regret Minimization"
+author: "73-423 Forecasting for Economics and Business"
+output:
+  html_document:
+    code_folding: hide
+---
+
+## Outline
+
+- Decision Theory Review
+- Regret Minimization
+- The Online Learning Setting
+- Discrete Case: Prediction with Expert Advice
+    - Realizable Case
+    - Nonrealizable Case    
+    - Application: The Mind Reading Machine   
+- Model Combination and Hedge
+    
+<!-- - Decision Theory Review -->
+<!-- - Regret Minimization -->
+<!--     - Comparison with statistical or Bayesian approaches -->
+<!--     - Impossibility results? -->
+<!--         - worst case may be trivial -->
+<!--         - No Free lunch? -->
+<!-- - The Online Learning Setting -->
+<!-- - Discrete Case: Prediction with Expert Advice -->
+<!-- - Realizable Case -->
+<!--     - Majority Vote (w Mistake Bounds) -->
+<!-- - Nonrealizable Case     -->
+<!--     - Randomized Weighted Majority -->
+<!-- - Application: The Mind Reading Machine?     -->
+<!-- - Model combination -->
+<!--     - Hedge -->
+<!-- - General Online Convex Optimization Setup? -->
+<!--     - Expert advice and online regression as example problems     -->
+
+## Motivation
+
+- Often, forecasting is not a single unique event, but a process that must be repeated over and over
+- Forecasts must be updated in light of new data, and business decisions made on an ongoing basis
+- May even need to choose a procedure in which process is entirely automated
+- Example use cases
+    - **Web services**: may need to update page every day or even every visitor
+    - **Large retail operation**: need to predict inventories for each outlet each day
+- Want a procedure which is both **automated** and **robust**    
+    - Not enough time for practitioner to apply judgment each time model must be changed
+    - If something goes wrong, might not be able to intervene immediately
+- These goals motivate **online learning** methods
+    - A class of **algorithms** for making a **sequence** of repeated forecasting decisions
+    - A distinct mode of decision theoretic **analysis** focused on minimizing **worst-case regret**
+
+## Decision Theory: Review
+
+- Choose a forecasting rule
+    - $f_{t}:\otimes_{s=1}^{t}\mathrm{Y}\to\mathrm{Y}$
+- Observe sequence of data 
+    - $\mathcal{Y}_t=\{y_s\}_{s=1}^{t}\in \otimes_{s=1}^{t} \mathrm{Y}$
+- Apply forecasting rule to obtain predicted value
+    - $\widehat{y}_{t+1}=f_{t}(\mathcal{Y}_{t})$
+- Observe realized value $y_{t+1}$
+- Evaluate by loss function 
+    - $\ell(.,.): \mathrm{Y}\times\mathrm{Y}\to\mathbb{R}^+$
+- Loss is $\ell(y_{t+1},\widehat{y}_{t+1})$
+- Sequential setup is exactly this, **but** repeated for $t=0\ldots T$
+    - Need to compare losses *across* periods to compare $T$ period sequence of decisions
+
+## Sequential Loss Evaluation 
+
+- Simplest approach: use **total loss** $\sum_{t=1}^{T}\ell(y_{t+1},\widehat{y}_{t+1})$ (or, equivalently, **average loss** $\frac{1}{T}\sum_{t=1}^{T}\ell(y_{t+1},\widehat{y}_{t+1})$)
+- Sometimes also work with **weighted average loss** $\sum_{t=1}^{T}w_t\ell(y_{t+1},\widehat{y}_{t+1})$
+    - If $w_t=\beta^t$, $\beta\in(0,1)$, called **exponential discounting**: future profits discounted at interest rate if maximizing present value
+- This is on top of existing issue of needing to compare performance across many sequences $\mathcal{Y}_t$ 
+- Previous approaches: $\mathcal{Y}_t$ comes from a distribution $p(\mathcal{Y}_t)$, possibly in a family $\mathcal{P}:=\{p(\mathcal{Y}_t,\theta),\theta\in\Theta\}$
+- Probability approach allows handling fact that multiple outcomes are possible by focusing on *average case loss*
+    - **Risk** $R_t(f)=E_{p}[\ell(y_{t+1},f_{t}(\mathcal{Y}_t))]$
+    - Statistical approach looked for low risk for **every** $p\in\mathcal{P}$
+    - Bayesian approach looked for low risk **on average** over $p\in{P}$, where average is with respect to prior $\pi(\theta)$
+- These approaches work fine if probability model good description of possible sequences we are likely to face
+    - Work best under **stationarity** or at least good model of changes over time
+    - Analyst judgment and intuition can and should be used to build model or method    
+- Extend to sequential setting by considering average risk $=$ expected average loss
+    - $\frac{1}{T}\sum_{t=1}^{T}E_{p}[\ell(y_{t+1},\widehat{y}_{t+1})]=E_{p}[\frac{1}{T}\sum_{t=1}^{T}\ell(y_{t+1},\widehat{y}_{t+1})]$
+
+
+## Worst Case Analysis and No Free Lunch Theorems
+
+- It would be even better if we had a method that can do well over **all** relevant sequences $\underset{\mathcal{Y}_T}{\max}\sum_{t=1}^{T}\ell(y_{t+1},\widehat{y}_{t+1})$
+- Without additional restrictions, impossible to get nontrivial performance bounds over all sequences
+- Consider case where $\mathrm{Y}=\{0,1\}$ and $\ell(y_{t+1},\widehat{y}_{t+1})=1\{y_{t+1}\neq \widehat{y}_{t+1}\}$. Total loss is number $M$ of mistakes made.
+- Given sequence $\widehat{y}_{t+1}=f_{t}(\mathcal{Y}_t)\in\{0,1\}$, consider sequence $y_{t+1}=(1-f_t(\mathcal{Y}_t))$
+    - Worst case total loss $M=T$ for *any* method
+- Motivates randomizing: data fixed, but choices random
+    - Eg. flip a coin every period and guess 1 for Heads, 0 for Tails
+    - Then no matter what sequence is, **expected total loss** (with respect to own choices) is $\frac{T}{2}$
+- **No Free Lunch** theorems give converse relationship 
+    - Any algorithm producing a $\{0,1\}$ sequence has loss $\frac{T}{2}$ on average over all sequences
+    - Corresponds to *data* playing the same coinflip strategy
+- Implication: without *some* assumptions on set of data faced, only trivial results possible
+    - Doing better against some sequences must mean doing worse against others
+    - With a little extra info, can focus on sequences that are relevant
+    
+## Regret Analysis
+
+- Intermediate between worst and average case analysis, may single out set of sequences which matter more
+- Assess **relative** loss in comparison to some baseline
+- Let $\mathcal{F}_t=\{f_{t,\theta}(): \otimes_{s=1}^{t}\mathrm{Y}\to\mathrm{Y}:\ \theta\in\Theta\}$ be a set of "baseline" predictors against which we want to perform well
+- Let $\mathcal{A}$ be a **strategy** or **algorithm**: sequence of decision rules $\{f_t(\mathcal{Y}_t)\}_{t=1}^{T}$ which may depend on the observations
+- The maximum total **regret** of strategy $\mathcal{A}$ with respect to comparison class $\mathcal{\Theta}$ is 
+    - $reg_{T}(\mathcal{A})=\underset{\{y_{t+1}\}_{t=1}^{T}\in\otimes_{t=1}^{T}\mathrm{Y}}{\max}\left\{\sum_{t=1}^{T}\ell(y_{t+1},f_t(.))-\underset{\theta\in\Theta}{\min}\sum_{t=1}^{T}\ell(y_{t+1},f_{\theta,t}(.))\right\}$
+- **Average Regret** is $\frac{1}{T}reg_{T}(\mathcal{A})$
+- Because regret is defined over all sequences, no probability distribution needed over sequences
+    - But, it can be helpful to randomize to compete with possibly adversarial sequences
+- A **randomized algorithm/strategy**  $\mathcal{A}=\{f_t(\mathcal{Y}_t,\omega_t)\}_{t=1}^{T}$ depends on auxiliary random variables $\omega_t\sim q_t$
+- If adversary can condition on strategy but not on realizations of randomness, measure of loss is **expected regret**
+    - $\underset{\{y_{t+1}\}_{t=1}^{T}\in\otimes_{t=1}^{T}\mathrm{Y}}{\max}\mathbf{E}\left\{\sum_{t=1}^{T}\ell(y_{t+1},f_t(.,\omega_t))-\underset{\theta\in\Theta}{\min}\sum_{t=1}^{T}\ell(y_{t+1},f_{\theta,t}(.))\right\}$
+    - Here, expectation is only over randomness in *own* decisions
+
+
+<!-- Okay: Notation problem to resolve: how to relate standard OCO notation to our previous decision theoretic notation? Minor issue is that for cases we mostly work with, notation is reversed: eg in Hazan, $f_t$ is the new data each period, $x_t$ is our choice. There, comparison set is $\mathcal{K}$ is a set of values. Bigger issue is not just that $f_t$, our choice, is their notation for data, but that we want our choice to be a function (of past data). Their choies are also functions of past data, but implicitly, through Algorithm $\mathcal{A}$. So perhaps we should do setup where choice is $\widehat{y}_t$, which does implicitly depend on past data: so our $f_t$ is actually their **algorithm**. Fine, I guess, but confusing when,eg, we want it to be something like regression model. Our choice is set of coefficients, prediction is then.. hmm, I guess their $f_t$ is not just our $\ell(y_{t+1},.)$ (which is right for fixed predictions), but our $\ell(y_{t+1},[.](\mathcal{Y}_T))$: w choose coefs or functional form. So, their comparison set is set of coefficients, say, or functional forms. This is fine? Consider class of functions $\mathcal{F}=\{f(.,\theta):\ \theta\in\Theta\}$. Okay, this is enough for Online Gradient Descent analysis. But prediction with expert advice setting looks weirder, since no explicit functional form for the experts: they are just a sequence of losses $g_t(i)$ $i=1\ldots n$ our choice is element of simplex over them: $\left\langle x_t g_t \right\rangle $  okay, then if this the case, functions in comparison class are vertices of simplex, and observed loss is $\ell(y_{t},\left\langle[.] ,g_t \right\rangle)$ okay, key here is that there is data other than $y_t$ or $\mathcal{Y}_t$ required to specify forecasts: corresponds to case with predictors $\mathcal{Z}_T$ also needed. Actually, not even: rely on unobserved info which is not outcome to be predicted AND not observable at time of forecast. Okay, so new notation is needed. Maybe just $(y_{t+1},z_{t+1})$ is enough.
+Alternately, think harder about prediction with expert advice: each expert will produce a forecast in $y$ domain, call it $\widehat{y}_i(t+1)$, so loss is $g_{i}(t)=\ell(y_{t},\widehat{y}_i(t+1))$. Only issue here is averaging over a random policy. I guess other difference is, in standard setting, can only combine experts: rule must lie in simplex of experts. This is not same as combining their forecasts: average is over losses instead. Fine, this is just a case of proper vs improper learning. Or... no, still need vector to come from somewhere...
+-->
+
+## Interpretation of Regret
+
+- An algorithm with low regret performs nearly as well as the best rule in the baseline set *in hindsight*, after the sequence was seen, for *any* possible sequence
+- Per no free lunch result, total loss on some sequences may be (indeed, has to be) terrible
+- But if regret is low, this means that best rule in comparison class also did terribly on that sequence
+    - Conversely, whenever some rule does well on a sequence, a low regret strategy also does well 
+- Low *expected* regret methods perform well relative to the best baseline rule *on average*, for any possible sequence
+    - Different draws of randomization may do better or worse
+- Regret captures situations where evaluation is against a benchmark
+    - Either explicitly as it is for hedge fund managers
+    - Or implicitly if you are competing with a group, and you can blame others for your mistakes 
+- “*Worldly wisdom teaches that it is better for reputation to fail conventionally than to succeed unconventionally.*” Keynes (1936)
+- Less cynically, useful if you care more about accuracy in some sequences than others
+    - Different from probability, which captures this by "weights" these sequences
+    - May care about them more either because they are more likely *or* because performance in that case is important
+
+
+## Example 1: Prediction with Expert Advice
+
+- Want to predict sequence of binary outcomes $y_{t+1}\in\{0,1\}$ with 0-1 loss
+    - User will click/not click on ad, Product will sell or not sell, Recession this quarter or no
+- We have access to a set of $N$ "experts" $\Theta=\{i\in 1\ldots N\}$ who each round give us their prediction $f_{\theta,t}=\widehat{y}_{i,t+1}\in \{0,1\}$ of $y_{t+1}$
+    - Experts may be real human forecasters, like those surveyed by the Survey of Professional Forecasters or the Wall Street Journal Economic Survey
+    - Or they may be algorithms: eg. logistic regression, some bespoke Bayesian model, or some state-of-the-art machine learning thing
+    - Or just simple rules: Always 0, Always 1, Alternate, 1 on primes, etc
+- Goal is to use all this info to make a forecast, recognizing that some experts may be more accurate than others
+- Experts are "black boxes": often impossible or too difficult to figure out where forecast comes from or why
+    - Only use history of past performance to evaluate
+- Best expert makes $M^*=\underset{i\in1\ldots N}{min}\sum_{t=1}^{T}1\{y_{t+1}\neq \widehat{y}_{i,t+1}\}$ mistakes 
+- Expected regret of an online learning procedure $\mathcal{A}$ is $\mathbf{E}\sum_{t=1}^{T}1\{y_{t+1}\neq \widehat{y}_{t+1}\}-M^*$
+- Goal is to make not many more mistakes than best expert
+
+
+## Example 2: Online Regression
+
+- Let $y_{t}\in\mathrm{Y}$ and $\ell(.,.):\ \mathrm{Y}\times\mathrm{Y}\to B\subset\mathbb{R}$, $B$ a bounded set
+- Boundedness may come from $\mathbf{Y}$ bounded, as in outcomes known to take limited range
+- Needed for regret analysis, because if unbounded, worst case may achieve unbounded regret
+    - Worst case regret analysis useful if bad outcome is "customer doesn't click the ad this time"
+    - Less so if worst outcome is "humanity perishes in nuclear war"
+    - Even though early theory came from David Blackwell at the RAND corporation, which supported early game and decision theory research for purpose of Cold War nuclear strategic planning 
+- Set $\Theta=\{\beta\in\mathbb{R}^d: \left\Vert\beta\right\Vert\leq C \}$ and $\mathcal{F}_t=\{z_t^{\prime}\beta, \beta\in\Theta\}$
+    - $z_t$ may be external predictors, lagged values, etc
+- Regret of a procedure $\mathcal{A}$ given by $\underset{\{y_{t+1}\}_{t=1}^{T}\in\otimes_{t=1}^{T}\mathrm{Y}}{\max}\mathbf{E}\left\{\sum_{t=1}^{T}\ell(y_{t+1},f_t(.))-\underset{\theta\in\Theta}{\min}\sum_{t=1}^{T}\ell(y_{t+1},z_t^\prime\beta)\right\}$
+- Goal is to perform as well as best regression model in hindsight
+
+## Algorithms
+
+- What kind of algorithms will produce a low regret in a particular problem?
+- Ideally, we would find method that solves **minimax regret** problem $\underset{\mathcal{A}}{\min}Reg_{T}(\mathcal{A})$
+- Minimizes over all possible sequences of prediction rules the maximum over all sequences the loss relative to the best sequence-specific benchmark
+    - This is insanely hard computationally and nobody ever does it
+- Instead, introduce some popular simple methods and show that they perform reasonably
+- Method may be **proper**: choosing an element of the comparison set $f_t\in\mathcal{F}_t$ each time
+    - E.g. prediction must be same as that of a particular expert, or must be linear
+    - If randomized, may choose a random element of $\mathcal{F}_t$
+- Or it may be **improper**: $f_t\notin\mathcal{F}_t$  
+    - Using advice of all experts, combine in some way which is not the same as any particular expert
+    - Use possibly nonlinear function, and compare to best linear function
+- Will explore examples of both types
+    - Improper setting, which is less restricted, often yields stronger results, but properness sometimes a genuine restriction
+    
+## Realizable Case
+
+- Some especially simple problems are **realizable**: the best possible predictor is in the comparison set $\mathcal{F}_t$
+    - $\underset{\theta\in\Theta}{\min}\sum_{t=1}^{T}\ell(y_{t+1},f_{t,\theta})=0$
+    - Regret minimization then equivalent to minimax case
+- Not realistic outside of settings where goal is to ascertain some unambiguous matter of fact
+    - But useful to show how analysis works
+- In expert advice setting, corresponds to $M^*=0$: at least one expert knows the true sequence
+    - Goal is to find this expert as quickly with as few mistakes as possible
+- A possible algorithm to use here, with good properties, is **Majority Vote**
+    - Give each expert an initial weight $w_{i,1}=1$, then at each t, do as follows:
+    - Choose 1 if $\sum_{i=1}^{n}w_{i,t}1\{\widehat{y}_{i,t+1}=1\}>\sum_{i=1}^{n}w_{i,t}1\{\widehat{y}_{i,t+1}=0\}$, 0 otherwise
+        - Vote with majority of experts
+    - After $y_{t+1}$ realized, set weight of any expert $i$ which made a mistake to 0
+- If we know best rule is exact, can ignore any rule as soon as it makes a mistake 
+
+## Analysis of Majority Vote
+
+- Let $W_t=\sum_{i=1}^{n}w_{i,t}$ be the number of remaining experts after $t$ steps
+- If in period $t$ a mistake is made, more than half of experts must have been wrong, so $W_{t+1}\leq\frac{W_t}{2}$
+- If $M$ is total number of mistakes over $T$ rounds then $W_{T+1}\leq n 2^{-M}$
+- Further $W_{T+1}\geq 1$, since by realizability, at least one expert doesn't make mistakes
+- Rearranging $n 2^{-M}\geq 1$, $M\leq \log_{2}n$
+    - Regret satisfies bound $reg_{T}(\mathcal{A})\leq\log_{2}n$
+- Average regret $\leq\frac{\log_{2}n}{T}$ goes to 0 as long as $n$ not exponential in $T$
+    - Can deal with very large number of wrong predictors and still make few mistakes
+- In general, and certainly for a proper algorithm, vanishing *average regret* is best that can be hoped for    
+- Compare method with *minority vote*: among those that haven't made a mistake, choose smallest group
+    - Could remove as few as 1 expert per mistake, leading to up to $n-1$ mistakes in worst case
+  
+## Non-realizable Case
+
+- Outside of realizable case, problem much harder
+- Suppose expert set contains i,j s.t. $f_{i,t}=0$ $\forall t$ and $f_{j,t}=1$ $\forall t$
+- Take any algorithm depending only on past data to pick outcome $\widehat{y}_{t+1}$
+    - Then sequence which always picks $y_{t+1}=1-\widehat{y}_{t+1}$ is possible, giving $T$ mistakes
+- Further, this sequence either has $\leq\frac{1}{2}$ 1s or $\leq\frac{1}{2}$ 0s
+    - So either $i$ or $j$ has loss $\leq\frac{T}{2}$, respectively
+- Regret is $\geq T-\frac{T}{2}=\frac{T}{2}$: allowing comparators does not make the worst case that much better
+- But, randomized algorithms can do fine in terms of *expected regret*
+    - Let $p_{i,t}$ be probability of choosing expert $i$ in round $t$
+    - Then Expected regret is $\sum_{t=1}^{T}\sum_{i=1}^{n}p_{i,t}|y_{t+1}-\widehat{y}_{i,t+1}|-\underset{i}{\min}\sum_{t=1}^{T}|y_{t+1}-\widehat{y}_{i,t+1}|$
+
+## Randomized Weighted Majority
+
+- Simple changes to Majority Vote lead to low expected regret in non-realizable case
+- Sample with probability proportional to weight
+    - $p_{i,t}=\frac{w_{i,t}}{\sum_{i=1}^{n}w_{i,t}}$
+- Since even best expert may make mistakes, don't discard completely
+    - Instead, if expert $i$ makes mistake, set $w_{i,t+1}=(1-\epsilon)w_{i,t}$
+- Analysis (cf Hazan 2015) similar to majority vote: let $M(i)$ be # of mistakes of expert $i$
+    - $W_T=\sum_{i=1}^{n}w_{i,T}$ has lower bound of $(1-\epsilon)^{M(i)}$
+    - Can show upper bound of $n\exp(-\epsilon\mathbf{E}M)$ in terms of total mistakes
+- Results imply regret $\mathbf{E}M-\underset{i}{\min}M(i)\leq \epsilon T +\frac{\log n}{\epsilon}$
+- Choosing $\epsilon=\sqrt{\frac{\log n}{T}}$, upper bound is $2\sqrt{T\log n}$
+- Method has average expected regret $\leq \frac{2\sqrt{\log N}}{\sqrt{T}}$
+    - Goes to 0 with $T$, and depends only weakly on number of experts
+
+## Claude Shannon's Mind-Reading Machine
+
+- A simple example of online binary prediction: a machine that predicts user's next choice, left or right
+    - If machine guesses right, it gets a point, if wrong, user gets a point
+    - Goal is to build machine that can win every time
+- In principle, user could guarantee $\frac{T}{2}$ points and a tie just by random guessing
+- In practice, humans are really bad at randomness without tools like coins, dice, computers
+- With online algorithm, can build machine that usually wins, as Claude Shannon did at Bell labs in 1950s 
+
+![Mind-reading machine, MIT museum, ](Figures/mindreading.jpeg) 
+[Photo: Poundstone (2014)](http://william-poundstone.com/blog/2015/7/30/how-i-beat-the-mind-reading-machine)
+
+
+## Hedge
+
+- Binary case can be generalized to experts making any kind of prediction, with arbitrary non-negative loss function
+    - Any output: discrete, scalar, vector, etc, all permitted
+    - Sufficient that $\ell^2(.,.)\leq B$: bounded loss, eg due to bounded outcomes
+- **Hedge** algorithm takes in $n$ experts, with initial weights $w_{i,0}=1$ 
+- Predict $y_{t+1}$ using expert $i$ forecast $\widehat{y}_{i,t+1}$ with probability $p_{i,t}=\frac{w_{i,t}}{\sum_{i=1}^nw_{i,t}}$
+- Observe losses $\ell_{i,t}=\ell(y_{t+1},\widehat{y}_{i,t+1})$ for each expert
+- Update weights to $w_{i,t+1}=w_{i,t}\exp(-\epsilon\ell_{i,t})$ and repeat for next forecast
+- Analysis shows expected regret bounded by $\epsilon\sum_{t=1}^{T}\sum_{i=1}^{n}p_{i,t}\ell^2_{i,t} +\frac{\log n}{\epsilon}$
+- Choosing $\epsilon=\sqrt{\frac{\log n}{BT}}$, upper bound is $2\sqrt{B T\log n}$
+- Regret grows sublinearly in $T$, depends weakly on number of experts
+
+## Hedge: Applications
+
+- Hedge provides alternative approach to model selection
+- Can use for hyperparameter choice like AIC/BIC/Cross-validation etc
+- Allows combining input of large set of models of diverse types
+    - Choice depends on past performance only, not model structure
+    - Inputs can be simple or complicated, or even based on human judgment
+    - Can't use AIC to compare VAR, random forest, and a CNBC pundit
+- Does not require stationarity or correct specification or existence of a probability distribution over outcomes
+    - Does require boundedness: useful for outcomes with known range
+- Guarantees performance near best in class on realized outcomes
+    - Contrast oracle guarantees: performance near best in class for **risk**
+- Rapidly (exponentially fast) downweights bad models, maintains weights on those with good performance
+- Essentially random near start of run: good performance coming from middle-to-end
+    - This is typical feature of online algorithms
+    - Choice of update speed $\epsilon$ depends on horizon $T$
+
+## General Purpose Methods: Online Convex Optimization
+
+- Can we move beyond case of finite comparison class of "experts" to methods that apply to more general variable structures and comparison classes?
+- One large class of problems where this is feasible are **online convex optimization** problems
+- If realized loss functions $\ell(y_{t+1},.)$ are **convex** in $f_t(.)$, there are general purpose methods with strong regret guarantees
+- Convexity means $\ell(y_{t+1},ax+(1-a)z)\leq a\ell(y_{t+1},x)+(1-a)\ell(y_{t+1},z)$ for any $a\in[0,1]$
+    - Bowl shaped functions
+    - Contains quadratic loss, absolute value loss, linear loss, etc
+    - Does not contain discrete case: randomization needed to make loss linear
+- Hedge and online regression with convex $\ell$ are special cases of this setup    
+- Next class: general algorithms and conditions
+    - Preview: Look a lot like (regularized) ERM
+
+## Conclusions
+
+- Online learning methods provide principled way to evaluate and implement stream of iteratively updated predictions
+- Regret based analyses ensure robustness against arbitrary sequences, relative to a set of comparison models
+    - An algorithm that produces low total expected regret over time can be trusted to have adequate performance regardless of what kind of new data comes in
+- For finite model sets, a useful class of procedures puts weights on the models based on past performance, then chooses randomly based on weights  
+    - Hedge algorithm takes many models or experts as inputs, outputs low expected regret sequence of predictions
+    - Randomization critical, as without it worst case regret is linear in $T$
+
+
+## References
+
+- Elad Hazan *Introduction to Online Convex Optimization* Foundations and Trends in Optimization, vol. 2, no. 3-4 (2015) 157–325.
+    - Textbook on online learning, from an optimization theory perspective
+- John Maynard Keynes *The General Theory of Employment, Interest, and Money* (1936)
+    - Aside from introducing whole framework of 20th century macroeconomics, insightful chapters on investor psychology
+- Shai Shalev-Shwartz *Online Learning and Online Convex Optimization*  Foundations and Trends in Machine Learning
+Vol. 4, No. 2 (2011) 107–194  
+    - Shorter intro to online learning

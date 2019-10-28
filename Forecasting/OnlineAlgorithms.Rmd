@@ -1,0 +1,361 @@
+---
+title: "Online Learning - Algorithms"
+author: "73-423 Forecasting for Economics and Business"
+output:
+  html_document:
+    code_folding: hide
+---
+
+
+## Outline
+
+- Online Learning Review 
+- Follow The Leader
+- Follow the Regularized Leader
+    - Online Gradient Descent
+    - Exponntial Weights
+    - Extensions
+- Applications
+    - Electricity Forecasts
+    - Ad Click Prediction
+
+
+## Online Learning: Review
+
+- Goal of online learning is to produce *sequence* of forecasts with low *regret*
+- Each round use past data $\mathcal{Y}_t=\{y_s\}_{s=1}^{t}\in \otimes_{s=1}^{t} \mathrm{Y}$
+- Apply **algorithm** $\mathcal{A}$: sequence of decision rules $\{\widehat{y}_{t+1}=f_t(\mathcal{Y}_t)\}_{t=1}^{T}$
+- Given a **comparison class** $\mathcal{F}_t=\{f_{t,\theta}(): \otimes_{s=1}^{t}\mathrm{Y}\to\mathrm{Y}:\ \theta\in\Theta\}$
+- Want to minimize $reg_{T}(\mathcal{A})=\underset{\{y_{t+1}\}_{t=1}^{T}\in\otimes_{t=1}^{T}\mathrm{Y}}{\max}\left\{\sum_{t=1}^{T}\ell(y_{t+1},f_t(.))-\underset{\theta\in\Theta}{\min}\sum_{t=1}^{T}\ell(y_{t+1},f_{\theta,t}(.))\right\}$
+- Last class: Prediction With Expert Advice: $\mathrm{Y}=\{0,1\}$, $\Theta$ finite, $\ell()=1\{y_{t+1}\neq\widehat{y}_{t+1}\}$
+    - Saw algorithms (Majority Vote, Hedge) which produce low regret in this setting
+
+
+## General Purpose Algorithms
+
+- In statistical setting, had "generic" methods which take predictor class, loss function and produce a low risk forecast
+    - Empirical/Structural Risk Minimization often suffices to achieve near-optimal risk
+    - Requires some conditions (stationarity, weak dependence, low complexity)
+- For Bayesian setting, similarly had method that, given likelihood and prior, produces a low average risk forecast
+    - Bayesian updating and posterior predictive distribution
+- Is there a similar general purpose procedure that we can use in online learning setting?
+    - Will again require some conditions, and some choices which aren't automatic
+    - Given a loss function and comparison class with certain properties, there is a useful class of methods
+- Restricted but highly flexible case: **Online Convex Optimization** (see e.g. Hazan 2015)
+    - Ensures simple methods have strong guarantees
+    
+## Online Convex Optimization Setting 
+
+- Detour from forecasting problem to slightly more general setup
+    - Forecasting problem can be shown to be a special case
+- Instead of sequence of observations $y_{t+1}$, face sequence of **convex functions** $g_t(x)\in\mathcal{G}$
+    - Convexity means $g_t(ax+(1-a)x^{\prime})\leq ag_t(x)+(1-a)g_t(x^\prime)$ for any $a\in[0,1]$
+- Each round, before $g_t()$ is known, choose $x_t$ from a set $\mathcal{K}$
+- $\mathcal{K}$ is a **convex** set: if $x,x^{\prime}\in\mathcal{K}$, then $ax+(1-a)x^{\prime}\in\mathcal{K}$ for any $a\in[0,1]$
+- Goal is to minimize regret $\underset{g_1\ldots g_{T}\in\mathcal{G}}{\max}(\sum_{t=1}^{T}g_t(x_t)-\underset{x\in\mathcal{K}}{\min}\sum_{t=1}^{T}g_t(x))$
+- If function $g_t$ is the same each round, this is **convex optimization** setting
+    - Goal is to find sequence of values which gets to the bottom of a bowl shaped function
+    - Convexity of $g()$ and $\mathcal{K}$ means that going downwards always gets to the unique lowest possible value
+- In online setting, same principle applies, but now function can change arbitrarily each period   
+  
+
+<!-- - Realized loss functions $\ell(y_{t+1},.)$ are **convex** in $f_t(.)$ -->
+<!-- - Convexity means $\ell(y_{t+1},ax+(1-a)z)\leq a\ell(y_{t+1},x)+(1-a)\ell(y_{t+1},z)$ for any $a\in[0,1]$ -->
+<!--     - "Bowl shaped" functions: e.g. quadratic loss, absolute value loss, linear loss, etc -->
+<!--     - Does not contain discrete case: randomization needed to make loss linear -->
+<!-- -  Further, set $\mathcal{F}_t$ is a **convex set**  -->
+
+<!-- (Should I use standard notation here and then convert? I think it might be simpler to match book. Maybe don't use $f_t$ for new function each round, since that's forecast. Call it $g_t$) -->
+
+## Examples
+
+- In forecasting applications, $g_t()$ is the loss function each round, and $\mathcal{K}$ defines space $\mathcal{F}_t$ of prediction rules
+- Online Regression: $\mathcal{K}=\{\beta\in\mathbb{R}^{n}:\ \Vert\beta\Vert\leq C\}$, $g_t(\beta_t)=\ell(y_{t+1},\sum_{i=1}^{n}z_{i,t+1}\beta_{i,t})$
+    - Convexity holds so long as $\ell(.,.)$ convex in second argument: square loss, absolute loss, linear loss, etc
+- Other predictor classes may fail to be convex: e.g., general nonlinear functions $f(z_t,\theta)$
+    - Can allow nonlinearities in predictors $(z_t,z_t^2,z_t^3,\ldots)$, but not usually in parameters
+- Prediction with Expert Advice/Hedge
+    - Setting with deterministic choices is *not* convex, but setting with probabilitic strategies is
+    - $\mathcal{K}=\{p\in\mathbb{R}^{n}:\ \sum_{i=1}^{n}p_i=1,p_i\geq 0\}$ $g_t(p)=\sum_{i=1}^{n}p_{i,t}\ell(y_{t+1},\widehat{y}_{i,t+1})$
+- Improper version: allow weighted average of expert predictions $\{\widehat{y}_{i}\}_{i=1}^{n}$
+     - $\mathcal{K}=\{p\in\mathbb{R}^{n}:\ \sum_{i=1}^{n}p_i=1,p_i\geq 0\}$ $g_t(p)=\ell(y_{t+1},\sum_{i=1}^{n}p_{i,t}\widehat{y}_{i,t+1})$
+     - Assume $\ell(.,.)$ convex in second argument and bounded
+     - Rather than picking one expert at random, take combination of all experts
+
+## Follow The Leader
+
+- Goal is to produce low cumulative value $\sum_{s=1}^{t}g_s(x_s)$ relative to best in class $\mathcal{K}$ in hindsight
+- Why not pick the value $x_t$ which has performed best so far?
+- For each $t$, **Follow the Leader** algorithm chooses $x_{t}=\underset{x\in\mathcal{K}}{\arg\min}\sum_{s=1}^{t-1}g_s(x)$
+- In forecast setting, $\widehat{\theta}_{t}=\underset{\theta\in\Theta}{\arg\min}\sum_{s=1}^{t-1}\ell(y_{s+1},f_{s,\theta}(.))$
+    - Then predict $f^{FTL}_{t}(.)=f_{t,\widehat{\theta}_t}(.)$ each round
+- Exactly equivalent to running Empirical Risk Minimization over class $\mathcal{F}_t$ each period
+    - This is what you would do in statistical approach, except repeated over and over
+- So, does it work? Can we just do what we were already doing and get good results in new setting?
+- In general, **no**
+    - For general convex loss functions, regret can grow linearly in $T$
+    - Means predictor strictly suboptimal every round, no matter how much data you have
+- But, in some special cases, **yes**
+    - Return to this after discussing what's wrong and how to fix it
+
+## Worst Case Behavior of Follow The Leader 
+
+- Consider case with linear loss $g_t(x)=g_tx$, $x\in[-1,1]$
+    - Convexity clearly holds because linear combination of linear functions is linear
+- Consider following sequence of $g_t$ values
+    - $g_1=-0.5$, then
+    - $g_t=1$ if $t$ even
+    - $g_t=-1$ if $t>1$ odd
+- For odd $t$, FTL chooses $x_t=\underset{x\in[-1,1]}{\arg\min}\ 0.5x$, which is $-1$
+- For even $t$, FTL chooses $x_t=\underset{x\in[-1,1]}{\arg\min}-0.5x$, which is $1$
+- Loss of FTL therefore $\propto T$, while loss of best fixed alternative in hindsight, $x=0$, is 0
+- Regret of algorithm is $\propto T$: average regret is constant: no matter how much data, predictions don't improve
+- Does badly because predictions can be **unstable**: move a lot between guesses
+- At least in this case, suggests looking for algorithms which don't move so much
+
+
+## Follow the Regularized Leader    
+
+- To avoid instability, modify approach to reduce variability of predictions
+    - Exactly the purpose of **regularization**
+- Let $R(x):\ \mathcal{K}\to\mathbb{R}^{+}$ be a convex function, a **regularizer**
+    - Example 1: Euclidean Regularizer $R(x)=\frac{1}{2}\Vert x\Vert^2$ over $\mathcal{K}\subseteq\mathbb{R}^n$
+    - Example 2: Entropic Regularizer $R(x)=\sum_{i=1}^{n}x_i\log x_i$ over $\mathcal{K}=\{x\in\mathbb{R}^{n}:\ \sum_{i=1}^{n}x_i=1,x_i\geq 0\}$
+- For each $t$, **Follow the Regularized Leader** algorithm chooses $x_{t}=\underset{x\in\mathcal{K}}{\arg\min}(\sum_{s=1}^{t-1}g_s(x)+\frac{1}{\eta}R(x))$
+    - Shortened to **FTRL**, **FoReL** or **RFTL** (for "Regularized Follow the Leader")
+    - Parameter $\eta>0$ determines strength of the regularization: large values closer to FTL, small values closer to minimizing $R$
+- In forecast setting, $\widehat{\theta}_{t}=\underset{\theta\in\Theta}{\arg\min}(\sum_{s=1}^{t-1}\ell(y_{s+1},f_{s,\theta}(.))+R(\theta))$
+    - Then predict $f^{FTRL}_{t}(.)=f_{t,\widehat{\theta}_t}(.)$ each round
+- Corresponds exactly to running *Penalized Empirical Risk Minimization* each round
+- With appropriate choice of $\eta$ and a few conditions, can guarantee low regret
+
+## FTRL Example 1: Online Linear Optimization
+
+- Let's go back to linear case that gave trouble to FTL algorithm, now in $\mathbb{R}^{n}$
+- Let $g_t(x_t)=\sum_{i=1}^ng_{i,t}x_{i,t}$ and use *Euclidean/quadratic regularizer* $R(x_t)=\frac{1}{2}\sum_{i=1}^n x_{i,t}^2$
+- FTRL update step is $x_{t}=\underset{x\in\mathcal{K}}{\arg\min}(\sum_{s=1}^{t-1}\sum_{i=1}^ng_{i,s}x_{i}+\frac{1}{2\eta}\sum_{i=1}^n x_{i}^2)$
+- If constraint that $x_t\in\mathcal{K}$ not binding (eg if $\mathcal{K}=\mathbb{R}^n$, or we allow improper choices), solution of this problem gives
+    - $x_1=0$, $x_{t+1}=-\eta\sum_{s=1}^{t}g_s=x_{t}-\eta g_t$ for any $t>1$
+    - Update in direction of latest linear direction, by an amount $\eta$
+- With sufficiently small choice of $\eta$, fluctuations are damped relative to unregularized case
+    - $\eta\approx \frac{1}{\sqrt{T}}$ gives regret $\approx\sqrt{T}$ against bad sequence from before
+- In fact, can show regret bound of $\sqrt{2T}$ holds against *any* sequence of $g_t\in[-1,1]$ if $\mathcal{K}=[-1,1]$
+    - Sublinear regret can achieved $\to$ average regret goes to 0
+
+
+## Linearization Trick
+
+- Previous method presented for linear loss, a single special case
+- In fact, linear case is entirely general: same algorithm applies
+- The trick is to replace $g_t(x_t)$ with a linear approximation which provides upper bound on regret
+<!-- - If $g_t()$ differentiable, replace $g_t(x_t)$ with $\sum_{i=1}^{n}\nabla_i g_tx_{i,t}$ -->
+- If $g_t$ and $\mathcal{K}$ convex, any **subgradient** provides a lower bound on the function
+    - $\partial g(x)=\{z\in\mathbb{R}^{n}:\forall u\in\mathcal{K}, g(u)\geq g(x)+\sum_{i=1}^{n}(u_i-x_i)z_i\}$
+    - If $g_t$ also differentiable, unique subgradient is the gradient $\nabla g_t(x)$
+- Rearranging, $g_t(x_t)-g_t(u)\leq \sum_{i=1}^{n}(x_{i,t}-u_{i})z_{i,t}$ $\forall u\in\mathcal{K}$
+- Summing up $\sum_{t=1}^{T}g_t(x_t)-\sum_{t=1}^{T}g_t(u)\leq \sum_{t=1}^{T}\sum_{i=1}^{n}x_{i,t}z_{i,t}-\sum_{t=1}^{T}\sum_{i=1}^{n}u_{i}z_{i,t})$
+- In words, this says regret of an online convex optimization problem is less than regret of corresponding online **linear** optimization problem
+- So special case suffices: just use (sub)gradient and solve linear problem
+
+## Example Continued: Online Gradient Descent
+
+- Algorithm which takes (sub)gradient of $g_t(x_t)$ and runs online linear optimization with quadratic penalty is called **Online Gradient Descent** (OGD)
+- Starting with $x_1=0$, each round suffer loss $g_t(x_t)$, and calculate subgradient $\nabla g_t(x_t)\in\partial g_t(x_t)$
+    - Then predict $x_{t+1}=\underset{x}{\arg\min}(\sum_{s=1}^{t}\sum_{i=1}^{n}\nabla g_{i,t}x_{it}+\frac{1}{2\eta}\sum_{i=1}^{n}x_{i,t}^2)$
+- Update step simplifies to $x_{t+1}=x_t-\eta\nabla g_{t}$
+    - This is exactly gradient descent algorithm used for optimization
+- Regret guarantee (cf Shalev-Shwartz Cor. 2.7): suppose $\underset{t}{\max}\Vert\nabla g_{t}\Vert^2\leq L$ and $\mathcal{K}\subseteq\{x\in\mathbb{R}^{n}:\ \Vert x\Vert\leq B\}$ 
+    - Bound on subgradients is a smoothness condition, bound on $\mathcal{K}$ restricts comparison class
+    - Result: if $\eta=\frac{B}{L^2\sqrt{2T}}$, obtain $Reg_{T}(OGD)\leq BL^2\sqrt{2T}$
+- Application: Online Regression: Consider $g(\beta_t)=\ell(y_{t+1},z_{t+1}^{\prime}\beta_t)$
+    - Corresponds to $L_2$ penalized regression each period
+    - Update rule is $\beta_1=0$, $\beta_{t+1}=\beta_t-\eta \frac{d}{d\widehat{y}}\ell(y_{t+1},z_{t+1}^{\prime}\beta)z_t$
+    - If $z_{t+1}$ bounded, subgradient bound holds for absolute loss or logistic regression 
+        - Not for square loss: needs another approach
+
+## FTRL Example 2: Exponential Weights Methods
+
+- For cases where decision is a probability distribution, prefer method which stays in space of distributions
+    - $\mathcal{K}=\{x\in\mathbb{R}^{n}:\ \sum_{i=1}^{n}x_i=1,x_i\geq 0\}$ is probability simplex
+    - Can stay in $\mathcal{K}$ using **entropic penalization**: $R(x)=\sum_{i=1}^{n}x_{i}\log x_i$
+- FTRL with linear loss and Entropic Penalty gives a distribution over predictions
+    - $x_{t}=\underset{x\in\mathcal{K}}{\arg\min}(\sum_{s=1}^{t}\sum_{i=1}^{n}g_{i,s}x_{i}+\frac{1}{\eta}\sum_{i=1}^{n}x_{i}\log x_i)$
+- With some clever algebra, can show form of update is $x_{i,t+1}=\frac{x_{i,t}e^{-\eta g_{i,t}}}{\sum_{j=1}^{n}x_{j,t}e^{-\eta g_{j,t}}}$ for any $i=1\ldots n$
+    - This is exactly **Hedge** algorithm: update probability of choice $i$ in proportion to exponentiated time $t$ loss
+- Apply linearization trick for nonlinear objectives: replace $g_{i,t}$ with (sub)gradient $\nabla g_{i,t}$
+    - Algorithm called (Normalized) **Exponentiated Gradient**
+- If $\underset{i,t}{\max}|\nabla g_{i,t}|\leq G$ and $\eta=\sqrt{\frac{\log n}{2TG^2}}$ regret bound (cf Hazan cor. 5.5)
+    - $Reg_{T}\leq 2G\sqrt{2T\log n}$: sublinear, logarithmic dependence on number of experts
+- Application: weighted averages, $g_t():=\ell(y_{t+1},\sum_{i=1}^{n}p_{i,t}\widehat{y}_{i,t+1})$
+    - $\nabla g_{i,t}=\frac{\partial}{d\widehat{y}_{t+1}}\ell(y_{t+1},\sum_{i=1}^{n}p_{i,t}\widehat{y}_{i,t+1})y_{i,t+1}$
+    - Exponentiated gradient method provides combination of any set of predictions with bounded prediction, smooth loss
+    
+
+## General Results (Shalev-Shwartz Thm 2.11/Hazan Thm 5.1)
+
+- Under boundedness and smoothness, with proper choice of $\eta$, two special cases of FTRL produce regret $\leq C\sqrt{T}$ 
+- Is this a general phenomenon? Yes, under some conditions
+    - Regularizer $R(x)$ is **strongly convex**: $R(x)$ bounded *below* by quadratic function of $\sigma\Vert x \Vert^2$ for some norm
+    - Losses are **smooth** (Lipschitz) $\Vert\nabla g_t(x)\Vert\leq L<\infty$ in same norm
+    - Set $\mathcal{K}$ is **bounded** $\underset{x\in\mathcal{K}}{\max}(R(x)-\underset{u\in\mathcal{K}}{\min}R(u))=B<\infty$  
+- Then FTRL with $\eta=\frac{B}{L^2\sqrt{2T}}$ has regret $\leq BL^2\sqrt{2T}$ 
+- So, if objective convex, you can find effective regularizer, and model is smooth, FTRL has low regret
+    - Rules out many problems where domain completely unrestricted
+        - E.g., in financial forecasting, one day's losses may wipe out years of gains
+        - Huge $B$ makes bounds useless 
+    - Regret primarily meaningful if comparison class likely to perform well
+        - Trade off low regret vs good performance of comparison class
+- For this class of problems, FTRL is general-purpose method, in same way ERM/SRM is in statistical case 
+
+## Revisiting Follow the Leader
+
+- Given good performance of FTRL, bad worst case for Follow the Leader, should we *always* be penalizing?
+- In some cases, Follow the Leader does have strong guarantees
+    - If $g_t(x_t)$ $\sigma$-**strongly convex**, FTL can perform as well or better than FTRL
+- Intuition: By linearization, $\sum_{s=1}^{t}g_s(x_t)-g_s(u)=\sum_{s=1}^{t}\nabla g_s^{\prime}(x_s-u)+\sum_{s=1}^{t}(g_s(x_s)-\nabla g_s^{\prime}(x_s-u))$
+    - Nonlinear strictly convex part acts like regularizer to linear part
+    - So unpenalized method equivalent to (some kind of) penalized method 
+- Knowing that $g_t(x_t)$ strongly convex can also buy improved regret bounds
+    - May obtain $Reg_{T}\propto \log (T)$ instead of $\sqrt{T}$
+    - Very substantial accuracy improvement in terms of amount of data needed
+- For Online Gradient Descent with strictly convex $g_t()$, can run $x_{t+1}=x_{t}-\eta_{t}\nabla_t g_t$
+    - If $\eta_t=\frac{1}{\sigma t}$, and $\Vert \nabla g_t \Vert \leq G$, regret bound is $\frac{G^2}{2\sigma}(1+\log T)$
+    - Bound $\infty$ in non-strong case $\sigma=0$
+    - But if **known** to be strong, can take bigger steps at start, smaller ones at end
+- Cases with strong convexity, like many online regression problems, can go faster than linear problems like Hedge    
+
+## Extensions and Adaptivity
+
+- In practice, hard part of implementation is choosing scaling parameter $\eta$
+- Need to know *time frame* $T$, *bounds* $B$, and *smoothness level* $L$
+- Usual tricks, like cross-validation, not usually possible in an online setting 
+- This has led to variety of modified algorithms which choose $\eta$ **adaptively**
+    - Penalization level depends on data, and may change at each $t$
+- If time frame not known, simple approach is **doubling trick**   
+    - Start as if $T_0$ fixed, then restart when reached and set $T_{k+1}=2T_{k}$
+- Can also use continuously-updated penalties, e.g. $\eta_t=\frac{1}{\sqrt{t}}$    
+- If smoothness not known, popular method is **Adagrad**
+    - Change Online Gradient Descent update to $x_{i,t+1}=x_{i,t}-\frac{\eta}{\sqrt{\sum_{s=1}^{t}\nabla g_{i,s}^2}}\nabla g_{i,t}$
+    - Updates slower for big gradients, smaller for large ones
+- For online gradient descent, can enforce choices in $\mathcal{K}$: called "Projected Online Gradient Descent"
+    - After each update, move to closest point in $\mathcal{K}$ to $x_{t+1}$ after each gradient step    
+
+```{r,message=FALSE,warning=FALSE}
+library(opera) #Library for online learning
+library(mgcv) #Library for additive models: used as part of the expert forecasts
+library(caret) #Library for several machine learning tasks: used as part of the expert forecasts
+
+set.seed(1) #Ensure randomness always identical (only shows up in GBM model)
+
+data(electric_load)
+idx_data_test <- 620:nrow(electric_load)
+data_train <- electric_load[-idx_data_test, ] 
+data_test <- electric_load[idx_data_test, ]  
+
+#Expert 1: A Generalized Additive Model, in Several Predictors
+gam.fit <- gam(Load ~ s(IPI) + s(Temp) + s(Time, k=3) + 
+                s(Load1) + as.factor(NumWeek), data = data_train)
+gam.fcst <- predict(gam.fit, newdata = data_test)
+
+#Expert 2: "medium term model", which adds autoregression component on residuals of an additive model
+medium.fit <- gam(Load ~ s(Time,k=3) + s(NumWeek) + s(Temp) + s(IPI), data = data_train)
+electric_load$Medium <- c(predict(medium.fit), predict(medium.fit, newdata = data_test))
+electric_load$Residuals <- electric_load$Load - electric_load$Medium
+
+# autoregressive correction
+ar.fcst <- numeric(length(idx_data_test))
+for (i in seq(idx_data_test)) {
+  ar.fit <- ar(electric_load$Residuals[1:(idx_data_test[i] - 1)])
+  ar.fcst[i] <- as.numeric(predict(ar.fit)$pred) + electric_load$Medium[idx_data_test[i]]
+}
+
+# Expert 3: A Gradient Boosting model (a machine learning thing based on trees) 
+capture.output(gbm.fit <- train(Load ~ IPI + IPI_CVS + Temp + Temp1 + Time + Load1 + NumWeek, 
+                  data = data_train, method = "gbm"),file="/dev/null")
+#capture.output is used to prevent command from spewing hundreds of lines of text
+gbm.fcst <- predict(gbm.fit, newdata = data_test)
+
+
+# Combine expert forecasts into sequences X along with observed outcomes Y
+Y <- data_test$Load
+X <- cbind(gam.fcst, ar.fcst, gbm.fcst)
+
+#Find loss of best expert ex post, according to absolute loss, and compare individual experts
+oracle.expert<-oracle(Y = Y, experts = X, loss.type = "absolute", model = "expert")
+
+params<-list(alpha=0.5,simplex=TRUE) # Code uses \eta=t^_{\alpha}, and projects to simplex
+#Select weighting of experts by projected online gradient descent
+ogdexperts<- mixture(Y=Y, experts=X, model = "OGD", loss.type = "absolute",parameters = params)
+
+param2<-list(eta=0.5)
+#Select weighting of experts by exponentially weighted average
+exponentialexperts<- mixture(Y=Y, experts=X, model = "EWA", loss.type = "absolute",parameters = param2)
+```    
+
+## Application: Electricity Forecasting    
+
+- Several prediction with expert advice algorithms implemented in R in library `opera`
+- Toy example: predict weekly electricity consumption
+    - Task important for power companies, which must buy and sell excess production on interchange markets
+- Train 3 complicated statistical/machine learning models on training set, then every week use their forecasts with incoming predictors (tempurature, season, etc) to predict that week's usage
+    - Label as gam.fcst, ar.fcst, and gbm.fcst
+- Best expert of 3 ex post, by absolute loss over 112 weeks, is gam.fcst with loss of `r oracle.expert$loss`
+- Predict online using weighted average of 3 experts, by exponential weights and projected Online Gradient Descent
+    - Let $\eta=0.5$ for exponential weights, and $\eta_t=t^{-0.5}$ for OGD
+- Results: Exponential weights achieves regret `r exponentialexperts$loss-oracle.expert$loss`, and OGD regret `r ogdexperts$loss-oracle.expert$loss`
+    - Both perform nearly as well as best expert ex post, even though not known ex ante
+
+## Projected Online Gradient Descent Results
+
+```{r,message=FALSE,warning=FALSE}
+#Plot results
+plot(ogdexperts)
+```
+
+## Exponential Weights Results
+
+```{r,message=FALSE,warning=FALSE}
+#Plot results
+plot(exponentialexperts)
+```
+
+## Application: Ad-Click Prediction at Google
+
+- Google implemented system to forecast probability of clicking on ads (McMahan et al 2013)
+- Want system to automatically give new prediction for each ad, for each customer
+    - Apply online method to update continuously and automatically
+- Want to use ad and user-level attributes for prediction
+    - Apply features in online logistic regression $g_t(\beta_t)=-y_t\log(\frac{1}{1+\exp(-z_t^\prime\beta_t)})-(1-y_t)\log(\frac{\exp(-z_t^\prime\beta_t)}{1+\exp(-z_t^\prime\beta_t)})$
+- $T$ is in the billions *per day*, and $z_t$ has billions of dimensions
+    - Individual sites and each have own attributes (ie, each person's search history, etc)
+    - Need extreme speed and scale: use **sparse** prediction method, using only a few coefficients at a time
+- Approach: Linearized FTRL with particular choice of regularizer 
+    - $\beta_{t+1}=\underset{\beta}{\arg\min}(\sum_{s=1}^{t}\nabla g_s\beta+\sum_{s=1}^{t}\sigma_s\Vert\beta-\beta_s\Vert^2+\lambda_1\Vert \beta\Vert_1)$
+    - Uses regularizer depending on whole past sequence of $\beta_s$, plus L1 penalty
+    - Latter acts like Lasso penalty; former like Euclidean, but leads to more computationally efficient updates
+- Online methods also used at Yahoo, Microsoft, many other web companies
+    - [Vowpal Wabbit](https://github.com/VowpalWabbit/vowpal_wabbit/wiki) system implements fast methods for large-scale web applications
+    - Speed, flexibility, reliability provided by online learning approach
+
+
+## Conclusions
+
+- Online Learning posesses simple, reliable general purpose classes of algorithms
+- If objective is *convex* and *smooth*, and predictor sets are *bounded*, can rely on **Follow The Regularized Leader**
+    - Applies penalized risk minimization each period
+    - If penalty chosen to balance out these factors, regret $\propto \sqrt{T}$
+- Special Case: **Online Gradient Descent**: update parameters in direction of subgradient
+- Special case: **Exponential Weights**: update probabilities in proportion to exponent of loss
+- **Follow the Leader** (Empirical Risk Minimization each round) less universal, but can be very accurate in strongly convex case
+
+
+
+## References
+
+- Elad Hazan *Introduction to Online Convex Optimization* Foundations and Trends in Optimization, vol. 2, no. 3-4 (2015) 157–325.
+- Shai Shalev-Shwartz *Online Learning and Online Convex Optimization*  Foundations and Trends in Machine Learning
+Vol. 4, No. 2 (2011) 107–194  
+- H. Brendan McMahan et. al. *Ad Click Prediction: a View from the Trenches* KDD'13 (2013)
+    - Description of Google's online-learning system
+
+    

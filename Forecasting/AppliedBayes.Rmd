@@ -1,0 +1,423 @@
+---
+title: "Applying Bayesian Methods"
+author: "73-423 Forecasting for Economics and Business"
+output:
+  html_document:
+    code_folding: hide
+---
+
+## Outline
+
+- Review of Bayesian Theory
+- Posterior Computation Approach I: Large sample approximation
+    - MAP
+    - Laplace approximation
+- Posterior Computation Approach II: MCMC Sampling
+    - Probabilistic programming and Stan
+- Example: Beta-Bernoulli revisited
+    - Posterior, Forecasts, Evaluation
+- Example extended: Logistic regression
+
+## Review of Bayesian Approach
+
+- Bayesian approach to modeling data $\mathcal{Y}_{T+1}=\{y_t\}_{t=1}^{T+1}$
+    - Describe sequence by **likelihood**: family of distributions $\{p(\mathcal{Y}_{T+1},\theta):\ \theta\in\Theta\}$ 
+    - Describe beliefs about $\theta$ with **prior**: distribution $\pi(\theta)$ on $\Theta$
+- Bayesian Inference
+    - Given data $\mathcal{Y}_T$, update prior to obtain **posterior** $\pi(\theta|\mathcal{Y}_{T})$: *conditional* distribution of $\theta$ given $\mathcal{Y}_T$
+    - Posterior formula given by **Bayes Rule**
+$$\pi(\theta|\mathcal{Y}_{T})=\frac{p(\mathcal{Y}_{T},\theta)\pi(\theta)}{\int_{\Theta}p(\mathcal{Y}_{T},\theta)\pi(\theta)d\theta}$$
+- Bayesian Forecasting
+    - Use posterior and **conditional likelihood** $p(y_{T+1}|\mathcal{Y}_T,\theta)$ to produce **posterior predictive distribution**
+    - $p(y_{T+1}|\mathcal{Y}_{T})=\int_{\Theta}p(y_{T+1}|\mathcal{Y}_T,\theta)\pi(\theta|\mathcal{Y}_{T})d\theta$
+- Bayesian Decision Theory
+    - Want rule $f(\mathcal{Y}_T)$ minimizing **prior predictive risk** $R_{\pi}(f)=\int_{\Theta}\int_{\times_{t=1}^{T+1}\mathrm{Y}}\ell(y_{T+1},f(\mathcal{Y}_T))p(\mathcal{Y}_{T+1},\theta)d\mathcal{Y}_{T+1}\pi(\theta)d\theta$
+    - Achieve by minimizing **posterior predictive risk** $f^*(\mathcal{Y}_T)=\underset{\widehat{y}}{\arg\min}\int_{\mathrm{Y}} \ell(y_{T+1},\widehat{y})p(y_{T+1}|\mathcal{Y}_{T})dy_{T+1}$
+    
+## Applying the Bayesian Approach
+
+- Genuinely hard part of Bayesian forecasting: modeling
+    - Express features of situation and economic and measurement processes producing data through the likelihood
+    - Provide honest and well-calibrated assessment of uncertainty regarding these features through the prior
+    - Once you have these, previous slide has all formulas you will ever need
+- Compare statistical approach: pick rule class $\mathcal{F}$ and optimize
+    - Helpful to choose model class attuned to features of the data that help prediction
+    - But don't need full knowledge of probability model, and can still do well without it in relative sense
+    - Leads to "push-button" solutions
+- “*Bayesian inference is hard in the sense that thinking is hard.*” (cf [Berry, via Sims](http://sims.princeton.edu/yftp/EmetSoc607/AppliedBayes.pdf)) 
+- More prosaically, Bayesian inference is hard in the sense that integration is hard
+    - Posterior and prediction calculation means integrating over $\Theta$
+    - In all but the simplest models, there is no exact solution
+    - Need to resort to various sorts of approximations
+
+## Types of posterior calculations
+
+- Posterior $\pi(\theta|\mathcal{Y}_T)$ is **proportional to** $p(\mathcal{Y}_T,\theta)\pi(\theta)$, which is easy to calculate
+    - But constant of proportionality $\int_{\Theta}p(\mathcal{Y}_T,\theta)\pi(\theta)d\theta$ requires integration
+- Exact Integration
+    - Feasible if likelihood $p(\mathcal{Y}_{T+1},\theta)$ and prior $\pi(\theta)$ are **conjugate**: posterior in same family as prior
+    - Many useful cases: Bernoulli with Beta, Normal with Normal, etc
+    - If you can find a pair which is "close enough" to model you want, simple and fast
+- Large T approximations
+    - If likelihood stationary & weak dependent, and sample $T$ large, simple posterior approximations may work well
+        - MAP/Laplace/Bernstein-von Mises procedures
+    - Calculations reduce to optimization, end up looking a **lot** like ERM/SRM
+- Sampling (**Monte Carlo**) algorithms
+    - Algorithms can produce (stationary weak dependent sequence of) **samples** $\{\theta_j\}_{j=1}^J$ from $\pi(\theta|\mathcal{Y}_T)$
+    - Any integral over posterior can be approximated as $\frac{1}{J}\sum_{j=1}^{J} m(\theta_j)$ by LLN
+    - Algorithms slow and prone to bizarre failures, but applicable in many more cases (small T, unusual shape, etc)
+
+
+## Maximum a Posteriori (MAP) Estimate
+
+- While very hard to calculate full posterior, can learn certain features of it easily
+    - In particular, the **Posterior Mode**, or MAP estimate: value $\widehat{\theta}^{MAP}$ of $\theta$ with highest posterior probability
+- To extent that this is "most plausible single value", can use it for predictions
+    - $p(y_{T+1}|\mathcal{Y}_{T},\widehat{\theta}^{MAP})$ is "most plausible" single prediction model
+- Key to MAP (and other large sample Bayesian approximations) is that likelihoods *factorize* into conditional likelihoods
+    - $p(\mathcal{Y}_{T},\theta)=\Pi_{t=1}^{T}p(y_{t}|\mathcal{Y}_{t-1})$
+- Key trick: take log of posterior to turn product into sum
+- $\log p(\theta|\mathcal{Y}_T)=\sum_{t=1}^{T}\log p(y_{t}|\mathcal{Y}_{t-1},\theta)+\log\pi(\theta)-\log\int_{\theta} p(\mathcal{Y}_T,\theta)\pi(\theta)d\theta$
+- Note that proportionality factor $\log\int_{\theta} p(\mathcal{Y}_T,\theta)\pi(\theta)d\theta$ not a function of $\theta$
+- So to find the MAP estimate, can ignore it and maximize the other part
+$$\widehat{\theta}^{MAP}=\underset{\theta\in\Theta}{\arg\max}\left\{\sum_{t=1}^{T}\log p(y_{t}|\mathcal{Y}_{t-1},\theta)+\log\pi(\theta)\right\}$$
+
+
+## Application: Bayesian Regression Model
+
+- Consider regression model   
+    - For any $t=1\ldots T$, $y_{t}=\sum_{k=1}^p\beta_kz_{t,k}+e_{t}$, $e_{t}\overset{iid}{\sim}N(0,\sigma^2)$ 
+    - $Z_t$ can contain lags to get autoregression model, external predictors, etc
+- Prior distribution on $\beta$ is independent mean 0 normal distributions $\pi(\beta)\propto\Pi_{k=1}^{p}\exp(-\frac{\beta_k^2}{2\sigma_{\beta}^2})$  
+- Taking logs and ignoring constants, MAP estimate takes suspiciously familiar form
+$$\widehat{\beta}^{MAP}=\underset{\beta\in\Theta}{\arg\min}\left\{\sum_{t=1}^{T} (y_{t}-\sum_{k=1}^p\beta_kz_{t,k})^2+c\sum_{k=1}^{p}\beta_k^2 \right\}$$
+    - This is exactly L2 Penalized (Ridge) regression! (with penalty $c$ based on relative variance of prior normal distributions and $\sigma^2$)
+- Suppose instead $\pi(\beta_k)\propto \exp(-\lambda|\beta_k|)$  (Called *Laplace* distribution)
+$$\widehat{\beta}^{MAP}=\underset{\beta\in\Theta}{\arg\min}\left\{\sum_{t=1}^{T} (y_{t}-\sum_{k=1}^p\beta_kz_{t,k})^2+c\sum_{k=1}^{p}|\beta_k| \right\}$$
+    - This is exactly L1 Penalized (Lasso) regression!
+
+
+## MAP vs Structural Risk Minimization
+
+- MAP estimate always equal to some form of structural risk minimizer
+    - (Negative) log likelihood defines the loss function, log prior defines the penalty       
+- Allows for new interpretation of both classes of method
+- MAP Bayes methods have small uniform risk whenever SRM would 
+    - Large T, stationary weak dependent distribution, limited complexity or heavy penalty 
+- SRM is approximately Bayes for a certain likelihood and prior
+    - Use knowledge of process (prior and likelihood) to assign loss and penalty
+- Disadvantage of both MAP and SRM, relative to full Bayes, is use of single $\theta$ rather than full posterior
+    - Posterior distribution allows expression of uncertainty and its use in decision-making
+    - May want to learn more about posterior than its highest point   
+    
+    
+## Laplace Approximation
+
+- If T large and averages are well-behaved, can use fact that posterior is sum to approximate
+- Idea: average eventually close to mean, so a local Taylor expansion in $\theta$ around $\theta^*=\widehat{\theta}^{MAP}$ suffices
+- $\pi(\theta|\mathcal{Y}_T)=\exp(T(\frac{1}{T}\sum_{t=1}^{T}\log p(y_{t}|\mathcal{Y}_{t-1},\theta)+\frac{1}{T}\log\pi(\theta)-\frac{1}{T}\log\int_{\Theta} p(\mathcal{Y}_T,\theta)\pi(\theta)d\theta))$
+- $\propto\exp(T(\frac{1}{T}\sum_{t=1}^{T}\frac{d}{d\theta}\log p(y_{t}|\mathcal{Y}_{t-1},\theta^*)(\theta-\theta^*)+\frac{1}{T}\sum_{t=1}^{T}\frac{1}{2}\frac{d^2}{d\theta^2}\log p(y_{t}|\mathcal{Y}_{t-1},\theta^*)(\theta-\theta^*)^2$
+- $+\frac{1}{T}\frac{d}{d\theta}\log\pi(\theta^*)(\theta-\theta^*)+\frac{1}{T}\frac{1}{2}\frac{d^2}{d\theta^2}\log\pi(\theta^*)(\theta-\theta^*)^2+\text{higher order terms}))$
+    - Proportionality constant and 0th order term disappear since not functions of $\theta$
+- By optimality of MAP, first derivative term equals 0
+- $=\exp(T(\frac{1}{T}\sum_{t=1}^{T}\frac{1}{2}\frac{d^2}{d\theta^2}\log p(y_{t}|\mathcal{Y}_{t-1},\theta^*)(\theta-\theta^*)^2+\frac{1}{T}\frac{1}{2}\frac{d^2}{d\theta^2}\log\pi(\theta^*)(\theta-\theta^*)^2)$
+- Density which is exponent of a quadratic function has a name: it is a Normal distribution
+- **Laplace Approximation**: For large T, posterior $\approx$ normal, with mean around $\widehat{\theta}^{MAP}$, variance proportional to minus inverse of second derivative of log likelihood (+ prior) over T
+- Unless prior very large relative to $T$, prior term also disappears as T grows
+
+    
+## Applied Laplace Approximation
+
+- 1. Calculate MAP (or even just unpenalized version, called the **Maximum Likelihood Estimator**)
+- 2. Use same variance formula as used for normal confidence intervals
+- 3. Use this normal distribution as posterior
+- Conclusion: When this works, posterior distribution is approximate sampling distribution and vice versa
+    - Can use intervals from standard regression, ETS, AR forecast commands, etc, as approximate Bayesian posteriors
+    - Interval between posterior quantiles is valid confidence interval if all conditions for validity of ERM confidence intervals hold 
+        - Stationarity, weak dependence, low complexity, correct specification 
+    - **Bernstein-von Mises Theorem** (cf van der Vaart 1998) presents formal conditions for this
+- Laplace approximation relies on 
+    1. Unique posterior mode 
+    2. (2x) Differentiability of likelihood 
+    3. T big enough to ignore higher order terms
+- All of these can cause problems, and approximation can be very bad far away from mode
+- But really fast to compute, so a good starting point for a quick analysis
+
+## Monte Carlo Sampling Algorithms
+
+- When exact posterior computation not possible and local approximations unreliable, can turn to numerical integration
+- Wide variety of methods: Riemann sums, trapezoid rule, Simpson's rule, etc
+- Rules based on fixed grid usually scale poorly with dimension of $\Theta$
+    - Need huge number of grid points for modest accuracy if model has many parameters, like a VAR
+- Rules based on random sampling, called **Monte Carlo** methods, perform equally well regardless of dimension
+    - By central limit theorem, error decreases as $\frac{1}{\sqrt{J}}$: Quadruple number of draws to halve error, on average
+- Sample from $\pi(\theta|\mathcal{Y}_T)$ by class of methods called **Markov Chain Monte Carlo** (MCMC)
+    - Idea: using random numbers, generate a sequence $\{\theta_j\}_{j=1}^J$ drawn from a specially designed process
+    - Sequence comes from conditional distribution $P(\theta_{j+1}|\theta_{j})$ which can be calculated using only $p(\mathcal{Y}_T,\theta)$, $\pi(\theta)$ without integration
+    - Under some conditions, $P(\frac{1}{J}\sum_{j=1}^{J}m(\theta_j)\to\int m(\theta)\pi(\theta|\mathcal{Y}_T)d\theta)=1$ for any integrable function $m()$ $\Theta\to\mathbb{R}^d$
+- Huge variety of such methods exist, based on details of formula for $P(\theta_{j+1}|\theta_{j})$: see [illustrations](https://chi-feng.github.io/mcmc-demo/app.html)
+    - Names like Metropolis-Hastings, Gibbs Sampler, MALA, Hamiltonian Monte Carlo (HMC), etc
+    - Details matter a lot for speed and reliability, but once you have sequence of draws, can use the same way
+- Due to flexibility, MCMC useful default first choice for Bayesian methods 
+
+## Probabilistic Programming
+
+- Ideally, would like a program that lets you enter likelihood, prior, and data, which would then automatically produce posterior and predictive distributions
+- Such a program is called a **Probabilistic Programming Language**
+    - Many exist, based on different posterior approximation methods
+        - BUGS, Stan, Edward, Tensorflow Probability, etc
+- **Stan** is a popular and well-supported choice, based on Hamiltonian Monte Carlo, with R access by library `rstan`
+    - HMC uses derivatives of $p(\mathcal{Y}_T,\theta)$, $\pi(\theta)$ to speed up sampling, so tends to be fairly fast for models with many parameters
+    - Downside is that it requires differentiable probability models
+- I will present some worked examples in Stan to show what Bayesian modeling and evaluation looks like
+- For details of Stan language, see documentation at [mc-stan.org](https://mc-stan.org)
+- Many conventional models, like regression, have already been coded and are accessible by an interface which doesn't require accessing probabilistic programming language directly
+    - Still useful to have sense of what's going on "under the hood" in packages like `rstanarm`, `brms` or `prophet`
+
+
+## Writing a Stan Program
+
+- A Stan program can be written and saved as .stan file, or defined directly as text (i.e. put quotes around the code)
+- A Stan program is a file with several parts 
+    - (1) **Data**: the variables in the model, with values to be taken from data
+    - (2) **Parameters**: the parameters of the model, to be inferred by Bayes rule
+    - (3) **Model**: Both the (log) likelihood and the prior, defined as probability distributions
+- May also have optional additional parts:
+    - **functions**, **transformed data**, **transformed parameters**: auxiliary functions
+    - **Generated quantities**: Things to simulate, including posterior predictive distribution
+- Stan is a "typed" language, meaning every variable declaration is associated with a type
+    - int (integer), real, vector, etc, along with upper or lower bounds if bounded
+    - This ensures the language knows what possible values a variable can take
+- Let's see a Stan program to sample from the posterior of Beta-Bernoulli model from last class
+    - Likelihood is Bernoulli: $p(y_t,\theta)=\theta^{y_t}(1-\theta)^{(1-y_t)}$, prior is Beta(a,b): $\pi(\theta)\propto \theta^{a-1}(1-\theta)^{b-1}$
+    - In this case, posterior after $N$ 1s and $M$ 0s known to be Beta(a+N,b+M), so can check accuracy    
+    
+## Stan code for model
+
+```{r,message=FALSE,warning=FALSE}
+library(rstan) #Access Stan from R
+stan_code_bernoulli <- " 
+data { 
+  int T;                     // The sample size
+  int<lower=0,upper=1> y[T]; // The observations (array of length T)
+  real<lower=0> prior_a;     // The a parameter of the prior: data because user allowed to enter value
+  real<lower=0> prior_b;     // The b parameter of the prior
+} 
+parameters { 
+  real<lower=0,upper=1> theta; // The probability of observing a one
+} 
+model { 
+  theta ~ beta(prior_a,prior_b);        // Prior
+  for (t in 1:T) 
+    y[t] ~ bernoulli(theta);  // Likelihood: consists of N independent Bernoulli samples
+} 
+generated quantities { 
+  int<lower=0,upper=1> y_tilde; // Samples from posterior predictive distribution
+  y_tilde = bernoulli_rng(theta);  //Simulate draw from (Bernoulli) conditional likelihood 
+}"
+```
+
+
+## Run Code on Simulated Data
+
+```{r,message=FALSE,warning=FALSE}
+options(mc.cores = parallel::detectCores()) #Use parallel computing when running MCMC
+rstan_options(auto_write = TRUE) #Do not recompile Stan code every time file is saved
+```
+```{r,results='hide',message=FALSE,warning=FALSE}
+# Compile this code as a model. Warning: compiling takes a long time
+stan_model_bernoulli<-stan_model(model_code = stan_code_bernoulli,model_name = "BernoulliModel") 
+```
+```{r,results='hide',message=FALSE,warning=FALSE}
+# Generate some data to feed to the model
+truetheta<-0.99   # Make 0s a rare event
+aprior<-0.5       # Expect few 1s
+bprior<-0.5       # Expect few 0s
+Tsample<-1000     # Data size
+
+set.seed(4567)    # Seed random number generator, so results always same 
+ysample<-rbinom(Tsample,1,truetheta)    #Generate T Bernoulli variates
+# Format data as list to feed to model
+stan_data<-list(T=Tsample, y=ysample, prior_a=aprior, prior_b=bprior)
+# Run the code to draw samples from the posterior
+fit_bernoulli<-sampling(object = stan_model_bernoulli,data = stan_data, chains = 4, iter = 2000, seed = 4567)
+#Run 4 chains of 2000 samples, and discard the first 1000 of each
+```
+```{r,eval=FALSE}
+print(fit_bernoulli) # Print summary statistics for posterior statistics 
+stan_hist(fit_bernoulli) # Plot the approximated posterior density
+```
+
+## Approximate Posterior and Posterior Predictive Densities
+
+```{r,warning=FALSE,messsge=FALSE}
+print(fit_bernoulli,digits_summary=3) # Print summary statistics for posterior statistics 
+quietgg(stan_hist(fit_bernoulli)) # Plot the approximated posterior density, suppressing warning messages
+#Calculate some statistics
+thetamean<-get_posterior_mean(fit_bernoulli,pars="theta") #Get posterior mean of theta
+```
+
+## Interpretation and Monte Carlo Diagnostics
+
+- Markov Chain Monte Carlo approximation drew 4 2000 sample sequences
+    - "Warm up" or "Burn in" of 1000 means first 1000 draws are discarded: done to reduce bias from start point of chain
+    - "Effective Sample Size" n_eff smaller than 4000 because samples autocorrelated, so variance increased, to level "as if" n_eff samples used
+- Run multiple long chains to compare variability
+    - If distribution very different across samples within chains or across chains, possible that sampler "got stuck"
+    - Rhat not close to 1, warnings saying "divergent transition" or trace plots of MCMC draws which seem to wander around are all warning signs of problems with sampler
+    - Use `launch_shinystan()` in library `shinystan` for extensive graphical summaries of fit and diagnostics
+    - Due to randomness, can never be sure approximation is good, but should be cautious if warnings exist
+- Data used had N= `r sum(ysample)` 1s, M= `r Tsample-sum(ysample)` 0s
+    - So with prior Beta(0.5,0.5), exact posterior on $\theta$ is Beta(985.5,15.5), with mean `r 985.5/1001`
+- MCMC approximate posterior on $\theta$ had mean `r thetamean[5]`
+    - Shape close to Beta distribution, but with some fluctuations due to sampling error 
+    - Could improve precision at cost of longer runtime by sampling longer chains 
+
+## Trace Plot of MCMC Chains
+
+- Chains show similar and narrow variation, suggesting reasonably weak dependence
+
+```{r}
+traceplot(fit_bernoulli,pars="theta")
+```
+
+
+## Extending the Model
+
+- For more practical application, can add dependence by making probability of drawing a 1 a function of past samples
+- Let's try Bayesian version of logistic autoregression model (as in recession forecast example)
+    - $p(y_{t+1}=1|\mathcal{Y}_{t})=\text{logit}^{-1}(a+\beta_1 y_{t-1}+\beta_2 y_{t-2})$
+    - iid Bernoulli model is special case where $\beta_1=\beta_2=0$, $\text{logit}^{-1}(a)=\theta$
+- Need prior on $\beta$:  
+    - Note that $\text{logit}^{-1}(5)\approx0.99$, so unless very strong persistence expected, prior should mostly be within $[-5,5]$
+    - Try N(0,10) for $a$, $N(0,5)$ for $\beta_1,\beta_2$, all independent, for quite dispersed prior
+    - Allows reasonable chance of very high persistence, but doesn't force it 
+    
+## Stan Code
+
+```{r,,class.source='fold-show'}
+stan_code_logitAR <- " 
+data { 
+  int T;                     // The sample size
+  int<lower=0,upper=1> y[T]; // The observations (array of length T)
+  int<lower=0> K;            // Number of lags to use
+  real<lower=0> prior_a;     // Prior variance of intercept
+  real<lower=0> prior_b;     // The variance of coefficients on lags
+} 
+parameters { 
+  real a;                    // Intercept coefficient
+  real b[K];                 // K Lag coefficients
+} 
+model { 
+  a ~ normal(0,prior_a);        // Intercept Prior
+  for (k in 1:K)
+    b[k] ~ normal(0,prior_b);   // Lag coefficient priors
+  for (t in (K+1):T) {
+    real mu = a;
+    for (k in 1:K)
+      mu += b[k] * y[t-k];       // Formula is sum of intercept and lags
+    y[t] ~ bernoulli_logit(mu);  // Likelihood 
+  }
+}
+generated quantities { 
+  int<lower=0,upper=1> y_tilde;  // Samples from posterior predictive distribution
+  for (t in (T-K):T) {           // Use last K observations to predict y[T+1] 
+    real mu = a;
+    for (k in 1:K)
+      mu += b[k] * y[t-k];
+    y_tilde = bernoulli_rng(inv_logit(mu));  //Simulate from conditional likelihood
+  }
+  }"
+```
+
+
+## Results: MCMC Fit vs Maximum Likelihood Fit
+
+```{r,results='hide',message=FALSE,warning=FALSE,echo=FALSE}
+# Compile this code as a model. Warning: compiling takes a long time
+stan_model_logitAR<-stan_model(model_code = stan_code_logitAR,model_name = "LogitARModel") 
+```
+```{r,results='hide',message=FALSE,warning=FALSE,echo=FALSE}
+library(fredr) #Access FRED, the Federal Reserve Economic Data
+fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
+#The NBER recession indicator has FRED ID "USREC"
+#1 in NBER declared recession, 0 in any other date
+USREC<-fredr(series_id = "USREC")
+usrec<-ts(USREC$value,frequency=12,start=c(1854,12)) #Convert to time series
+#Produce lagged values
+l1usrec<-window(lag(usrec,-1),start=c(1855,2),end=c(2019,1))
+l2usrec<-window(lag(usrec,-2),start=c(1855,2),end=c(2019,1))
+recession<-window(usrec,start=c(1855,2),end=c(2019,1))
+#Compute Logistic regression by ERM as before, equal to MLE
+recessionlogit<-glm(recession~l1usrec+l2usrec,family=binomial(link="logit"))
+```
+```{r,results='hide',message=FALSE,warning=FALSE,echo=FALSE}
+## Assemble data for Stan model
+recessiondata<-as.integer(recession) #Binary recession indicators
+Tmonths<-length(recessiondata) #Length of sample
+avariance<-10 #Prior variance of intercept
+bvariance<-5 #Prior variance of lag
+nlags<-2  #Order of autoregression model to use
+stan_data2<-list(T=Tmonths, y=recession, K=nlags, prior_a=avariance, prior_b=bvariance)
+# Run the code to draw samples from the posterior
+fit_logitAR<-sampling(object = stan_model_logitAR,data = stan_data2, chains = 4, iter = 2000, seed = 5678)
+```
+- Maximum likelihood here is logistic regression: ERM of cross-entropy loss
+    - If Bernstein von Mises approximation close, prior doesn't matter, and Std. Error here is Normal posterior standard deviation
+```{r}
+summary(recessionlogit)$coefficients #MLE
+```
+- Examining MCMC fit with priors, big difference in coefficients
+```{r}
+print(fit_logitAR) #Bayesian Prediction
+```
+
+## Posterior and Posterior Predictive Distribution Samples
+
+```{r}
+#Pairs plot
+pairs(fit_logitAR,pars=c("a","b","y_tilde"))
+```
+
+## Interpretation and Conclusion
+
+- Asymptotic approximation based on ignoring priors very different from MCMC draws
+    - Even though sample size quite big and series not strongly dependent 
+- Reason is that 1 month vs 2 months in past contain almost the same information about future
+    - Predictions are highly correlated
+    - See this in posterior pairs plot between b1 and b2, with near straight line
+    - b1 and b2 posteriors notably skewed: not so close to normal
+- Effectively, likelihood has not a single peak, but a "ridge" of almost identical density
+- Adding prior information constrains range of plausible effects to subset of this ridge, resulting in different outcomes
+- Lesson: be careful with approximation assumptions
+- MCMC for logistic regression can be done with much less code using `rstanarm` package
+    - `stan_glm(y~z1+z2,family=binomial(link="logit"))` estimates same model, with slightly different default prior scales
+    - `stan_lm` similarly for linear regression, etc. See also many models in `brms`
+    - Can set options to adjust priors as needed
+    
+## Summary
+
+- Bayesian approach offers principled and orderly way to produce predictions and forecasts
+- Knowledge goes into building models and selecting priors: rest is just integration
+    - But integration is hard!
+- Can easily approximate posterior locally by its maximum, giving MAP equal to penalized ERM
+- Can extend to distribution in large samples by taking Laplace approximation
+    - Posterior close to normal around MAP, with variance defined by derivatives
+- For small samples or challenging problems, can sample by Markov Chain Monte Carlo
+    - Implement easily using probabilistic programming languages like Stan
+
+## References
+
+- Chi Feng [The Markov-chain Monte Carlo Interactive Gallery](https://chi-feng.github.io/mcmc-demo/) 2017
+    - Visualizations showing how different MCMC algorithms construct samples
+- Jim Savage [A quick-start intro to Stan for Economists](https://nbviewer.jupyter.org/github/QuantEcon/QuantEcon.notebooks/blob/master/IntroToStan_basics_workflow.ipynb) 2016
+    - Practical introduction to Bayesian model building in Stan
+- Chris Sims. [Bayesian Methods in Applied Econometrics, or, Why Econometrics Should Always and Everywhere Be Bayesian](http://sims.princeton.edu/yftp/EmetSoc607/AppliedBayes.pdf) 2007
+    - A rant
+- Stan Development Team. **[Stan User's Guide](https://mc-stan.org/docs/2_18/stan-users-guide/index.html)** 2018, v 2.18 
+    - Comprehensive guide to Stan language and Bayesian models
+- Aad van der Vaart. **Asymptotic Statistics** Cambridge UP, 1998
+    - Has useful (but overly technical) chapters on Bayesian large sample approximations
+
+    
+
