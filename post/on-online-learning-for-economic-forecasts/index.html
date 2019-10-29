@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="theme" content="hugo-academic">
+  <meta name="generator" content="Hugo 0.40.3" />
+  <meta name="author" content="David Childers">
+
+  
+  
+  
+  
+    
+      
+    
+  
+  <meta name="description" content="Jérémy Fouliard, Michael Howell, and Hélène Rey have just released an update of their working paper applying methods from the field of Online Learning to forecasting of financial crises, demonstrating impressive performance in a difficult forecasting domain using some techniques that appear to be underapreciated in econometrics. Francis Diebold provides discussion and perspectives. This work is interesting to me as I spent much of the earlier part of this year designing and running a course on economic forecasting which attempted to offer a variety of perspectives beyond the traditional econometric approach, including that of Online Learning.">
+
+  
+  <link rel="alternate" hreflang="en-us" href="/post/on-online-learning-for-economic-forecasts/">
+
+  
+
+
+  
+
+  
+  
+  <meta name="theme-color" content="hsl(339, 90%, 68%)">
+  
+  
+  
+  
+    
+  
+  
+    
+    
+      
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/dracula.min.css">
+      
+    
+  
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha512-6MXa8B6uaO18Hid6blRMetEIoPqHf7Ux1tnyIQdpt9qI5OACx7C+O3IVTr98vwGnlcg0LOLa02i9Y1HpVhlfiw==" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha512-SfTiTlX6kk+qitfevl/7LibUOeJWlt9rbyDn92a1DqWOw9vWG2MFoays0sgObmWazO5BQPiFucnnEAjpAB+/Sw==" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" integrity="sha256-ygkqlh3CYSUri3LhQxzdcm0n1EQvH2Y+U5S2idbLtxs=" crossorigin="anonymous">
+  
+  
+  
+  
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Montserrat:400,700%7cRoboto:400,400italic,700%7cRoboto&#43;Mono">
+  
+  <link rel="stylesheet" href="/styles.css">
+  
+
+  
+
+  
+  <link rel="alternate" href="/index.xml" type="application/rss+xml" title="David Childers">
+  <link rel="feed" href="/index.xml" type="application/rss+xml" title="David Childers">
+  
+
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="icon" type="image/png" href="/img/icon.png">
+  <link rel="apple-touch-icon" type="image/png" href="/img/icon-192.png">
+
+  <link rel="canonical" href="/post/on-online-learning-for-economic-forecasts/">
+
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="twitter:site" content="@DonskerClass">
+  <meta property="twitter:creator" content="@DonskerClass">
+  
+  <meta property="og:site_name" content="David Childers">
+  <meta property="og:url" content="/post/on-online-learning-for-economic-forecasts/">
+  <meta property="og:title" content="On Online Learning for Economic Forecasts | David Childers">
+  <meta property="og:description" content="Jérémy Fouliard, Michael Howell, and Hélène Rey have just released an update of their working paper applying methods from the field of Online Learning to forecasting of financial crises, demonstrating impressive performance in a difficult forecasting domain using some techniques that appear to be underapreciated in econometrics. Francis Diebold provides discussion and perspectives. This work is interesting to me as I spent much of the earlier part of this year designing and running a course on economic forecasting which attempted to offer a variety of perspectives beyond the traditional econometric approach, including that of Online Learning.">
+  <meta property="og:locale" content="en-us">
+  
+  <meta property="article:published_time" content="2019-10-29T00:00:00&#43;00:00">
+  
+  <meta property="article:modified_time" content="2019-10-29T00:00:00&#43;00:00">
+  
+
+  
+  
+
+  <title>On Online Learning for Economic Forecasts | David Childers</title>
+
+</head>
+<body id="top" data-spy="scroll" data-target="#toc" data-offset="71" class="dark">
+
+<nav class="navbar navbar-default navbar-fixed-top" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="navbar-header">
+      
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+              data-target=".navbar-collapse" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+      <a class="navbar-brand" href="/">David Childers</a>
+    </div>
+
+    
+    <div class="collapse navbar-collapse">
+
+      
+      
+      <ul class="nav navbar-nav navbar-right">
+        
+
+        
+        
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#about">
+            
+            <span>Home</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+        
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#publications_selected">
+            
+            <span>Research</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+        
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#teaching">
+            
+            <span>Teaching</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a href="/#cv">
+            
+            <span>CV</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+        
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#posts">
+            
+            <span>Blog</span>
+            
+          </a>
+        </li>
+
+        
+        
+      
+
+      
+      </ul>
+
+    </div>
+  </div>
+</nav>
+
+
+<article class="article" itemscope itemtype="http://schema.org/Article">
+
+  
+
+
+  <div class="article-container">
+    <h1 itemprop="name">On Online Learning for Economic Forecasts</h1>
+
+    
+
+<div class="article-metadata">
+
+  <span class="article-date">
+    
+    <time datetime="2019-10-29 00:00:00 &#43;0000 UTC" itemprop="datePublished dateModified">
+      Oct 29, 2019
+    </time>
+  </span>
+  <span itemscope itemprop="author publisher" itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="David Childers">
+  </span>
+
+  
+
+  
+  
+
+  
+  
+  
+  
+
+  
+  
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    <li>
+      <a class="twitter"
+         href="https://twitter.com/intent/tweet?text=On%20Online%20Learning%20for%20Economic%20Forecasts&amp;url=%2fpost%2fon-online-learning-for-economic-forecasts%2f"
+         target="_blank" rel="noopener">
+        <i class="fa fa-twitter"></i>
+      </a>
+    </li>
+    <li>
+      <a class="facebook"
+         href="https://www.facebook.com/sharer.php?u=%2fpost%2fon-online-learning-for-economic-forecasts%2f"
+         target="_blank" rel="noopener">
+        <i class="fa fa-facebook"></i>
+      </a>
+    </li>
+    <li>
+      <a class="linkedin"
+         href="https://www.linkedin.com/shareArticle?mini=true&amp;url=%2fpost%2fon-online-learning-for-economic-forecasts%2f&amp;title=On%20Online%20Learning%20for%20Economic%20Forecasts"
+         target="_blank" rel="noopener">
+        <i class="fa fa-linkedin"></i>
+      </a>
+    </li>
+    <li>
+      <a class="weibo"
+         href="http://service.weibo.com/share/share.php?url=%2fpost%2fon-online-learning-for-economic-forecasts%2f&amp;title=On%20Online%20Learning%20for%20Economic%20Forecasts"
+         target="_blank" rel="noopener">
+        <i class="fa fa-weibo"></i>
+      </a>
+    </li>
+    <li>
+      <a class="email"
+         href="mailto:?subject=On%20Online%20Learning%20for%20Economic%20Forecasts&amp;body=%2fpost%2fon-online-learning-for-economic-forecasts%2f">
+        <i class="fa fa-envelope"></i>
+      </a>
+    </li>
+  </ul>
+</div>
+
+
+  
+
+</div>
+
+
+    <div class="article-style" itemprop="articleBody">
+      <p>Jérémy Fouliard, Michael Howell, and Hélène Rey have just released <a href="http://conference.nber.org/conf_papers/f130922.pdf" target="_blank">an update of their working paper</a> applying methods from the field of Online Learning to forecasting of financial crises, demonstrating impressive performance in a difficult forecasting domain using some techniques that appear to be underapreciated in econometrics. Francis Diebold provides <a href="https://fxdiebold.blogspot.com/2019/10/machine-learning-for-financial-crises.html" target="_blank">discussion</a> and <a href="https://fxdiebold.blogspot.com/2019/10/online-learning-vs-tvp-forecast.html" target="_blank">perspectives</a>. This work is interesting to me as I spent much of the earlier part of this year designing and running a <a href="/Forecasting.html">course on economic forecasting</a> which attempted to offer a variety of perspectives beyond the traditional econometric approach, including that of Online Learning.<sup class="footnote-ref" id="fnref:1"><a href="#fn:1">1</a></sup> This persective has been widely applied by machine learning practitioners and businesses that employ them, particularly major web companies like <a href="https://ai.google/research/pubs/pub41159" target="_blank">Google</a>, <a href="https://vowpalwabbit.org/" target="_blank">Yahoo, and Microsoft</a>, but has not seen widespread takeup by more traditional economic forecasting consumers and practitioners like central banks and government institutions.</p>
+
+<p>The essence of the online learning approach has less to do with particular algorithms (though there are many), but instead reconsiders the choice of <a href="Forecasting/Evaluation.html" target="_blank"><em>evaluation framework</em></a>. Consider a quantity to be forecast $y_{t+h}$, like an indicator equal to 1 in the presence of a financial crisis. A forecating rule $f(.)$ depending on currently available data $\mathcal{Y}<em>T$ produces a forecast $\widehat{y}</em>{t+h}=f(\mathcal{Y}<em>T)$ which can be evaluated ex post according to a loss function $\ell(y</em>{t+h},\widehat{y}<em>{t+h})$ which measures how close the forecast was to being correct. Since we don&rsquo;t know the true value $y</em>{t+h}$ until it is observed, to make a forecast we must come up with a criterion instead which compares rules. Traditional econometric forecasting looks at measures of statistical <em>risk</em>, $$E[\ell(y<em>{t+h},\widehat{y}</em>{t+h})]$$</p>
+
+<p>where expectation is taken with respect to a (usually unknown) true probability distribution. Online learning, in contrast, aims to provide estimators which have low <em>regret</em> over sequences of outcomes ${y<em>{t+h}}</em>{t=1}^{T}$ relative to a comparison class $\mathcal{F}$ of possible rules,
+$$\text{Regret}({\widehat{y}<em>{t+h}}</em>{t=1}^{T})=\sum<em>{t=1}^{T} \ell(y</em>{t+h},\widehat{y}<em>{t+h})-\underset{f\in\mathcal{F}}{\inf}\sum</em>{t=1}^{T}\ell(y<em>{t+h},f(\mathcal{Y}</em>{t}))$$</p>
+
+<p>This criterion looks a little odd from the perspective of traditional forecasting rules: <a href="https://fxdiebold.blogspot.com/2017/02/predictive-loss-vs-predictive-regret.html" target="_blank">Diebold has expressed skepticism</a>. First, regret is a relative rather than absolute standard; to even be defined you need to take a stand on rules you might compare to, which can look somewhat arbitrary. If you choose a class of rules that predict poorly, a low regret procedure will not do well in an absolute sense. Second, there is no expectation or probability, just a sequence of outcomes. Diebold frames this as ex ante vs ex post, as the regret canot be computed until <em>after</em> the data is observed, while risk can be computed without seeing the data. But this does not accord with how regret is applied in the theoretical literature. Risk can be computed only with respect to a probability measure, which has to come from somewhere. One can build a model and ask that this be the &ldquo;true&rdquo; probability measure describing the sequence generating the data, but this is also unknown. To get ex ante results for a procedure, one needs to take a stand on a model or class of models. Then one can evaluate results either <em>uniformly</em> over models in the class (this is the classic <a href="Forecasting/StatisticalApproach.html" target="_blank">statistical approach</a>, used implicitly in much of the forecasting literature, like Diebold&rsquo;s <a href="https://www.sas.upenn.edu/~fdiebold/Teaching221/econ221Penn.html" target="_blank">textbook</a>) or <em>on average</em> over models, where the distribution over which one averages is called a <em>prior distribution</em> and leads to <a href="Forecasting/Bayes.html" target="_blank">Bayesian forecasting</a>. In the online learning context, in contrast, one usually seeks guarantees which apply for <em>any</em> sequence of outcomes, as opposed to over a distribution. So the results are still ex ante, with the difference being whether one needs to take a stance on a model class or a comparison class. There are reasons why one might prefer either approach. For one, <a href="https://itzhakgilboa.weebly.com/uploads/8/3/6/3/8363317/gilboa_notes_for_introduction_to_decision_theory.pdf" target="_blank">standard decision theory</a> requires use of probability in &ldquo;rational&rdquo; decision making. But the probabilistic framework is often extremely restrictive in terms of the guarantees it provides on the type of situations in which a procedure will perform well. In general, one must have a model which is correctly specified, or at least not too badly misspecified.</p>
+
+<p>Especially for areas where the economics is still in dispute, the confidence that one has that the models available to us encompass all likely outcomes maybe shouldn&rsquo;t be so high. This is the content of the Queen&rsquo;s question to which the title of the FHR paper refers: many or most economists before the financial crisis were using models which did not foresee a particularly high probability of such an event. For that reason, a procedure which allows us to perform reasonably over <em>any</em> sequence of events, not just those likely with respect to a particular model class, may be particularly desirable; a procedure with a low regret guarantee will do so, and be known to do so <em>ex ante</em>, as long as there is some comparator which performed well <em>ex post</em>. Ideally, we would like to remove that latter caveat, but as economists like to say, there is <a href="https://en.wikipedia.org/wiki/No_free_lunch_theorem" target="_blank">no free lunch</a>. One can instead do analysis based on risk without assuming one has an approximately correct model; this is the content of <a href="https://books.google.com/books?hl=en&amp;lr=&amp;id=EqgACAAAQBAJ&amp;oi=fnd&amp;pg=PR7&amp;dq=Vapnik+statistical+learning+theory&amp;ots=g3K-htaV29&amp;sig=5p6V7MW49xnzKUQGoAf7gRJZow0#v=onepage&amp;q=Vapnik%20statistical%20learning%20theory&amp;f=false" target="_blank">statistical learning theory</a>. But this usually involves both introducing a comparison class of models $\mathcal{F}$ to study a relative criterion, the <em>oracle risk</em>  $E[\ell(y<em>{t+h},\widehat{y}</em>{t+h})]-\underset{f\in\mathcal{F}}{\inf}E\ell(y_{t+h},f(\mathcal{Y}_t))$, or variants thereof.<sup class="footnote-ref" id="fnref:2"><a href="#fn:2">2</a></sup> This requires both a comparison class and some restrictions on distributions to get uniformity; Vapnik considered the i.i.d. case, which is unsuitable for most time series forecasting applications; extensions need some version of stationarity and/or <a href="https://papers.nips.cc/paper/3489-rademacher-complexity-bounds-for-non-iid-processes" target="_blank">weak</a> <a href="https://projecteuclid.org/download/pdf_1/euclid.aop/1176988849" target="_blank">dependence</a>, or strong conditions on the class of nonstationary processes allowed, which can be problematic when one does not know what kind of distribution shifts are likely to occur.</p>
+
+<p>This brings us to the content of the forecast procedures used: FHR apply classic Prediction with Expert Advice algorithms, like versions of Exponential Weights (i.e. the &ldquo;Hedge&rdquo; algorithm of <a href="http://rob.schapire.net/papers/FreundSc95.pdf" target="_blank">Freund and Schapire 1997</a>) and Online Gradient Descent (<a href="https://www.aaai.org/Papers/ICML/2003/ICML03-120.pdf" target="_blank">Zinkevich 2003</a>), which take a set of forecasts and form a convex combination of them with weights that update each round of predictions. Diebold <a href="https://fxdiebold.blogspot.com/2019/10/online-learning-vs-tvp-forecast.html" target="_blank">notes</a> that these are essentially versions of model averaging procedures which allow for time-varying weights, which are frequently studied by econometricians, acomplaining that &ldquo;ML types seem to think they invented everything&rdquo;. To this I have two responses. First, on a credit attribution level, the online learning perspective originates in the studies of sequential decision theory and game theory from people like Wald and Blackwell, squarely in the economics tradition, and the techniques became ubiquitous in the ML field through <a href="http://www.ii.uni.wroc.pl/~lukstafi/pmwiki/uploads/AGT/Prediction_Learning_and_Games.pdf" target="_blank">&ldquo;Prediction, Learning, and Games&rdquo;</a>, by Cesa-Bianchi and Lugosi, the latter of whom is in an Economics department. So if one wants to claim credit for these ideas for economics, go right ahead. Second, there are noteworthy distinctions between these ideas and statistical approaches to forecast combination. Next, the uniformity over sequences of the regret criterion ensures that not only does it permit changes over time, these can be completely arbitrary and do not have to accord with a particular model of the way in which the shift occurs. So while the approaches can be analyzed in terms of statistical properties, and may correspond to known algorithms for a particular model, the reason they is used is to ensure guarantees for arbitrary sequences, a property which is not shared by general statistical approaches. In fact, a classic result in online model combination (Cf Section 2.2 in <a href="https://www.cs.huji.ac.il/~shais/papers/OLsurvey.pdf" target="_blank">Shalev-Shwartz</a>) shows that some approaches with reasonable risk properties, like picking the forecast with the best performance up to the current period, can give unbounded regret for particularly bad sequences. The fact that a combination procedure adapts to these &ldquo;poorly behaved&rdquo; sequences is more important than the fact that it gives time varying weights per se.</p>
+
+<p>For these reasons, I think Online Learning approaches at minimum deserve more use in economic forecasting and I am pleased to see the promising results of FHR, as well as the growing application of minimax regret criteria in other areas of economics like <a href="https://arxiv.org/abs/1909.06853" target="_blank">inference and policy</a> under partial identification and areas like <a href="http://yingniguo.com/wp-content/uploads/2019/09/slides-regulation.pdf" target="_blank">mechanism design</a> where providing a well-specified distribution over outcomes can be challenging.</p>
+
+<p>There are still many issues that need more exploration, and there are important limitations. One thing existing online methods do not handle well is fully unbounded data; the worst case over all sequences leads to completely uniformative bounds, even for regret. For this reason, forecasting indicators is a good place to start. Whether it is even possible to extend these methods to data with unknown trends is still an open question, which may limit their suitability for many types of economic data. Tuning parameter selection is a topic of active research, with plenty of work on adapting these to the interval length and data features. Methods which perform well by regret criteria but also adapt to the case in which one does have stationary data and so could do well with a model-based algorithm are also a potentialy promising direction. If one has real confidence in a model, it makes sense to rely on it, in which case statistical approaches are fine. But for many applications where the science is less settled and one might plausibly see data that doesn&rsquo;t look like any model we have written down, we should keep this in our toolbox.</p>
+<div class="footnotes">
+
+<hr />
+
+<ol>
+<li id="fn:1">For a better overview of the field than I can provide, see the survey of <a href="https://www.cs.huji.ac.il/~shais/papers/OLsurvey.pdf" target="_blank">Shalev-Shwartz</a>, the monograph of <a href="https://ocobook.cs.princeton.edu/OCObook.pdf" target="_blank">Hazan</a>, or courses by <a href="http://www.mit.edu/~rakhlin/6.883/" target="_blank">Rakhlin</a> or <a href="http://www.mit.edu/~rakhlin/courses/stat928/" target="_blank">Rakhlin and Sridharan</a>.
+ <a class="footnote-return" href="#fnref:1"><sup>^</sup></a></li>
+<li id="fn:2">Econometricians are used to thinking of this from the perspective of misspecification a la <a href="https://www.jstor.org/stable/1912526" target="_blank">Hal White</a> in which one compares to risk under the &ldquo;pseudo-true&rdquo; parameter value of the best predictor in a class. An alternative, popular in machine learning, is to use a data dependent comparator, the <em>empirical risk</em>, and prove bounds on the generalization gap. Here again we are effectively using the performance of a model or algorithm class for a relative measure.
+ <a class="footnote-return" href="#fnref:2"><sup>^</sup></a></li>
+</ol>
+</div>
+
+    </div>
+
+    
+
+
+<div class="article-tags">
+  
+  <a class="btn btn-primary btn-outline" href="/tags/econometrics/">econometrics</a>
+  
+  <a class="btn btn-primary btn-outline" href="/tags/macroeconomics/">macroeconomics</a>
+  
+  <a class="btn btn-primary btn-outline" href="/tags/forecasting/">forecasting</a>
+  
+  <a class="btn btn-primary btn-outline" href="/tags/onlinelearning/">onlinelearning</a>
+  
+</div>
+
+
+
+
+    
+    
+    <div class="article-widget">
+      <div class="hr-light"></div>
+      <h3>Related</h3>
+      <ul>
+        
+        <li><a href="/post/aggregate-shocks-in-cross-sectional-data/">Aggregate shocks in cross-sectional data, or the alternative to a macroeconomic model isn&#39;t no macroeconomic model, it&#39;s a bad macroeconomic model</a></li>
+        
+        <li><a href="/post/top-papers-2017/">Top Papers 2017</a></li>
+        
+        <li><a href="/post/top-papers-read-in-2015/">Top Papers Read in 2015</a></li>
+        
+        <li><a href="/post/why-laplacians/">Why Laplacians?</a></li>
+        
+      </ul>
+    </div>
+    
+
+    
+
+    
+
+
+  </div>
+</article>
+
+<footer class="site-footer">
+  <div class="container">
+    <p class="powered-by">
+
+      &copy; 2018 &middot; 
+
+      Powered by the
+      <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+      <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+      <span class="pull-right" aria-hidden="true">
+        <a href="#" id="back_to_top">
+          <span class="button_icon">
+            <i class="fa fa-chevron-up fa-2x"></i>
+          </span>
+        </a>
+      </span>
+
+    </p>
+  </div>
+</footer>
+
+
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close btn-large" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Cite</h4>
+      </div>
+      <div>
+        <pre><code class="modal-body tex"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-primary btn-outline js-copy-cite" href="#" target="_blank">
+          <i class="fa fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-primary btn-outline js-download-cite" href="#" target="_blank">
+          <i class="fa fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+    
+
+    
+
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" integrity="sha512-3P8rXCuGJdNZOnUx/03c1jOTnMn3rP63nBip5gOP2qmUh5YAdVAvFZ1E+QLZZbC1rtMrQb+mah3AfYW11RUrWA==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.3/imagesloaded.pkgd.min.js" integrity="sha512-umsR78NN0D23AzgoZ11K7raBD+R6hqKojyBZs1w8WvYlsI+QuKRGBx3LFCwhatzBunCjDuJpDHwxD13sLMbpRA==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha512-iztkobsvnjKfAtTNdHkGVjAYTrrtlC7mGp/54c40wowO7LhURYl3gVzzcEqGl/qKXQltJ2HwMrdLcNUdo+N/RQ==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.4/isotope.pkgd.min.js" integrity="sha512-VDBOIlDbuC4VWxGJNmuFRQ0Li0SKkDpmGyuhAG5LTDLd/dJ/S0WMVxriR2Y+CyPL5gzjpN4f/6iqWVBJlht0tQ==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" integrity="sha256-X5PoE3KU5l+JcX+w09p/wHl9AzK333C4hJ2I9S5mD4M=" crossorigin="anonymous"></script>
+    
+    
+    <script src="/js/hugo-academic.js"></script>
+    
+
+    
+    
+      
+      
+      <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js" integrity="sha256-/BfiIkHlHoVihZdc6TFuj7MmJ0TWcWsMXkeDFwhi0zw=" crossorigin="anonymous"></script>
+      
+
+      
+
+      
+
+      <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    
+    
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({ tex2jax: { inlineMath: [['$','$'], ['\\(','\\)']] } });
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_CHTML" integrity="sha512-tOav5w1OjvsSJzePRtt2uQPFwBoHt1VZcUq8l8nm5284LEKE9FSJBQryzMBzHxY5P0zRdNqEcpLIRVYFNgu1jw==" crossorigin="anonymous"></script>
+    
+    
+
+  </body>
+</html>
+

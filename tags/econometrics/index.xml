@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
-    <lastBuildDate>Thu, 07 Dec 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 29 Oct 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/econometrics/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>On Online Learning for Economic Forecasts</title>
+      <link>/post/on-online-learning-for-economic-forecasts/</link>
+      <pubDate>Tue, 29 Oct 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/on-online-learning-for-economic-forecasts/</guid>
+      <description>Jérémy Fouliard, Michael Howell, and Hélène Rey have just released an update of their working paper applying methods from the field of Online Learning to forecasting of financial crises, demonstrating impressive performance in a difficult forecasting domain using some techniques that appear to be underapreciated in econometrics. Francis Diebold provides discussion and perspectives. This work is interesting to me as I spent much of the earlier part of this year designing and running a course on economic forecasting which attempted to offer a variety of perspectives beyond the traditional econometric approach, including that of Online Learning.</description>
+    </item>
     
     <item>
       <title>Top Papers 2017</title>

@@ -276,7 +276,7 @@ $$p(\left|\frac{1}{T}\sum_{t=1}^{T}g(y_t)-E_p g(y_t)\right|>c)\to 0\text{ as }T\
 - Sufficient conditions for ergodicity are fast enough decay of certain measures of dependence
     - Autocorrelation function decreasing rapidly to 0 is characteristic of distributions where approximation error is small
 
-## Evaluating Weak Dependnece
+## Evaluating Weak Dependence
 
 - How far sample mean is from population mean controlled by dependence
 - Variance: $E_p[y_t^2]-E_p[y_t]^2$ measures how far a variable deviates from mean

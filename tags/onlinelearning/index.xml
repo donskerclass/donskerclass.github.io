@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Macroeconomics on David Childers</title>
-    <link>/tags/macroeconomics/</link>
-    <description>Recent content in Macroeconomics on David Childers</description>
+    <title>Onlinelearning on David Childers</title>
+    <link>/tags/onlinelearning/</link>
+    <description>Recent content in Onlinelearning on David Childers</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
     <lastBuildDate>Tue, 29 Oct 2019 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/tags/macroeconomics/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/tags/onlinelearning/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -19,15 +19,6 @@
       
       <guid>/post/on-online-learning-for-economic-forecasts/</guid>
       <description>Jérémy Fouliard, Michael Howell, and Hélène Rey have just released an update of their working paper applying methods from the field of Online Learning to forecasting of financial crises, demonstrating impressive performance in a difficult forecasting domain using some techniques that appear to be underapreciated in econometrics. Francis Diebold provides discussion and perspectives. This work is interesting to me as I spent much of the earlier part of this year designing and running a course on economic forecasting which attempted to offer a variety of perspectives beyond the traditional econometric approach, including that of Online Learning.</description>
-    </item>
-    
-    <item>
-      <title>Aggregate shocks in cross-sectional data, or the alternative to a macroeconomic model isn&#39;t no macroeconomic model, it&#39;s a bad macroeconomic model</title>
-      <link>/post/aggregate-shocks-in-cross-sectional-data/</link>
-      <pubDate>Mon, 20 Jul 2015 00:00:00 +0000</pubDate>
-      
-      <guid>/post/aggregate-shocks-in-cross-sectional-data/</guid>
-      <description>Inspired by the release of a new and quite clear explainer on the topic by Hahn, Kuersteiner, and Mazzocco (HKM) amid a growing trend of using microeconomic data to learn about macroeconomic or aggregate effects, I believe it’s a good time to write something about what microeconometricians and applied microeconomists ought to know about dealing with aggregate effects. Broadly, this refers to any time-dependent variability in a data-generating process that can’t be modeled is independent across individual observations.</description>
     </item>
     
   </channel>
