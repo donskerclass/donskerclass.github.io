@@ -343,7 +343,7 @@ summary {
 <li><span class="math inline">\(g_t=1\)</span> if <span class="math inline">\(t\)</span> even</li>
 <li><span class="math inline">\(g_t=-1\)</span> if <span class="math inline">\(t&gt;1\)</span> odd</li>
 </ul></li>
-<li>For odd <span class="math inline">\(t\)</span>, FTL chooses <span class="math inline">\(x_t=\underset{x\in[-1,1]}{\arg\min}\ 0.5x\)</span>, which is <span class="math inline">\(-1\)</span></li>
+<li>For odd <span class="math inline">\(t\)</span>, FTL chooses <span class="math inline">\(x_t=\underset{x\in[-1,1]}{\arg\min} 0.5x\)</span>, which is <span class="math inline">\(-1\)</span></li>
 <li>For even <span class="math inline">\(t\)</span>, FTL chooses <span class="math inline">\(x_t=\underset{x\in[-1,1]}{\arg\min}-0.5x\)</span>, which is <span class="math inline">\(1\)</span></li>
 <li>Loss of FTL therefore <span class="math inline">\(\propto T\)</span>, while loss of best fixed alternative in hindsight, <span class="math inline">\(x=0\)</span>, is 0</li>
 <li>Regret of algorithm is <span class="math inline">\(\propto T\)</span>: average regret is constant: no matter how much data, predictions don’t improve</li>
@@ -409,7 +409,7 @@ summary {
 <li>If <span class="math inline">\(g_t\)</span> also differentiable, unique subgradient is the gradient <span class="math inline">\(\nabla g_t(x)\)</span></li>
 </ul></li>
 <li>Rearranging, <span class="math inline">\(g_t(x_t)-g_t(u)\leq \sum_{i=1}^{n}(x_{i,t}-u_{i})z_{i,t}\)</span> <span class="math inline">\(\forall u\in\mathcal{K}\)</span></li>
-<li>Summing up <span class="math inline">\(\sum_{t=1}^{T}g_t(x_t)-\sum_{t=1}^{T}g_t(u)\leq \sum_{t=1}^{T}\sum_{i=1}^{n}x_{i,t}z_{i,t}-\sum_{t=1}^{T}\sum_{i=1}^{n}u_{i}z_{i,t})\)</span></li>
+<li>Summing up <span class="math inline">\(\sum_{t=1}^{T}g_t(x_t)-\sum_{t=1}^{T}g_t(u)\leq \sum_{t=1}^{T}\sum_{i=1}^{n}x_{i,t}z_{i,t}-\sum_{t=1}^{T}\sum_{i=1}^{n}u_{i}z_{i,t}\)</span></li>
 <li>In words, this says regret of an online convex optimization problem is less than regret of corresponding online <strong>linear</strong> optimization problem</li>
 <li>So special case suffices: just use (sub)gradient and solve linear problem</li>
 </ul>
