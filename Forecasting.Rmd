@@ -10,7 +10,7 @@ Governments forecast economic indicators (e.g., GDP, job growth, etc.); business
 
 ## Course Materials
 
-The following files, derived from the lecture slides for the course and containing both text and R code, are provided as-is, as a resource for students and researchers interested in the topics. They are currently in draft form and are liable to contain errors big and small. If you have questions, comments, suggestions, or criticisms of the material, please [contact me](mailto:dchilder@andrew.cmu.edu). Additional course materials, including syllabi, problem sets, practice problems, and project assignments, may be available upon request.
+The following files, derived from the lecture slides for the course and containing both text and R code, are provided as-is, as a resource for students and researchers interested in the topics. They are currently in draft form and are likely to contain errors both big and small. If you have questions, comments, suggestions, or criticisms of the material, please [contact me](mailto:dchilder@andrew.cmu.edu). Additional course materials, including syllabi, problem sets, practice problems, and project assignments, may be available upon request.
 
 
 1. [Introduction](Forecasting/Intro.html)
