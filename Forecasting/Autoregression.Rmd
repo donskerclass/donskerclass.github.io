@@ -172,7 +172,7 @@ $$y_t=b_0+\sum_{j=1}^{p}b_jy_{t-j}+\epsilon_t$$
     - If not a unit root, still stationary, prediction valid but may lose predictive power
 - Can also test starting from null of stationarity (`kpss.test` in `tseries`)
 - Test approach is implemented in auto.arima
-    - First uses KPSS test (with null of stationarity) to determine differencing, then AIC to choose lag order $p$
+    - First uses KPSS test (with null of stationarity) to determine differencing, then AICc to choose lag order $p$
     
 ## The Stakes: The "Unit Root Wars"
 
@@ -200,7 +200,7 @@ $$y_t=b_0+\sum_{j=1}^{p}b_jy_{t-j}+\epsilon_t$$
 - As different tests have slightly different properties, one may reject stationarity, another may support it
     - May rely on single test, recognizing chance of error,  or be overly cautious and difference if unsure
     - Run PP test with null of unit root with constant and trend, KPSS with null of stationarity plus linear trend, and (by auto.arima) KPSS with null of stationarity with no trend
-- Use AIC after differencing according to KPSS results to get ideal AR order for each
+- Use AICc after differencing according to KPSS results to get ideal AR order for each
     - Corresponds to auto.arima (with certain options for more complicated models turned off)
 - Here, inflation (GNP deflator) measured to be nonstationary by KPSS test, stationary by PP test at 5% threshold
     - Macroeconomic theorists likewise fight about whether inflation stationary
@@ -301,10 +301,10 @@ macrodata<-data.frame(rgnp,infla,unemp,m1,invest,cprate,cbi)
 nlags<-6 # Number of lags to use
 nseries<-length(macrodata[1,]) #Number of series used
 ```
-```{r,echo=FALSE,warning=FALSE,message=FALSE}
+```{r,warning=FALSE,message=FALSE}
 #Evaluate Stationarity of series by Phillips-Perron Tests, as well as KPSS tests
 # accounting for constants and possible linear trend
-#USe auto.arima to choose AR order after KPSS test without trend
+#Use auto.arima to choose AR order after KPSS test without trend
 stationaritytests<-list()
 PPtests<-list()
 KPSStests<-list()
@@ -316,7 +316,7 @@ for (i in 1:nseries){
   KPSStests[i]<-kpss.test(macrodata[,i],null="Trend")$p.value
   ARIstatmodels[[i]]<-auto.arima(macrodata[,i],max.q=0,seasonal=FALSE) #Apply auto.arima set to (nonseasonal) ARI only
   Integrationorder[i]<-ARIstatmodels[[i]]$arma[6] #Integration order chosen (uses KPSS Test)
-  ARorder[i]<-ARIstatmodels[[i]]$arma[1] #AR order chosen (uses AIC)
+  ARorder[i]<-ARIstatmodels[[i]]$arma[1] #AR order chosen (uses AICc)
 }
 ```
 ```{r,echo=FALSE,warning=FALSE,message=FALSE}
