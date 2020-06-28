@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Bayes on David Childers</title>
+    <link>/tags/bayes/</link>
+    <description>Recent content in Bayes on David Childers</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>&amp;copy; 2018</copyright>
+    <lastBuildDate>Sun, 28 Jun 2020 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/bayes/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Posterior Samplers for Turing.jl</title>
+      <link>/post/posterior-samplers-for-turing-jl/</link>
+      <pubDate>Sun, 28 Jun 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/posterior-samplers-for-turing-jl/</guid>
+      <description>Prompted by a question on the slack for Turing.jl about when to use which Bayesian sampling algorithms for which kinds of problems, I compiled a quick off-the-cuff summary of my opinions on specific samplers and how and when to use them. Take these with a grain of salt, as I have more experience with some than with others, and in any case the nice thing about a framework like Turing is that you can switch out samplers easily and test for yourself which is best for your application.</description>
+    </item>
+    
+  </channel>
+</rss>

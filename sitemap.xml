@@ -5,6 +5,15 @@
     
     <url>
     
+      <loc>/post/posterior-samplers-for-turing-jl/</loc>
+      <lastmod>2020-06-28T00:00:00+00:00</lastmod>
+    </url>
+    
+  
+    
+    
+    <url>
+    
       <loc>/post/on-online-learning-for-economic-forecasts/</loc>
       <lastmod>2019-10-29T00:00:00+00:00</lastmod>
     </url>
@@ -131,6 +140,14 @@
     
     <url>
     
+      <loc>/post/2020-06-28-posterior-samplers-for-turing-jl/</loc>
+    </url>
+    
+  
+    
+    
+    <url>
+    
       <loc>/publication_types/3/</loc>
       <lastmod>2018-10-13T00:00:00-04:00</lastmod>
       <priority>0</priority>
@@ -161,6 +178,16 @@
     
     <url>
     
+      <loc>/tags/bayes/</loc>
+      <lastmod>2020-06-28T00:00:00+00:00</lastmod>
+      <priority>0</priority>
+    </url>
+    
+  
+    
+    
+    <url>
+    
       <loc>/categories/</loc>
       <priority>0</priority>
     </url>
@@ -181,7 +208,7 @@
     <url>
     
       <loc>/tags/econometrics/</loc>
-      <lastmod>2019-10-29T00:00:00+00:00</lastmod>
+      <lastmod>2020-06-28T00:00:00+00:00</lastmod>
       <priority>0</priority>
     </url>
     
@@ -282,6 +309,16 @@
     
       <loc>/tags/</loc>
       <lastmod>2017-01-01T00:00:00-05:00</lastmod>
+      <priority>0</priority>
+    </url>
+    
+  
+    
+    
+    <url>
+    
+      <loc>/tags/turing/</loc>
+      <lastmod>2020-06-28T00:00:00+00:00</lastmod>
       <priority>0</priority>
     </url>
     

@@ -22,9 +22,18 @@
     </item>
     
     <item>
+      <title>Bayes</title>
+      <link>/tags/bayes/</link>
+      <pubDate>Sun, 28 Jun 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/bayes/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Econometrics</title>
       <link>/tags/econometrics/</link>
-      <pubDate>Tue, 29 Oct 2019 00:00:00 +0000</pubDate>
+      <pubDate>Sun, 28 Jun 2020 00:00:00 +0000</pubDate>
       
       <guid>/tags/econometrics/</guid>
       <description></description>
@@ -99,6 +108,15 @@
       <pubDate>Wed, 03 Jun 2015 00:00:00 +0000</pubDate>
       
       <guid>/tags/spectral-theory/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Turing</title>
+      <link>/tags/turing/</link>
+      <pubDate>Sun, 28 Jun 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/turing/</guid>
       <description></description>
     </item>
     
