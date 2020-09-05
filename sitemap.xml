@@ -5,6 +5,15 @@
     
     <url>
     
+      <loc>/post/some-issues-with-bayesian-epistemology/</loc>
+      <lastmod>2020-09-05T00:00:00+00:00</lastmod>
+    </url>
+    
+  
+    
+    
+    <url>
+    
       <loc>/post/posterior-samplers-for-turing-jl/</loc>
       <lastmod>2020-06-28T00:00:00+00:00</lastmod>
     </url>
@@ -179,7 +188,7 @@
     <url>
     
       <loc>/tags/bayes/</loc>
-      <lastmod>2020-06-28T00:00:00+00:00</lastmod>
+      <lastmod>2020-09-05T00:00:00+00:00</lastmod>
       <priority>0</priority>
     </url>
     

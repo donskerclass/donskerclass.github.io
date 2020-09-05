@@ -13,6 +13,15 @@
     
     
     <item>
+      <title>Some issues with Bayesian epistemology</title>
+      <link>/post/some-issues-with-bayesian-epistemology/</link>
+      <pubDate>Sat, 05 Sep 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/some-issues-with-bayesian-epistemology/</guid>
+      <description>In this post, I’d like to lay out a few questions and concerns I have about Bayesianism and Bayesian decision theory as a normative theory of inductive inference. As a positive theory, of what people do, psychology is full of demonstrations of cases where people do not use Bayesian reasoning (the entire “heuristics and biases” area), which is interesting but not my target. There are no new ideas here, just a summary of some old concerns which merit more consideration, and not even necessarily the most important ones, which are better covered elsewhere.</description>
+    </item>
+    
+    <item>
       <title>Posterior Samplers for Turing.jl</title>
       <link>/post/posterior-samplers-for-turing-jl/</link>
       <pubDate>Sun, 28 Jun 2020 00:00:00 +0000</pubDate>
