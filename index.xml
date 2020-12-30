@@ -11,6 +11,64 @@
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Top Papers 2020</title>
+      <link>/post/top-papers-2020/</link>
+      <pubDate>Wed, 30 Dec 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/top-papers-2020/</guid>
+      <description>&lt;p&gt;The following is a look back at my reading for 2020, identifying a totally subjective set of the top 10 papers I read this year. My reading patterns, as usual, have not been so systematic, so if your brilliant work is missing it either slipped past my attention or is living in an ever-expanding set of folders and browser tabs on my to-read list. I’ll exclude papers I refereed, for privacy purposes (a fair amount if you include conferences and also cutting out a lot of the macroeconomics from my list). Themes I focused on were Bayesian computation, the optimal policy estimation/dynamic treatment regime/offline reinforcement learning space, and survival/point process models, all more-or-less project-related and in all of which I’m sure I’m missing some foundational understanding. I spent a brief time in March mostly reading about basic epidemiology, which I am led to believe many others did as well, but didn’t take it anywhere.&lt;/p&gt;
+&lt;p&gt;Papers, in alphabetical order&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Adusumilli, Geiecke, Schilter. &lt;a href=&#34;https://arxiv.org/abs/1904.01047&#34;&gt;Dynamically optimal treatment allocation using reinforcement learning&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;Approximation methods for estimating viscosity solutions of HJB equations and their resulting optimal policies policies from data. These methods will form a key step in taking continuous time dynamic macro models (see &lt;a href=&#34;https://benjaminmoll.com/lectures/&#34;&gt;Moll lecture notes&lt;/a&gt;) to data.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Andrews &amp;amp; Mikusheva &lt;a href=&#34;https://scholar.harvard.edu/iandrews/publications/optimal-decision-rules-weak-gmm&#34;&gt;Optimal Decision Rules for Weak GMM&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;The Generalized Method of Moments defines a semiparametric estimator implicitly, making it often unclear what the form of the nuisance parameter being ignored actually is, especially in cases of irregular identification. This paper takes a middle ground between the fully Bayesian semiparametric approach which puts a (usually Dirichlet Process) prior over the infinite dimensional nuisance space and the regular frequentist approach which ignores it entirely, showing weak convergence to a Gaussian Process, which is tractable enough to characterize and apply to obtain approximate Bayesian tests and decision rules without strong identification.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Cevid, Michel, Bühlmann, &amp;amp; Meinshausen &lt;a href=&#34;https://arxiv.org/abs/2005.14458&#34;&gt;Distributional Random Forests : Heterogeneity Adjustment and Multivariate Distributional Regression&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;Conditional density estimation by random forests with splits by (approximate) kernel MMD distribution tests. Produces a set of conditional weights that can be used to represent and visualize possibly multivariate conditional distributions. An &lt;a href=&#34;https://github.com/lorismichel/drf&#34;&gt;R package&lt;/a&gt; is available and this really quickly became one of my go-to data exploration tools.&lt;/li&gt;
+&lt;li&gt;See also: Lee and Pospisil have a &lt;a href=&#34;https://github.com/tpospisi/rfcde&#34;&gt;related method&lt;/a&gt; splitting by sieve &lt;span class=&#34;math inline&#34;&gt;\(L^2\)&lt;/span&gt; distance tests which is more or less similar, though more tailored to low dimensional outputs.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Gelman, Vehtari, Simpson, Margossian, Carpenter, Yao, Kennedy, Gabry, Bürkner, Modrák. &lt;a href=&#34;http://arxiv.org/abs/2011.01808&#34;&gt;Bayesian Workflow&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;A comprehensive overview of what Bayesian statisticians actually do when analyzing data, as opposed to the mythology in our intro textbooks (roughly, the likelihood is given to you by God, you think real hard and come up with a prior, then you apply Bayes rule and are done). It includes all the bits of sequential model expansion and checking and computational diagnostics and compromise between simplicity, convention, and domain expertise you actually go through to build a Bayesian model from scratch. The contrarian in me would love to see more frequentist analysis of this paradigm. A lot of the checks are there to make sure you’re not fooling yourself; how well do they work in practice?&lt;/li&gt;
+&lt;li&gt;See also Michael Betancourt’s &lt;a href=&#34;https://betanalpha.github.io/writing/&#34;&gt;notebooks&lt;/a&gt; for worked examples of this process.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Giannone, Lenza, Primiceri &lt;a href=&#34;https://www.tandfonline.com/doi/abs/10.1080/01621459.2018.1483826&#34;&gt;Priors for the Long Run&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;Exact rank constraints for cointegration are often uncertain, making pure VECM modeling a bit fraught, but standard priors on the VAR form are not strongly constraining of long run relationships, and improper treatment of initial conditions can lead to spurious inference on trends. This proposes a simple class of priors which allow “soft” constraints.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Kallus and Uehara &lt;a href=&#34;http://arxiv.org/abs/1908.08526&#34;&gt;Double Reinforcement Learning for Efficient Off-Policy Evaluation in Markov Decision Processes&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;Characterizes the semiparametric efficiency bound for the value of a dynamic policy and provides a doubly robust estimator combining the appropriate variants of a regression statistic and a (sequential) probability weighting statistic, allowing use of nonparametric and (with sample splitting) machine learning estimates in reinforcement learning while retaining parametric convergence rates.&lt;/li&gt;
+&lt;li&gt;See also companion papers on estimating the &lt;a href=&#34;https://arxiv.org/abs/2002.04014&#34;&gt;policy and policy gradient&lt;/a&gt; and extending to the case of &lt;a href=&#34;http://arxiv.org/abs/2006.03900&#34;&gt;deterministic policies&lt;/a&gt; (which require smoothing) among others, or watch &lt;a href=&#34;https://www.youtube.com/watch?v=n5ZoxT_WmHo&#34;&gt;the talk&lt;/a&gt; for an overview.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Sawhney &amp;amp; Crane &lt;a href=&#34;https://dl.acm.org/doi/abs/10.1145/3386569.3392374&#34;&gt;Monte Carlo Geometry Processing: A Grid-Free Approach to PDE-Based Methods on Volumetric Domains&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;I don’t usually read papers in computer graphics, but I do care a lot about computing &lt;a href=&#34;https://donskerclass.github.io/post/why-laplacians/&#34;&gt;Laplacians&lt;/a&gt; and this paper offers a clever new Monte Carlo based method that allows computation on much more complicated domains. It’s not yet obvious to me whether the method generalizes to the PDE classes I and other macroeconomists &lt;a href=&#34;https://benjaminmoll.com/wp-content/uploads/2019/07/PDE_macro_translated.pdf&#34;&gt;tend to work with&lt;/a&gt;, but even if not it should still be handy for many applications.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Schmelzing &lt;a href=&#34;https://www.bankofengland.co.uk/working-paper/2020/eight-centuries-of-global-real-interest-rates-r-g-and-the-suprasecular-decline-1311-2018&#34;&gt;Eight Centuries of Global Real Interest Rates, R-G, and the ‘Suprasecular’ Decline, 1311–2018&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;An enormous data collection process and public good which will be informing research on interest rates for years to come. As with any such effort at turning messy historical data into aggregate series, many contestable choices go into data selection, standardization, and normalization, and I don’t think the author’s simple trend estimates of a several hundred year decline will be the last word on the statistical properties or future implications of this data, but now that it’s out there we have a basis for discussion and testing.&lt;/li&gt;
+&lt;li&gt;See also: lots of useful historical macro data collection (going not quite so far back) by the folks at the Bonn &lt;a href=&#34;http://www.macrohistory.net/&#34;&gt;Macrohistory Lab&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Wolf &lt;a href=&#34;https://www.aeaweb.org/articles?id=10.1257/mac.20180328&#34;&gt;SVAR ( Mis- ) Identification and the Real Effects of Monetary Policy&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;A nice practical application of Bayesian model checking, applying SVAR methods to simulated macro data when the (usually a bit suspect) identifying restrictions need not hold exactly. It finds that early sign-restricted BVARs with uniform (Haar) priors tend to be biased toward finding monetary neutrality, and do not in fact provide noteworthy evidence contradicting the implied shock responses of typical central bank monetary DSGEs. Of course, such models have many other problems and not being contradicted by one test is not dispositive, but macro debates would be elevated if people would check to make sure that their contradictory evidence is in fact contradictory (respectively, supportive).&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Wang and Blei &lt;a href=&#34;http://arxiv.org/abs/1905.10859&#34;&gt;Variational Bayes under Model Misspecification&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;Describes what (mean field) variational Bayes ends up targeting, at least in cases where a Bernstein von Mises approximation works well enough. Also covers the much more nontrivial case with latent variables.&lt;/li&gt;
+&lt;li&gt;I will judiciously refrain from comment on other recent works by this pair (discussion &lt;a href=&#34;https://casualinfer.libsyn.com/fairness-in-machine-learning-with-sherri-rose-episode-03&#34;&gt;1&lt;/a&gt;, &lt;a href=&#34;https://casualinfer.libsyn.com/episode-15-dr-betsy-ogburn&#34;&gt;2&lt;/a&gt;) except to say that dimensionality reduction in causal inference deserves more study and this &lt;a href=&#34;https://drive.google.com/file/d/1aN1cK_UEffkBT34a2aNtrZKIJFw_xibX/view?usp=sharing&#34;&gt;manifold learning approach&lt;/a&gt; to create a nonparametric version of interactive fixed effects estimation looks like a useful supplement the standard panel data toolbox.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Some issues with Bayesian epistemology</title>
       <link>/post/some-issues-with-bayesian-epistemology/</link>
       <pubDate>Sat, 05 Sep 2020 00:00:00 +0000</pubDate>

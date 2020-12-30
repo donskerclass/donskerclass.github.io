@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
-    <lastBuildDate>Thu, 07 Dec 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 30 Dec 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/review/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Top Papers 2020</title>
+      <link>/post/top-papers-2020/</link>
+      <pubDate>Wed, 30 Dec 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/top-papers-2020/</guid>
+      <description>The following is a look back at my reading for 2020, identifying a totally subjective set of the top 10 papers I read this year. My reading patterns, as usual, have not been so systematic, so if your brilliant work is missing it either slipped past my attention or is living in an ever-expanding set of folders and browser tabs on my to-read list. I’ll exclude papers I refereed, for privacy purposes (a fair amount if you include conferences and also cutting out a lot of the macroeconomics from my list).</description>
+    </item>
     
     <item>
       <title>Top Papers 2017</title>
