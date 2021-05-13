@@ -1,0 +1,492 @@
+---
+title: "Methods and Motivation"
+author: "73-423 Forecasting for Economics and Business"
+output:
+  html_document:
+    code_folding: show
+---
+
+
+## Building a Forecast
+
+- Given series $\mathcal{Y}_T:=\{Y_t\}_{t=1}^T$
+- Forecast **horizon** $h$
+    - Number of periods out we want to forecast
+- Goal: predict the value of $y_{T+h}$
+- A **forecasting method** is a function that takes as input data $\mathcal{Y}_T$ and possibly other inputs, and produces a forecast
+$$\widehat{y}_{t+h}=f(\mathcal{Y}_T,\text{other stuff})$$
+
+- Today
+    - Overview of some example methods
+    - How to evaluate results
+
+
+## Simple Forecast Methods
+
+- **Trivial**: always predict 0, regardless of the data
+$$f(\mathcal{Y}_T)=0$$
+    - Simple, easy to compute, stable
+
+- **Naïve**: Just pick the last value
+$$f(\mathcal{Y}_T)=y_T$$
+    - The next period will be the same as the current period
+    - Simple and straightforward, and uses the data
+    - Also called "**random walk forecast**"
+
+- **Mean**:   Take the average past value
+$$f(\mathcal{Y}_T)=\frac{1}{T}\sum_{t=1}^T y_t$$
+    - Still fairly simple, now uses all the data
+    
+    
+## Implementation
+
+- Apply methods to a monthly series of a Manufacturer's inventories of Condensed Milk, 1971-1980
+- Typical company forecasting task: predict inventories to avoid over-accumulation or stock-outs
+
+```{r, eval=FALSE}
+library(fpp2)
+data(condmilk) #Inventory Data
+#Forecast using each of above methods
+milknaive<-naive(condmilk,h=12) #Naive forecast, 12 months out
+milkmean<-meanf(condmilk,h=12) #Mean forecast, 12 months out
+trivialFC<-c(0,0,0,0,0,0,0,0,0,0,0,0)
+milktrivial<-ts(trivialFC,start=c(1981,1),frequency=12) #Trivial forecast, 12 months out
+
+#Plot the forecasts
+autoplot(condmilk,series="Observed")+
+  autolayer(milknaive, PI=FALSE, series="Naive")+
+  autolayer(milktrivial, series="Trivial")+
+  autolayer(milkmean, PI=FALSE,series="Mean")+
+  ggtitle("Forecasts for Monthly Milk Stocks") +
+  guides(colour=guide_legend(title="Series and Forecasts"))
+```
+    
+    
+## Plot
+
+```{r, echo=FALSE}
+suppressMessages(suppressWarnings(library(fpp2))) 
+data(condmilk) #Inventory Data
+#Forecast using each of above methods
+milknaive<-naive(condmilk,h=12) #Naive forecast, 12 months out
+milkmean<-meanf(condmilk,h=12) #Mean forecast, 12 months out
+trivialFC<-c(0,0,0,0,0,0,0,0,0,0,0,0)
+milktrivial<-ts(trivialFC,start=c(1981,1),frequency=12) #Trivial forecast, 12 months out
+
+#Plot the forecasts
+autoplot(condmilk,series="Observed")+
+  autolayer(milknaive, PI=FALSE, series="Naive")+
+  autolayer(milktrivial, series="Trivial")+
+  autolayer(milkmean, PI=FALSE,series="Mean")+
+  ggtitle("Forecasts for Monthly Milk Stocks") +
+  guides(colour=guide_legend(title="Series and Forecasts"))
+```
+
+## Methods with parameters
+
+- Going beyond the simplest methods, one can construct families of methods which are similar 
+    - Differ by one or more additional inputs to the method, which must be chosen
+    - Extra inputs are called **parameters**
+    - Once parameters are set, method again depends only on the data
+- Denote parameter by $\theta$, and set of possible parameters as $\Theta$  
+- A parametric forecast method is a set of methods 
+
+$$\{f(\mathcal{Y}_T,\theta,\text{other stuff})\}_{\theta\in\Theta}$$
+
+
+## Examples of Parametric Methods
+
+- **Trivial**: always predict the same number, $\theta$, regardless of the data
+$$f(\mathcal{Y}_T,\theta)=\theta$$
+    - $\theta=0$ gives the trivial forecast
+
+- **Autoregression**: Take $\theta$ times the last value
+$$f(\mathcal{Y}_T,\theta)=\theta y_T$$
+    - $\theta=1$ gives the naïve forecast
+    - Extend to horizon $h$ by $\widehat{y}_{T+h}=\theta^h y_T$
+
+- **Weighted Average**: Take average of past value + a constant, with different weights on different times
+$$f(\mathcal{Y}_T,\{\theta_t\}_{t=1}^{T})=\theta_0+\sum_{t=1}^T \theta_t y_t$$
+    - Extremely flexible, but requires many choices
+        - Picking $\theta_t=\frac{1}{T}$ for all t,$\theta_0=0$ gives unweighted average
+        - Picking $\theta_T=\theta$, $\theta_t=0$ for all $t<T$ gives autoregression
+    
+## Structured parametric models
+
+- Arbitrary weighted averages can be too complicated, but some flexibility can help: use special cases
+- **Autoregression of order p**, abbreviated as **AR(p)**
+    - Weighted sum of $p$ most recent values (and a constant)
+$$f(\mathcal{Y}_T,\{\theta_j\}_{j=0}^{p})=\theta_0+\sum_{j=0}^{p-1} \theta_{j+1} y_{T-j}$$    
+- **Simple Exponential Smoothing**
+    - Weighted average where weights decline by fixed amount each time period
+    - Use all data, with more weight on recent past 
+    - Takes two parameters $\alpha\in[0,1]$ and $\ell_0$
+$$f(\mathcal{Y}_T,\alpha,\ell_0)=(1-\alpha)^T\ell_0+\sum_{j=0}^{T-1} \alpha(1-\alpha)^jy_{T-j}$$    
+    - Higher $\alpha$ gives more weight to recent data, up to $\alpha=1$ naïve forecast
+    
+## Choosing parameters
+
+- Applying a parametric method requires a choice of which parameters to use
+- Can pick based on sensible default values
+    - Random walk $\theta=1$ often a good choice for autoregression with economic data
+- Usually apply a parameter selection method based on the data
+$$\theta=\widehat{\theta}(\mathcal{Y}_T)$$
+- Full forecasting method now a function of data again
+$$f(\mathcal{Y}_T)=f(\mathcal{Y}_T,\widehat{\theta}(\mathcal{Y}_T))$$
+- Many types of parameter selection methods exist
+    - Will discuss details in later classes
+- Selecting parameters not quite the same as "estimation" in statistics
+    - Care about $f(\mathcal{Y}_T)$, not $\theta$ itself
+    
+## Implementation
+
+- Forecast using parametric methods, with default parameter selection rules
+    - Autoregressive models of order 1 and order 4
+    - Simple Exponential Smoothing
+
+```{r, eval=FALSE}
+milkAR1selection<-Arima(condmilk,order=c(1,0,0),include.mean=FALSE) #Choose parameter of AR(1) model
+    #Do not include added constant
+milkAR1<-forecast(milkAR1selection,h=12) #Autoregression of order 1 forecast, 12 months out
+milkAR4selection<-Arima(condmilk,order=c(4,0,0)) #Choose parameters of AR(4) model, including constant
+milkAR4<-forecast(milkAR4selection,h=12) #Autoregression of order 4 forecast, 12 months out
+milkexpsm<-ses(condmilk,h=12) #Simple Exponential Smoothing Forecast, 12 months out
+
+#Plot the forecasts
+autoplot(condmilk,series="Observed")+
+  autolayer(milkAR1, PI=FALSE, series="AR(1) no constant")+
+  autolayer(milkAR4, PI=FALSE,series="AR(4)")+
+  autolayer(milkexpsm, PI=FALSE,series="Simple Exponential Smoothing")+
+  ggtitle("Forecasts for Monthly Milk Stocks") +
+  guides(colour=guide_legend(title="Series and Forecasts"))
+```
+
+## Plot
+
+```{r, echo=FALSE}
+#Forecast using parametric methods, with default parameter selection rules
+milkAR1selection<-Arima(condmilk,order=c(1,0,0),include.mean=FALSE) #Choose parameter of AR(1) model
+    #Do not include added constant
+milkAR1<-forecast(milkAR1selection,h=12) #Autoregression of order 1 forecast, 12 months out
+milkAR4selection<-Arima(condmilk,order=c(4,0,0)) #Choose parameters of AR(4) model, including constant
+milkAR4<-forecast(milkAR4selection,h=12) #Autoregression of order 4 forecast, 12 months out
+milkexpsm<-ses(condmilk,h=12) #Simple Exponential Smoothing Forecast, 12 months out
+
+#Plot the forecasts
+autoplot(condmilk,series="Observed")+
+  autolayer(milkAR1, PI=FALSE, series="AR(1) no constant")+
+  autolayer(milkAR4, PI=FALSE,series="AR(4)")+
+  autolayer(milkexpsm, PI=FALSE,series="Simple Exponential Smoothing")+
+  ggtitle("Forecasts for Monthly Milk Stocks") +
+  guides(colour=guide_legend(title="Series and Forecasts"))
+```
+
+## Parameters Chosen
+
+```{r}
+# alpha and l_0 from exponential smoothing
+milkexpsm$model$fit$par
+# AR(1) Coefficient
+milkAR1selection$coef
+# AR(4) Coefficients
+milkAR4selection$coef
+```
+
+## Seasonal and trending data
+
+- Some simple methods are designed to rely on and exploit particular features of existing data
+- These methods extrapolate features like seasonality or trends to future data
+- Let $m$ be the frequency of the series
+    - ex: $m=4$ for quarterly, $m=12$ for monthly data
+- **Seasonal naïve** forecast for seasonal data
+    - Predict the value as the last observed value from the same season
+$$f(\mathcal{Y}_T)=y_{T+1-m}$$
+    - Extend to horizon $h$ as $\widehat{y}_{T+h}=y_{T+h-m(\lfloor\frac{h-1}{m}\rfloor+1)}$
+    
+- **Drift Method** for trending data
+    - Adds average growth to naïve forecast
+    
+$$f(\mathcal{Y}_T)=y_{T}+\frac{1}{T-1}\sum_{t=2}^{T}(y_t-y_{t-1})$$
+
+- Seasonal and trending versions exist for autoregression, exponential smoothing, etc 
+
+## Implementation
+
+- Forecast using seasonal and drift methods
+    - Series appears highly seasonal, with minimal trend
+    - So expect better results from seasonal method
+    
+```{r, eval=FALSE}
+milksnaive<-snaive(condmilk,h=12) #Seasonal Naive forecast, 12 months out
+milkdrift<-rwf(condmilk,drift=TRUE,h=12) #Drift forecast, 12 months out
+
+#Plot the forecasts
+autoplot(condmilk,series="Observed")+
+  autolayer(milksnaive, PI=FALSE, series="Seasonal Naive")+
+  autolayer(milkdrift, PI=FALSE,series="Drift")+
+  ggtitle("Forecasts for Monthly Milk Stocks") +
+  guides(colour=guide_legend(title="Series and Forecasts"))
+```
+
+## Plot
+
+```{r,echo=FALSE}
+#Forecast using seasonal
+milksnaive<-snaive(condmilk,h=12) #Seasonal Naive forecast, 12 months out
+milkdrift<-rwf(condmilk,drift=TRUE,h=12) #Drift forecast, 12 months out
+
+#Plot the forecasts
+autoplot(condmilk,series="Observed")+
+  autolayer(milksnaive, PI=FALSE, series="Seasonal Naive")+
+  autolayer(milkdrift, PI=FALSE,series="Drift")+
+  ggtitle("Forecasts for Monthly Milk Stocks") +
+  guides(colour=guide_legend(title="Series and Forecasts"))
+```
+
+## Adding External Data
+
+- A forecast might be a function of series of interest AND other data, $\mathcal{X}_T$
+    - Related time series, Background information, etc
+- Method becomes 
+$$\widehat{y}_{T+h}=f(\mathcal{Y}_T,\mathcal{X}_T,\text{other stuff})$$
+- Example: **(Predictive) Regression**
+    - Forecast is linear function of $x_T$
+$$\widehat{y}_{T+h}=f(\mathcal{Y}_T,\mathcal{X}_T,\theta)=\theta_0+\theta_1 x_T$$ 
+- More generally, may use subjective or **judgmental** assessment to come up with a number
+- **Judgemental forecast**: think real hard and come up with a number
+$$\widehat{y}_{T+h}=f(\mathcal{Y}_T,\text{whatever you're thinking})=???$$
+- **Expert forecast**: ask someone else to think real hard and come up with a number
+$$\widehat{y}_{T+h}=f(\mathcal{Y}_T,\text{whatever they're thinking})=???$$
+
+
+## Random methods
+
+- Some forecasting methods involve randomness
+- Let $U$ be a random variable, with distribution $F(u)$
+- A randomized method takes the random variable as an input, so its output is also random
+- E.g. **Random Guess**: pick a number at random, without using the data
+$$f(\mathcal{Y}_T,U)=U$$
+    - A random guess is a random generalization of trivial method
+    - A randomized version of any other procedure can be made by adding $U$ to the output
+- Not super common, but one part of some more complicated methods
+
+## Choices: Finding a "Good" method
+
+- Now we know we CAN use any of these methods to forecast
+- What SHOULD we use?
+    - Depends on application
+- Want a good guess because bad guesses will lead to bad decisions
+    - Sales forecasts too high or low both lead to incorrect inventory decisions, lower profit
+    - Financial market forecasts too high or low lead to bad buy/sell decisions, lower profit
+    - Missed economic indicator forecasts can lead to inappropriate policy, worse outcomes
+- Ideal forecast: exact true value $y_{T+h}$
+    - Problem: value isn't known
+- Next best choice: something very close to $y_{T+h}$
+    - Problem: also not known
+    - Problem: what is *close*?
+- Need a measure of how bad decision will have turned out to be given an incorrect forecast
+    - A "Loss Function"
+
+
+## Loss Functions
+
+- Mathematically, a loss function $\ell(.,.)$ 
+    - Takes true value $y$ and forecast value $\widehat{y}$
+    - Outputs a number measuring how bad the guess was
+- *After* truth is known, says how bad forecast was    
+- Acts like (dis)utility of outcome
+    - If used to utility functions from economics, this is negative of utility
+- Usual property
+    - $y=\underset{\widehat{y}}{\arg\min}\ell(y,.)$ for all $y$
+    - A perfect forecast is alway (weakly) better than other guesses
+- If above holds, can use normalized version
+    - $\ell(y,y)=0$ for any $y$. 0 Loss for exactly correct guesses
+    - $\ell(y_1,y_2)\geq 0$ for any $y_1,y_2$. Incorrect guesses are (weakly) worse
+- If profit $\pi(y,\widehat{y})$ is maximized by correct forecasts
+    - $\ell(y,\widehat{y})=\pi(y,y))-\pi(y,\widehat{y})$ is equivalent loss function
+
+## Examples
+
+- Common loss functions $\ell(y,\widehat{y})$ use measures of absolute or relative distance
+- Absolute Error
+$$|y-\widehat{y}|$$
+- Squared Error
+$$(y-\widehat{y})^2$$
+- Absolute Percent Error: Requires non-zero values of $y$
+$$\left|100\frac{(y-\widehat{y})}{y}\right|$$
+- Absolute Scaled Error: Compares error to average error of a random walk forecast
+$$\left|\frac{(y-\widehat{y})}{\frac{1}{T-1}\sum_{t=2}^T|y_t-y_{t-1}|}\right|$$
+
+## Evaluating Loss
+
+- To see how forecast method performed in past, can evaluate loss within data $\mathcal{Y}_T$
+- Sample mean of loss function common way to describe past performance
+$$\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\mathcal{Y}_{t}))$$
+- For Squared Error, this is called MSE, for Absolute Error, MAE, for Abolute Percent Error, MAPE, Absolute Scaled Error MASE
+    - Usually take square root of MSE to get RMSE: Units same as series
+- Answers question: "How much loss would I have incurred (on average) had I used this method in the past?"
+- *Not* same as "How much loss will I incur if I use this method in the future?"
+
+
+## Evaluating Parametric Methods
+
+- With parameterized methods, common to use different data for forecast rule and parameter selection rule
+$$\widehat{y}_{t+h}=f(\mathcal{Y}_t,\widehat{\theta}(\mathcal{Y}_T))$$
+- Predicted value for $y_{t+h}$ that you would predict at $t$ using the forecast rule chosen using all the data up to $T$
+    - Mostly done for computational reasons: methods to calculate $\widehat{\theta}(\mathcal{Y}_T)$ can be very slow
+- Values $y_{t+h}-f(\mathcal{Y}_t,\widehat{\theta}(\mathcal{Y}_T))$ are called **residuals**
+    - $\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\mathcal{Y}_t,\widehat{\theta}(\mathcal{Y}_T)))$ is residual error
+    - Also given name MSE, MAE, MAPE, etc
+- Residuals are a measure of error, but do not describe loss from a feasible procedure
+- To compare a feasible measure, also use only past data for forecasting rule
+    - Predict $\widehat{y}_{t+h}=f(\mathcal{Y}_t,\widehat{\theta}(\mathcal{Y}_t))$
+    - Errors and loss from this approach called "evaluation on rolling forecast origin"
+    - Calculate via **tsCV** in forecast package
+    - Can be slow: calculate $\widehat{\theta}(\mathcal{Y}_t)$ many times
+    
+## Evaluation 
+- Construct rolling forecast origin AR4 models and evaluate 1-month errors
+```{r}
+far4 <- function(x, h){forecast(Arima(x, order=c(4,0,0)), h=h)}
+AR4forecasterrors<-tsCV(condmilk,far4,h=1)
+#Rolling Forecast Error RMSE and MAE
+RMSEfc<-sqrt(mean((AR4forecasterrors)^2,na.rm = TRUE))
+MAEfc<-mean(abs(AR4forecasterrors),na.rm = TRUE)
+#Compare RMSE and MAE on residuals
+RMSEres<-sqrt(mean((milkAR4selection$residuals)^2,na.rm = TRUE))
+MAEres<-mean(abs(milkAR4selection$residuals),na.rm = TRUE)
+```
+Method      | RMSE        | MAE
+------------|-------------|----------
+Residual    |`r RMSEres`  |`r MAEres` 
+Rolling     |`r RMSEfc`   |`r MAEfc`
+
+- Rolling window errors are larger than residual errors
+- Former reflect what you *would have* gotten from running method in the past
+
+## Train vs Test Set
+
+- Simple compromise: Split $\mathcal{Y}_T$ into $$\mathcal{Y}_{Train},\mathcal{Y}_{Test}$$
+$$\mathcal{Y}_{Train}=\{y_t\}_{t=1}^{S},\mathcal{Y}_{Test}=\{y_t\}_{t=S+1}^{T}$$ 
+    - where $S$ is split point
+- Compute error as 
+$$\frac{1}{T-S}\sum_{t=S+1}^{T}\ell(y_{t},f(\mathcal{Y}_{\min\{t-h,S\}},\widehat{\theta}(\mathcal{Y}_{Train})))$$
+- Allows fast computation: compute $\widehat{\theta}(\mathcal{Y}_{Train})$ only once
+- Performance measure describes feasible method, since test set not used
+
+## Train vs Test Set
+
+- Compute test set accuracy for milk forecasts by many measures
+```{r}
+milktrain<-window(condmilk,end=c(1977,12)) #Until 1978
+milktest<-window(condmilk,start=c(1978,1)) #After 1978                  
+milkAR4train<-Arima(milktrain,order=c(4,0,0))
+milkAR4forecast<-forecast(milkAR4train,h=36)
+#Test set RMSE and MAE
+RMSE<-sqrt(mean((milkAR4forecast$mean-milktest)^2))
+MAE<-mean(abs(milkAR4forecast$mean-milktest))
+```
+Method            | RMSE        | MAE
+------------------|-------------|----------
+Test Set Error    |`r RMSE`     |`r MAE` 
+
+```{r,eval=FALSE}
+#Plot results
+autoplot(milktrain, series="Training Set Data")+
+  autolayer(milktest,series="Test Set Data")+
+  autolayer(milkAR4forecast, PI=FALSE,series="Forecast")+
+  ggtitle("Forecasts for Monthly Milk Stocks") +
+  guides(colour=guide_legend(title="Series and Forecasts"))
+```
+
+## Plot
+
+```{r,echo=FALSE}
+#Plot results
+autoplot(milktrain, series="Training Set Data")+
+  autolayer(milktest,series="Test Set Data")+
+  autolayer(milkAR4forecast, PI=FALSE,series="Forecast")+
+  ggtitle("Forecasts for Monthly Milk Stocks") +
+  guides(colour=guide_legend(title="Series and Forecasts"))
+```
+
+## The problem of induction
+
+- Now that we can measure forecasting performance, what do we know about how to forecast?
+    - Not much!
+- Problem:    
+- "Past performance does not necessarily predict future results"
+    - U.S. Securities and Exchange Commission mandatory warning, paraphrasing Scottish Enlightenment philosopher David Hume
+![David Hume. Source: Wikimedia](Figures/David_Hume_2.jpg)
+
+
+## The problem of induction
+
+- No matter how good the empirical performance of the method, or how much data, cannot say anything at all about what will happen on new data without additional logical premises
+- Will sun rise tomorrow? 
+    - Has done so every recorded day in the past
+    - Premise that things that have always happened before will continue to happen might be true 
+    - But can't be justified by the fact that it's been true in the past 
+- Circularity of reasoning best expressed by considering opposite belief (cf Aaronson (2013) p229)
+- There is "a planet full of people who believe in *anti-induction*: if the sun has risen every day in the past, then today, we should expect that it won't. As a result, these people are all starving and living in poverty. Someone visits the planet and tells them, "Hey, why are you still using this anti-induction philosophy? You're living in horrible poverty" 
+    - They respond; "Well, it never worked before..."
+
+- Clearly, we are going to need some additional principles
+
+
+<!-- ## Grue and Bleen -->
+
+<!-- - Can we get around this by taking as a premise that induction works? -->
+<!-- - Probably we need more than that -->
+<!-- - Consider an observation: -->
+<!--     - Every day, the sky has been blue -->
+<!--     - Every day, emeralds have been green -->
+<!-- - Suppose induction is valid -->
+<!--     - Reasonable to forecast the sky will continue to be blue, emeralds continue to be green -->
+<!-- - Consider another premise  -->
+<!--     - Every day, the sky has been bleen -->
+<!--     - Every day, emeralds have been grue -->
+<!-- - Bleen is "blue until January 24, 2019, green thereafter" -->
+<!--   - Grue is "green until January 24, 2019, blue thereafter" -->
+<!-- - Induction alone says to forecast the sky will continue to be bleen, emeralds continue to be grue -->
+
+<!-- ## Can we get around this? -->
+
+<!-- - Maybe these are wrong concepts?  -->
+<!--   - They seem to require assuming changes -->
+<!-- - But take grue and bleen as foundational -->
+<!-- - Blue is "bleen until January 24, 2019, grue thereafter" -->
+<!--   - Green is "grue until January 24, 2019, bleen thereafter" -->
+
+
+
+## Next class
+
+- Principles of forecasting
+    - No "right" answer
+    - Multiple reasonable approaches
+- Submit first problem sets
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

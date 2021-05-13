@@ -3,7 +3,7 @@ title: "Methods and Motivation"
 author: "73-423 Forecasting for Economics and Business"
 output:
   html_document:
-    code_folding: show
+    code_folding: hide
 ---
 
 
@@ -43,15 +43,16 @@ $$f(\mathcal{Y}_T)=\frac{1}{T}\sum_{t=1}^T y_t$$
 - Apply methods to a monthly series of a Manufacturer's inventories of Condensed Milk, 1971-1980
 - Typical company forecasting task: predict inventories to avoid over-accumulation or stock-outs
 
-```{r, eval=FALSE}
-library(fpp2)
-data(condmilk) #Inventory Data
+```{r, eval=FALSE, class.source = 'fold-show'}
+library(fpp2) #Loads forecasting functionsm and data sets
 #Forecast using each of above methods
 milknaive<-naive(condmilk,h=12) #Naive forecast, 12 months out
 milkmean<-meanf(condmilk,h=12) #Mean forecast, 12 months out
 trivialFC<-c(0,0,0,0,0,0,0,0,0,0,0,0)
 milktrivial<-ts(trivialFC,start=c(1981,1),frequency=12) #Trivial forecast, 12 months out
+```
 
+```{r, eval=FALSE, echo=FALSE}
 #Plot the forecasts
 autoplot(condmilk,series="Observed")+
   autolayer(milknaive, PI=FALSE, series="Naive")+
@@ -65,14 +66,15 @@ autoplot(condmilk,series="Observed")+
 ## Plot
 
 ```{r, echo=FALSE}
+#Loads forecasting functionsm and data sets
 suppressMessages(suppressWarnings(library(fpp2))) 
-data(condmilk) #Inventory Data
 #Forecast using each of above methods
-milknaive<-naive(condmilk,h=12) #Naive forecast, 12 months out
+milknaive<-forecast::naive(condmilk,h=12) #Naive forecast, 12 months out
 milkmean<-meanf(condmilk,h=12) #Mean forecast, 12 months out
 trivialFC<-c(0,0,0,0,0,0,0,0,0,0,0,0)
 milktrivial<-ts(trivialFC,start=c(1981,1),frequency=12) #Trivial forecast, 12 months out
-
+```
+```{r}
 #Plot the forecasts
 autoplot(condmilk,series="Observed")+
   autolayer(milknaive, PI=FALSE, series="Naive")+
@@ -108,7 +110,7 @@ $$f(\mathcal{Y}_T,\theta)=\theta y_T$$
 - **Weighted Average**: Take average of past value + a constant, with different weights on different times
 $$f(\mathcal{Y}_T,\{\theta_t\}_{t=1}^{T})=\theta_0+\sum_{t=1}^T \theta_t y_t$$
     - Extremely flexible, but requires many choices
-        - Picking $\theta_t=\frac{1}{T}$ for all t,$\theta_0=0$ gives unweighted average
+        - Picking $\theta_t=\frac{1}{T}$ for all t, $\theta_0=0$ gives unweighted average
         - Picking $\theta_T=\theta$, $\theta_t=0$ for all $t<T$ gives autoregression
     
 ## Structured parametric models
@@ -144,14 +146,15 @@ $$f(\mathcal{Y}_T)=f(\mathcal{Y}_T,\widehat{\theta}(\mathcal{Y}_T))$$
     - Autoregressive models of order 1 and order 4
     - Simple Exponential Smoothing
 
-```{r, eval=FALSE}
+```{r, eval=FALSE, class.source = 'fold-show'}
 milkAR1selection<-Arima(condmilk,order=c(1,0,0),include.mean=FALSE) #Choose parameter of AR(1) model
     #Do not include added constant
 milkAR1<-forecast(milkAR1selection,h=12) #Autoregression of order 1 forecast, 12 months out
 milkAR4selection<-Arima(condmilk,order=c(4,0,0)) #Choose parameters of AR(4) model, including constant
 milkAR4<-forecast(milkAR4selection,h=12) #Autoregression of order 4 forecast, 12 months out
 milkexpsm<-ses(condmilk,h=12) #Simple Exponential Smoothing Forecast, 12 months out
-
+```
+```{r, eval=FALSE,echo=FALSE}
 #Plot the forecasts
 autoplot(condmilk,series="Observed")+
   autolayer(milkAR1, PI=FALSE, series="AR(1) no constant")+
@@ -171,7 +174,8 @@ milkAR1<-forecast(milkAR1selection,h=12) #Autoregression of order 1 forecast, 12
 milkAR4selection<-Arima(condmilk,order=c(4,0,0)) #Choose parameters of AR(4) model, including constant
 milkAR4<-forecast(milkAR4selection,h=12) #Autoregression of order 4 forecast, 12 months out
 milkexpsm<-ses(condmilk,h=12) #Simple Exponential Smoothing Forecast, 12 months out
-
+```
+```{r}
 #Plot the forecasts
 autoplot(condmilk,series="Observed")+
   autolayer(milkAR1, PI=FALSE, series="AR(1) no constant")+
@@ -183,7 +187,7 @@ autoplot(condmilk,series="Observed")+
 
 ## Parameters Chosen
 
-```{r}
+```{r, class.source = 'fold-show'}
 # alpha and l_0 from exponential smoothing
 milkexpsm$model$fit$par
 # AR(1) Coefficient
@@ -216,10 +220,11 @@ $$f(\mathcal{Y}_T)=y_{T}+\frac{1}{T-1}\sum_{t=2}^{T}(y_t-y_{t-1})$$
     - Series appears highly seasonal, with minimal trend
     - So expect better results from seasonal method
     
-```{r, eval=FALSE}
+```{r, eval=FALSE, class.source = 'fold-show'}
 milksnaive<-snaive(condmilk,h=12) #Seasonal Naive forecast, 12 months out
 milkdrift<-rwf(condmilk,drift=TRUE,h=12) #Drift forecast, 12 months out
-
+```
+```{r, eval=FALSE,echo=FALSE}
 #Plot the forecasts
 autoplot(condmilk,series="Observed")+
   autolayer(milksnaive, PI=FALSE, series="Seasonal Naive")+
@@ -234,7 +239,8 @@ autoplot(condmilk,series="Observed")+
 #Forecast using seasonal
 milksnaive<-snaive(condmilk,h=12) #Seasonal Naive forecast, 12 months out
 milkdrift<-rwf(condmilk,drift=TRUE,h=12) #Drift forecast, 12 months out
-
+```
+```{r}
 #Plot the forecasts
 autoplot(condmilk,series="Observed")+
   autolayer(milksnaive, PI=FALSE, series="Seasonal Naive")+
@@ -253,7 +259,7 @@ $$\widehat{y}_{T+h}=f(\mathcal{Y}_T,\mathcal{X}_T,\text{other stuff})$$
     - Forecast is linear function of $x_T$
 $$\widehat{y}_{T+h}=f(\mathcal{Y}_T,\mathcal{X}_T,\theta)=\theta_0+\theta_1 x_T$$ 
 - More generally, may use subjective or **judgmental** assessment to come up with a number
-- **Judgemental forecast**: think real hard and come up with a number
+- **Judgmental forecast**: think real hard and come up with a number
 $$\widehat{y}_{T+h}=f(\mathcal{Y}_T,\text{whatever you're thinking})=???$$
 - **Expert forecast**: ask someone else to think real hard and come up with a number
 $$\widehat{y}_{T+h}=f(\mathcal{Y}_T,\text{whatever they're thinking})=???$$
@@ -269,6 +275,11 @@ $$f(\mathcal{Y}_T,U)=U$$
     - A random guess is a random generalization of trivial method
     - A randomized version of any other procedure can be made by adding $U$ to the output
 - Not super common, but one part of some more complicated methods
+
+## Exercise: Try it yourself
+
+- Go to [Kaggle link](https://www.kaggle.com/davidchilders/forecast-methods) to try methods on Electricity Price data
+- Copy and edit file to implement, then share with instructor.
 
 ## Choices: Finding a "Good" method
 
@@ -290,7 +301,7 @@ $$f(\mathcal{Y}_T,U)=U$$
 
 ## Loss Functions
 
-- Mathematically, a loss function $\ell(.,.)$ 
+- Mathematically, a loss function $\ell(.,.)$ $\mathrm{Y}\times\mathrm{Y}\to\mathbb{R}$ 
     - Takes true value $y$ and forecast value $\widehat{y}$
     - Outputs a number measuring how bad the guess was
 - *After* truth is known, says how bad forecast was    
@@ -303,7 +314,7 @@ $$f(\mathcal{Y}_T,U)=U$$
     - $\ell(y,y)=0$ for any $y$. 0 Loss for exactly correct guesses
     - $\ell(y_1,y_2)\geq 0$ for any $y_1,y_2$. Incorrect guesses are (weakly) worse
 - If profit $\pi(y,\widehat{y})$ is maximized by correct forecasts
-    - $\ell(y,\widehat{y})=\pi(y,y))-\pi(y,\widehat{y})$ is equivalent loss function
+    - $\ell(y,\widehat{y})=\pi(y,y)-\pi(y,\widehat{y})$ is equivalent loss function
 
 ## Examples
 
@@ -322,8 +333,11 @@ $$\left|\frac{(y-\widehat{y})}{\frac{1}{T-1}\sum_{t=2}^T|y_t-y_{t-1}|}\right|$$
 - To see how forecast method performed in past, can evaluate loss within data $\mathcal{Y}_T$
 - Sample mean of loss function common way to describe past performance
 $$\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\mathcal{Y}_{t}))$$
-- For Squared Error, this is called MSE, for Absolute Error, MAE, for Abolute Percent Error, MAPE, Absolute Scaled Error MASE
+- For Squared Error, this is called MSE: Mean Squared Error
     - Usually take square root of MSE to get RMSE: Units same as series
+    - For Absolute Error, MAE 
+    - For Abolute Percent Error, MAPE 
+    - For Absolute Scaled Error, MASE
 - Answers question: "How much loss would I have incurred (on average) had I used this method in the past?"
 - *Not* same as "How much loss will I incur if I use this method in the future?"
 
@@ -346,7 +360,7 @@ $$\widehat{y}_{t+h}=f(\mathcal{Y}_t,\widehat{\theta}(\mathcal{Y}_T))$$
     
 ## Evaluation 
 - Construct rolling forecast origin AR4 models and evaluate 1-month errors
-```{r}
+```{r, class.source = 'fold-show'}
 far4 <- function(x, h){forecast(Arima(x, order=c(4,0,0)), h=h)}
 AR4forecasterrors<-tsCV(condmilk,far4,h=1)
 #Rolling Forecast Error RMSE and MAE
@@ -356,13 +370,23 @@ MAEfc<-mean(abs(AR4forecasterrors),na.rm = TRUE)
 RMSEres<-sqrt(mean((milkAR4selection$residuals)^2,na.rm = TRUE))
 MAEres<-mean(abs(milkAR4selection$residuals),na.rm = TRUE)
 ```
-Method      | RMSE        | MAE
-------------|-------------|----------
-Residual    |`r RMSEres`  |`r MAEres` 
-Rolling     |`r RMSEfc`   |`r MAEfc`
+```{r,warning=FALSE,message=FALSE}
+library(knitr)
+library(kableExtra)
+mse_tbl <- data.frame(Method = c("Residual", "Rolling"),RMSE = c(RMSEres, RMSEfc), MAE = c(MAEres, MAEfc))
+
+kable(mse_tbl) %>%
+  kable_styling(full_width = F) %>%
+  column_spec(1,border_right = T)
+```
+
+<!-- Method      | RMSE        | MAE -->
+<!-- ------------|-------------|---------- -->
+<!-- Residual    |`r RMSEres`  |`r MAEres`  -->
+<!-- Rolling     |`r RMSEfc`   |`r MAEfc` -->
 
 - Rolling window errors are larger than residual errors
-- Former reflect what you *would have* gotten from running method in the past
+- Rolling errors reflect what you *would have* gotten from running method in the past
 
 ## Train vs Test Set
 
@@ -370,42 +394,67 @@ Rolling     |`r RMSEfc`   |`r MAEfc`
 $$\mathcal{Y}_{Train}=\{y_t\}_{t=1}^{S},\mathcal{Y}_{Test}=\{y_t\}_{t=S+1}^{T}$$ 
     - where $S$ is split point
 - Compute error as 
-$$\frac{1}{T-S}\sum_{t=S+1}^{T}\ell(y_{t},f(\mathcal{Y}_{\min\{t-h,S\}},\widehat{\theta}(\mathcal{Y}_{Train})))$$
+$$\frac{1}{T-S}\sum_{t=S+1}^{T}\ell(y_{t},f(\mathcal{Y}_{t-h},\widehat{\theta}(\mathcal{Y}_{Train})))$$
 - Allows fast computation: compute $\widehat{\theta}(\mathcal{Y}_{Train})$ only once
-- Performance measure describes feasible method, since test set not used
+- Performance measure describes feasible method, since test set not used to select $\theta$
 
 ## Train vs Test Set
 
-- Compute test set accuracy for milk forecasts by many measures
-```{r}
+- Compute test set accuracy for milk forecasts by AR(4)
+```{r, class.source = 'fold-show'}
 milktrain<-window(condmilk,end=c(1977,12)) #Until 1978
 milktest<-window(condmilk,start=c(1978,1)) #After 1978                  
 milkAR4train<-Arima(milktrain,order=c(4,0,0))
-milkAR4forecast<-forecast(milkAR4train,h=36)
+```
+```{r}
+#Constructing forecast on test data requires some ugly code: hidden
+S<-length(milktrain)           #Length of training data series
+testlength<-length(milktest)   #Length of test data series
+p<-4 #Number of lags used in autoregression
+#Arima library reports mean rather than constant term in our notation
+#So need to transform results to get numbers in formula on slide 8
+theta0<-(1-sum(milkAR4train$coef[1:p]))*milkAR4train$coef[p+1] 
+milkAR4testpred<-c() #Make list of forecasts
+#Use selected parameters to construct forecast
+for(t in 1:testlength){
+  milkAR4testpred[t]<-milkAR4train$coef[p:1]%*%condmilk[(S-p+t):(S+t-1)]+theta0
+}
+milkAR4testforecasts<-ts(milkAR4testpred,start=c(1978,1),frequency=12) #Convert to time series
+```
+```{r,echo=FALSE,eval=FALSE}
+#Alternate approach: forecast at all horizons in test set:
+# This doesn't use any test set data even in forecast, as opposed to above
+# which uses test set data for forecast, but not to select parameters
+#milkAR4forecast<-forecast(milkAR4train,h=36)
+##Test set RMSE and MAE
+#RMSE<-sqrt(mean((milkAR4forecast$mean-milktest)^2))
+#MAE<-mean(abs(milkAR4forecast$mean-milktest))
+```
+- Construct predictions and evaluate performance on test set
+```{r, class.source = 'fold-show'}
 #Test set RMSE and MAE
-RMSE<-sqrt(mean((milkAR4forecast$mean-milktest)^2))
-MAE<-mean(abs(milkAR4forecast$mean-milktest))
+RMSE<-sqrt(mean((milkAR4testforecasts-milktest)^2))
+MAE<-mean(abs(milkAR4testforecasts-milktest))
 ```
-Method            | RMSE        | MAE
-------------------|-------------|----------
-Test Set Error    |`r RMSE`     |`r MAE` 
+```{r,warning=FALSE,message=FALSE}
+err_tbl <- data.frame(Method = c("Test Set Error"),RMSE = c(RMSE), MAE = c(MAE))
 
-```{r,eval=FALSE}
-#Plot results
-autoplot(milktrain, series="Training Set Data")+
-  autolayer(milktest,series="Test Set Data")+
-  autolayer(milkAR4forecast, PI=FALSE,series="Forecast")+
-  ggtitle("Forecasts for Monthly Milk Stocks") +
-  guides(colour=guide_legend(title="Series and Forecasts"))
+kable(err_tbl) %>%
+  kable_styling(full_width = F) %>%
+  column_spec(1,border_right = T)
 ```
+
+<!-- Method            | RMSE        | MAE -->
+<!-- ------------------|-------------|---------- -->
+<!-- Test Set Error    |`r RMSE`     |`r MAE`  -->
 
 ## Plot
 
-```{r,echo=FALSE}
+```{r}
 #Plot results
 autoplot(milktrain, series="Training Set Data")+
   autolayer(milktest,series="Test Set Data")+
-  autolayer(milkAR4forecast, PI=FALSE,series="Forecast")+
+  autolayer(milkAR4testforecasts,series="Forecast")+
   ggtitle("Forecasts for Monthly Milk Stocks") +
   guides(colour=guide_legend(title="Series and Forecasts"))
 ```
@@ -417,7 +466,8 @@ autoplot(milktrain, series="Training Set Data")+
 - Problem:    
 - "Past performance does not necessarily predict future results"
     - U.S. Securities and Exchange Commission mandatory warning, paraphrasing Scottish Enlightenment philosopher David Hume
-![David Hume. Source: Wikimedia](Figures/David_Hume_2.jpg)
+    
+![David Hume. Source: Wikimedia](Figures/David_Hume_2.jpg){height=350px}
 
 
 ## The problem of induction
@@ -428,7 +478,7 @@ autoplot(milktrain, series="Training Set Data")+
     - Premise that things that have always happened before will continue to happen might be true 
     - But can't be justified by the fact that it's been true in the past 
 - Circularity of reasoning best expressed by considering opposite belief (cf Aaronson (2013) p229)
-- There is "a planet full of people who believe in *anti-induction*: if the sun has risen every day in the past, then today, we should expect that it won't. As a result, these people are all starving and living in poverty. Someone visits the planet and tells them, "Hey, why are you still using this anti-induction philosophy? You're living in horrible poverty" 
+- There is "a planet full of people who believe in *anti-induction*: if the sun has risen every day in the past, then today, we should expect that it won't. As a result, these people are all starving and living in poverty. Someone visits the planet and tells them, "Hey, why are you still using this anti-induction philosophy? You're living in horrible poverty." 
     - They respond; "Well, it never worked before..."
 
 - Clearly, we are going to need some additional principles
@@ -460,12 +510,13 @@ autoplot(milktrain, series="Training Set Data")+
 
 
 
-## Next class
+## Next topic
 
 - Principles of forecasting
     - No "right" answer
     - Multiple reasonable approaches
-- Submit first problem sets
+    
+<!-- - Reminder: Problem Set 01 has been assigned, due next week -->
 
 
 

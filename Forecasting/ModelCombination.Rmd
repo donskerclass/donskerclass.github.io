@@ -49,7 +49,7 @@ output:
     - Express in terms of loss functions and approach (worst-case or average risk, regret)
 - Other differences come from class of models or predictors used
     - ARIMA, State Space, ETS, Additive, nonlinear, judgmental, etc
-- Often, different methids will lead to fairly different results  
+- Often, different methods will lead to fairly different results  
 - Given many forecasts, what can we do with them? (At least) 3 Choices
     - Model **Selection**: Pick one "best" forecast
     - Model **Averaging**: Take some (weighted) combination
@@ -91,7 +91,7 @@ output:
 - Simplest model averaging procedure, and one with surprisingly good performance, is **equal weights**
     - $s=(\frac{1}{m},\frac{1}{m},\ldots,\frac{1}{m})$, no matter what data is used
 - If we have several forecasting methods and don't have a particularly good reason to think one should be much better or worse than others, average may do well
-- Combination may even do better than best individual forecast, from risk persepective
+- Combination may even do better than best individual forecast, from risk perspective
     - Combination has lower variance than any individual forecast, making results more precise, especially if forecasts not perfectly correlated
         - $Var(\frac{1}{M}\sum_{m=1}^{M}\widehat{y}_{t+h,m})=\frac{1}{M^2}\left(\sum_{m=1}^{M}Var(\widehat{y}_{t+h,m})+\sum_{m=1}^{M}\sum_{n\neq m}Cov(\widehat{y}_{t+h,m},\widehat{y}_{t+h,n})\right)$
     - If forecasts each have low bias $\mathbf{E}[y_{t+h}-\widehat{y}_{t+h,m}]\approx 0$, this increase in precision improves square loss risk
@@ -181,7 +181,7 @@ library(gridExtra) #Graph Display
 
 fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
 
-WTI<-fredr(series_id = "MCOILWTICO",units="chg") #Monthly Growth in West Texas Intermediate Crude Oil Price
+WTI<-fredr(series_id = "MCOILWTICO",units="chg",vintage_dates = as.Date("2021-04-20")) #Monthly Growth in West Texas Intermediate Crude Oil Price
       #Measure of Oil Prices at point for import to US, before refining
 
 #Format the series as monthly time series object, starting at the first date
@@ -297,7 +297,7 @@ farma <- function(x, h){forecast(Arima(x, order=c(1,0,1)), h=h)}
 e1 <- tsCV(oilgrowth, farma, h=1)
 
 #Produce predictions from rolling forecasts
-armacvpred<-window(oilgrowth,start=c(1987,1),end=c(2019,1))-window(e1,start=c(1987,1),end=c(2019,1))
+armacvpred<-window(oilgrowth,start=c(1987,1),end=c(2021,2))-window(e1,start=c(1987,1),end=c(2021,2))
 
 # rugarch library has its own function for tsCV forecasts, called ugrachroll
 # For computational speed, choose new parameters only every 5 data points
@@ -321,9 +321,9 @@ keep.coef = TRUE)
 archarcvpred<-ts(mod@forecast$density$Mu,frequency=12,start=c(1986,12))
 
 #Truncate series to window of predictions
-ogwindow<-window(oilgrowth,start=c(1987,1),end=c(2019,1))
-archcv<-window(archcvpred,start=c(1987,1),end=c(2019,1))
-archarcv<-window(archarcvpred,start=c(1987,1),end=c(2019,1))
+ogwindow<-window(oilgrowth,start=c(1987,1),end=c(2021,2))
+archcv<-window(archcvpred,start=c(1987,1),end=c(2021,2))
+archarcv<-window(archarcvpred,start=c(1987,1),end=c(2021,2))
 
 # Compare RMSE
 armacverr<-accuracy(armacvpred,ogwindow)
@@ -399,7 +399,7 @@ kable(seltable,
 
 - Given a set $\mathcal{M}$ of probability models, the fully Bayesian approach is to put a prior over it
 - Let $\nu(m)$ be a prior weight attached to model $m\in\mathcal{M}$, reflecting information about the plausibility of different models
-- For each $m$, $p(\tilde{\mathcal{Y}}_T|m)=\int_{\theta\in\mathcal{\Theta_m}} p_m(\tilde{\mathcal{Y}}_T,\theta)\pi_m(\theta)d\theta$ is the prior probability of observing data set $\tilde{\mathcal{Y}}_T$
+- For each $m$, $p(\tilde{\mathcal{Y}}_T|m)=\int_{\theta\in\mathcal{\Theta_m}} p_m(\tilde{\mathcal{Y}}_T|\theta)\pi_m(\theta)d\theta$ is the prior probability of observing data set $\tilde{\mathcal{Y}}_T$
     - Evaluated at $\tilde{\mathcal{Y}}_T=\mathcal{Y}_T$, it gives us the **marginal likelihood** of the data given the model $m$
 - Applying Bayes rule, one can construct a posterior distibution over the set of models
     - $\nu(m|\mathcal{Y}_T)=\frac{p(\mathcal{Y}_T|m)\nu(m)}{\sum_{j=1}^{M}p(\mathcal{Y}_t|j)\nu(j)}$ is posterior weight of model $m$
@@ -456,28 +456,29 @@ kable(seltable,
     
 ## Application: Bayesian Evaluation of Oil Price Models
 
-- Using Oil Price growth data, fit 3 Bayesian models: AR(3), ARCH(2), and AR(1)-ARCH(2)
+- Using Oil Price growth data, fit 4 Bayesian models: AR(3), ARCH(2), and AR(1)-ARCH(2), ARMA(1,1)
     - Put N(0,1) priors on all parameters of each model
-- Latter two models are nested, first is not    
+- Middle two models are nested, others are not    
 - Construct individual forecasts in Stan, calculate marginal likelihoods using library `bridgesampling` 
-- Result: comparing marginal likelihoods, both ARCH models blow AR model out of the water
-    - Differ by over 30, which is would require $\approx e^{30}$ higher prior weight to overcome
+- Result: comparing marginal likelihoods, both ARCH models blow AR(3) model out of the water (and ARMA(1,1) even worse)
+    - Differ by over 40, which would require $\approx e^{40}$ higher prior weight to overcome
     - This is in spite of fact that ARCH(2) model always predicts a constant mean
     - Reason is that volatility not well matched by a model which predicts a constant variance, like AR
-- Using a (1/3,1/3,1/3) prior over models, posterior $\approx(0,0,1)$
+- Using a (1/4,1/4,1/4,1/4) prior over models, posterior $\approx(0,0,1,0)$
     - Model average and model selection essentially identical
 - Useful if we want to know under which model data we have seen is more probable
     - If all models not great, may prefer less extreme weighting 
     
 
 ```{r,message=FALSE,warning=FALSE}
-
 options(mc.cores = parallel::detectCores()) #Use parallel computing when running MCMC
 rstan_options(auto_write = TRUE) #Do not recompile Stan code every time file is saved
+```
 
-#Write code for AR(1)-ARCH(2) model in Stan
-#Follows Stan User's Guide Ch 2.1-2.2, with modifications
-stan_code_ararch<-"
+```{stan, output.var="stan_model_ararch"}
+//"stan_model_ararch"
+//Write code for AR(1)-ARCH(2) model in Stan
+//Follows Stan User's Guide Ch 2.1-2.2, with modifications
 data {
   int<lower=0> T;
   real r[T];
@@ -521,13 +522,12 @@ r_tilde = normal_rng(mu + ar1*r[T],sqrt(omega
 
 // vector[T-3] log_lik; //Value of log likelihood at parameter draws
 // for (t in 4:T) log_lik[t] = normal_lpdf(r[t] | lagval[t-1], sigma[t-3]);
-}"
-
-
-#Write code for ARCH(2) model in Stan
-#Follows Stan User's Guide Ch 2.1-2.2, with modifications
-#Sampling seems to fail for this model: not sure why yet
-stan_code_arch<-"
+}
+```
+```{stan, output.var="stan_model_arch"}
+//"stan_model_arch"
+//Write code for ARCH(2) model in Stan
+//Follows Stan User's Guide Ch 2.1-2.2, with modifications
 data {
   int<lower=0> T;
   real r[T];
@@ -569,11 +569,11 @@ r_tilde = normal_rng(mu,sqrt(omega
 
 // vector[T-3] log_lik; //Value of log likelihood at parameter draws
 // for (t in 4:T) log_lik[t] = normal_lpdf(r[t] | lagval[t-1], sigma[t-3]);
-}"
-
-
-#AR(3) Model for comparison
-stan_code_ar<-"
+}
+```
+```{stan, output.var="stan_model_ar"}
+//"stan_model_ar"
+//AR(3) Model for comparison
 data {
   int<lower=0> T;
   vector[T] r;
@@ -596,21 +596,23 @@ generated quantities {
 real r_tilde; // Samples from posterior predictive distribution
 
 r_tilde = normal_rng(alpha+beta*r[T]+gamma*r[T-1]+delta*r[T-2],sigma);  //Simulate draw from period T+1 conditional likelihood 
-}"
-
-#Steal code for ARMA(1,1) from Stan manual
-#Fun fact: this code has major problems with sampling, making MCMC results unreliable
-#All diagnostics suggest not to trust it, so exclude it from out set of models
-stan_code_arma<-"
+}
+```
+```{stan, output.var="stan_model_arma"}
+//"stan_model_arma"
+//Steal code for ARMA(1,1) from Stan manual
+//One change: restrict theta to be in -1,1, so that MA coefficient is identified
+//Fun fact: without that change this code has major problems with sampling, making MCMC results unreliable
+//All diagnostics suggested not to trust it, so it was excluded from our set of models before the change
 data {
   int<lower=1> T;            // num observations
   real r[T];                 // observed outputs
 }
 parameters {
-  real mu;                   // mean coeff
-  real phi;                  // autoregression coeff
-  real theta;                // moving avg coeff
-  real<lower=0> sigma;       // noise scale
+  real mu;                      // mean coeff
+  real phi;                     // autoregression coeff
+  real<lower=-1,upper=1> theta; // moving avg coeff
+  real<lower=0> sigma;          // noise scale
 }
 transformed parameters {
   vector[T] nu;              // prediction for time t
@@ -634,13 +636,6 @@ real r_tilde; // Samples from posterior predictive distribution
 
 r_tilde = normal_rng(mu + phi * r[T] + theta * err[T],sigma);  //Simulate draw from period T+1 conditional likelihood 
 }
-"
-
-stan_model_ararch<-stan_model(model_code = stan_code_ararch,model_name = "ARARCHModel") 
-stan_model_arch<-stan_model(model_code = stan_code_arch,model_name = "ARCHModel") 
-stan_model_ar<-stan_model(model_code = stan_code_ar,model_name = "ARModel") 
-#stan_model_arma<-stan_model(model_code = stan_code_arma,model_name = "ARMAModel") 
-
 ```
 
 ```{r,message=FALSE,warning=FALSE}
@@ -652,8 +647,8 @@ stan_data<-list(T=Tlength, r=oilgrowth)
 fit_ararch<-sampling(object = stan_model_ararch,data = stan_data, chains = 4, iter = 2000, seed = 4567)
 fit_arch<-sampling(object = stan_model_arch,data = stan_data, chains = 4, iter = 2000, seed = 4567)
 fit_ar<-sampling(object = stan_model_ar,data = stan_data, chains = 4, iter = 2000, seed = 4567)
-#fit_arma<-sampling(object = stan_model_arma,data = stan_data, chains = 4, iter = 2000, seed = 4567, 
-#                   control=list(adapt_delta=0.94,max_treedepth=16))
+fit_arma<-sampling(object = stan_model_arma,data = stan_data, chains = 4, iter = 2000, seed = 4567, 
+                   control=list(adapt_delta=0.94,max_treedepth=16))
 
 #Display parameter estimates
 #print(fit_ararch,pars=c("mu","ar1","omega","beta1","beta2","lp__"),digits_summary=4)
@@ -667,26 +662,29 @@ postpredplot<-list()
 postpredplot[[1]]<-stan_hist(fit_ararch,pars="r_tilde",bins=70)+ggtitle("AR-ARCH")+xlab("Oil Price Growth")
 postpredplot[[2]]<-stan_hist(fit_arch,pars="r_tilde",bins=70)+ggtitle("ARCH")+xlab("Oil Price Growth")
 postpredplot[[3]]<-stan_hist(fit_ar,pars="r_tilde",bins=70)+ggtitle("AR(3)")+xlab("Oil Price Growth")
+postpredplot[[4]]<-stan_hist(fit_arma,pars="r_tilde",bins=70)+ggtitle("ARMA")+xlab("Oil Price Growth")
 
 #stan_hist(fit_arma,pars="r_tilde",bins=70)+ggtitle("Posterior Density y_{T+1}, ARMA model")+xlab("Oil Price Growth")
 
 # Compute log marginal likelihood via bridge sampling for models using "bridgesampling" library
+M4.bridge <- bridge_sampler(fit_arma, silent = TRUE)
 M3.bridge <- bridge_sampler(fit_ararch, silent = TRUE)
 M2.bridge <- bridge_sampler(fit_arch, silent = TRUE)
 M1.bridge <- bridge_sampler(fit_ar, silent = TRUE)
 #Obtain Log marginal likelihood
+ml4<-M4.bridge$logml
 ml3<-M3.bridge$logml
 ml2<-M2.bridge$logml
 ml1<-M1.bridge$logml
 
-modelposterior<-post_prob(M1.bridge,M2.bridge,M3.bridge)
+modelposterior<-post_prob(M1.bridge,M2.bridge,M3.bridge,M4.bridge)
 ```
 
 ## Marginal Likelihoods and T+1 Posterior Predictive distributions    
 
 ```{r}
-marglikelihood<-c(ml1,ml2,ml3)
-models<-c("AR(3)","ARCH(2)","AR(1)-ARCH(2)")
+marglikelihood<-c(ml1,ml2,ml3,ml4)
+models<-c("AR(3)","ARCH(2)","AR(1)-ARCH(2)","ARMA(1,1)")
 
 bayestable<-data.frame(models,marglikelihood,modelposterior)
 
@@ -696,7 +694,7 @@ kable(bayestable,
   caption="Bayesian Combinations of Oil Price Growth Models") %>%
   kable_styling(bootstrap_options = "striped")
 
-grid.arrange(grobs=postpredplot,nrow=1,ncol=3)
+grid.arrange(grobs=postpredplot,nrow=1,ncol=4)
 ```
 
 ## Dynamic Model Combination

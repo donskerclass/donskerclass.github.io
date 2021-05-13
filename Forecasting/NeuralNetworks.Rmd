@@ -3,7 +3,7 @@ title: "Neural Networks"
 author: "73-423 Forecasting for Economics and Business"
 output:
   html_document:
-    code_folding: show
+    code_folding: hide
 ---
 
 ## Outline
@@ -83,6 +83,8 @@ $$f_{j}(b_{0,j}+b_{1,j}x_1+b_{2,j}x_2+\ldots+b_{K,j}x_k)$$
 - **Architecture** 
     - Basic formula above is a *Fully Connected* **Feedforward Neural Network**, the simplest kind.
     - Modern approach uses modified forms like **Convolutional** and **Recurrent** Networks
+    - Even more recently, new methods like **Attention** and **Graph** neural networks 
+    - Succeed especially with particular data types like *images*, *time series*, *text*, and *3d* data, respectively
 - **Training** 
     - As with trees, for big enough networks, finding exact minimizer with off-the-shelf optimization methods rarely feasible
     - Instead use methods like **Stochastic Gradient Descent** (SGD) and variants, which provide speed and out-of-sample accuracy gains
@@ -117,7 +119,7 @@ $$f_{j}(b_{0,j}+b_{1,j}x_1+b_{2,j}x_2+\ldots+b_{K,j}x_k)$$
     - Can regularize by **early stopping**: don't train all the way until empirical risk minimized
     - This can be shown to act a lot like L2 penalty, but has obvious speed advantage since you don't have to wait
 - Another popular regularization strategy, to apply at each layer, is **dropout** (Srivastava et al 2014)
-    - Within each minibatch, multiply neurons in a layer by indpendent $0-1$ Bernoulli(p) random variables
+    - Within each minibatch, multiply neurons in a layer by independent $0-1$ Bernoulli(p) random variables
     - Acts as if fraction $(1-p)$ of neurons disappeared, so others must update to give good fit without them
     - Use all neurons, scaled by $p$ for prediction (to keep average output size same as in training)
 - Many other tricks are used, set based on validation performance
@@ -138,7 +140,8 @@ library(reticulate) #Access to Python, which is language Tensorflow is written i
 # Yes, we are going 3 layers of languages deep, from R to Keras to Tensorflow to Python, to run this code
 
 
-# Plan: *show* Keras code in line for each step: intialize, write models (feedforward, then recurrent, then maybe recurrent with dropout), train, display results.
+# Subsequent code examples *show* but do not run Keras code in line for each step: 
+# intialize, write models (feedforward, then recurrent, then recurrent with dropout), train, display results.
 ```
 
 
@@ -155,8 +158,9 @@ library(reticulate) #Access to Python, which is language Tensorflow is written i
 - Specific nonlinear function $f(s_t,z_t,\theta)$ can be basic neuron $f_j(b_0+W_1^{\prime}z_t+W_2^{\prime}s_t)$, or more complicated object
     - Popular choices are **Long Short Term Memory** (LSTM) unit or **Gated Recurrent Unit** (GRU)
 - Use final output of repeated iterates $s_{T+1}$ as forecast or input to next non-recurrent layer
+    - Or output entire sequence $\{s_t\}_{t=1}^{T}$ to be used as input for another recurrent layer
 - RNNs accomodate variable-length inputs, can take into account long-term dependences, and work with input like text
-- Performance very good with LSTM or GRU with enough data and regularization (cf Karpathy 2015)
+- Performance very good with LSTM or GRU with enough data and regularization (Karpathy 2015)
 
 ## Convolutional Networks
 
@@ -182,7 +186,7 @@ library(reticulate) #Access to Python, which is language Tensorflow is written i
 - Complication means deep learning mainly uses specialized programming languages designed to do all these things
     - Especially automatic derivative computation and use of GPU to speed up operations
 - Many options, pros and cons of which are source of debates: choose best for your application
-    - Tensorflow, Torch, MXNet, Theano, CNTK, Keras, etc
+    - Tensorflow, Torch, MXNet, Theano, CNTK, Keras, Flux, etc
 - Here, will show code examples via R interface to Keras (Chollet 2018)
     - Simple interface allowing "high level" descriptions of structure, rather than building from scratch
     - In background, runs "low level" language like Tensorflow, which specifies functions, calculates gradients, etc
@@ -190,18 +194,19 @@ library(reticulate) #Access to Python, which is language Tensorflow is written i
 
 ## Applications
 
-- Use neural networks of different types described here for applications from last 2 classes
+- Use neural networks of different types described here for applications from last classes
     - [Mortgage loan approval prediction](https://www.kaggle.com/davidchilders/mortgage-loan-approval-prediction-in-r-keras/) from data set of applicants and characteristics
-    - [Prediction of a macro time series](https://www.kaggle.com/davidchilders/time-series-prediction-in-r-keras/) (industrial production) using FredMD database of 129 monthly predictors 
+    - [Prediction of a macro time series](https://www.kaggle.com/davidchilders/time-series-prediction-in-r-keras-with-factors) (industrial production) using FredMD database of 128 monthly predictors 
 - The former is a task using independent, unstructured data: try dense feedforward networks and regularized versions
 - The latter is a sequence task, so try feedforward case but also recurrent and convolutional approaches
 - Display here, but, for speed and memory, all code and analysis hosted on Kaggle notebooks
+    - Not an in-class exercise because methods too slow to run in short time
 - Data fairly small, and even with regularization performance not great in either application
     - Can't really rule out that all methods outperformed by simpler approaches
     
 ## A Fully Connected Network for Loan Approval Prediction    
 
-```{r, eval=FALSE}
+```{r, eval=FALSE, class.source = 'fold-show'}
 library(keras)
 ffmodel<- keras_model_sequential() %>%
     layer_dense(units=32,activation="relu",input_shape=c(59)) %>%
@@ -217,7 +222,7 @@ ffmodel<- keras_model_sequential() %>%
     
 ## Training the model
 
-```{r, eval=FALSE}
+```{r, eval=FALSE, class.source = 'fold-show'}
 ffmodel %>% compile(
     optimizer = "rmsprop",
     loss="binary_crossentropy",
@@ -229,7 +234,7 @@ ffmodel %>% compile(
 - Minimize sequentially by RMSprop, a modified variant of Stochastic Gradient Descent
 - Compute percent correctly guessed in validation set
 
-```{r, eval=FALSE}
+```{r, eval=FALSE, class.source = 'fold-show'}
 ffhistory <- ffmodel %>% fit(
     x = trainfeat, y = y_train,
     epochs=20, batch_size=10,
@@ -248,7 +253,7 @@ ffhistory <- ffmodel %>% fit(
 
 - Model with dropout
 
-```{r,eval=FALSE}
+```{r,eval=FALSE, class.source = 'fold-show'}
 ffmodel5<- keras_model_sequential() %>% 
     layer_dense(units=30,activation="relu",input_shape=c(59)) %>%
     layer_dropout(rate=0.5) %>% #50% chance of dropping each neuron in each batch
@@ -259,7 +264,7 @@ ffmodel5<- keras_model_sequential() %>%
 
 - Model with L1 Penalty
 
-```{r,eval=FALSE}
+```{r,eval=FALSE, class.source = 'fold-show'}
 ffmodel6<- keras_model_sequential() %>%
     layer_dense(units=64, kernel_regularizer = regularizer_l1(0.001),
                 activation="relu",input_shape=c(59)) %>%
@@ -279,7 +284,7 @@ ffmodel6<- keras_model_sequential() %>%
 - Use dropout on input units, and "recurrent dropout"
     - Applies same Bernoulli to output of recurrent nodes in each time step    
     
-```{r,eval=FALSE}
+```{r,eval=FALSE, class.source = 'fold-show'}
 recmodellstm <- keras_model_sequential() %>%
     layer_lstm(units = 32, dropout=0.2, recurrent_dropout=0.2,
               input_shape = list(NULL, dim(data)[[-1]])) %>%
@@ -292,13 +297,13 @@ recmodellstm <- keras_model_sequential() %>%
 
 ## A Mixed Convolutional and Recurrent model
 
-- To outperform auto.arima on just the outcome series on this data set, needed complicated model
+- Needed complicated model to get performance even close to auto.arima on just the outcome series on this data set 
 - Start with convolutional layers, to learn filters capturing patterns, including dealing with obvious trend 
     - Filters are length 5, then layer pooled to max of every 3 units
 - After 2 such pairs of layers, pass to a recurrent layer, a GRU, to encode sequential ordering
 - Use dropout and L1 penalization in every layer to account for huge number of parameters
 
-```{r, eval=FALSE}
+```{r, eval=FALSE, class.source = 'fold-show'}
 crmodel2<-keras_model_sequential() %>%
     layer_conv_1d(filters=32, kernel_size=5, kernel_regularizer = regularizer_l1(0.001), activation="relu",
                  input_shape = list(NULL, dim(data)[[-1]])) %>%
@@ -309,7 +314,7 @@ crmodel2<-keras_model_sequential() %>%
     layer_dense(units = 1)
 ```
 
-- Final MSE 0.1385 versus 0.1586 for auto.arima on validation set
+- Final MSE 0.1513 versus 0.00133 for auto.arima on validation set
 
 ## Mean Squared Error Results, Convnet with Recurrent Layer
 

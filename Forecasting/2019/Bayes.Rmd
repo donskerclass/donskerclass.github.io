@@ -1,0 +1,328 @@
+---
+title: "Bayes"
+author: "73-423 Forecasting for Economics and Business"
+output:
+  html_document:
+    code_folding: hide
+---
+
+## Outline
+
+- The probability approach
+- Inference by Bayes Rule
+- Posterior Prediction
+- Examples
+    - Beta-Bernoulli Model
+    - Normal-Normal Model
+
+
+## The probability approach to forecasting
+
+- Today, we begin to consider an alternate perspective on how to build a forecast rule
+- Recall setup for general forecasting problem 
+    - **Data** $\mathcal{Y}_T=\{y_t\}_{t=1}^{T}\in\otimes_{t=1}^{T}\mathrm{Y}$
+    - **Decision rule** $f():\ \otimes_{t=1}^{T}\mathrm{Y}\to\mathrm{Y}$
+    - **Loss function** $\ell(.,.):\ \mathrm{Y}\times\mathrm{Y}\to\mathbb{R}$
+    - **Realized loss** $\ell(y_{T+h},f(\mathcal{Y}_T))$
+- Goal of different forecast approaches is to find a decision rule that produces small realized loss "in some sense"
+- *Average case* approaches recognize uncertainty by asking for realized loss to be small, "on average"
+    - Let $\{\mathcal{Y}_{T+h}(\omega):\ \omega\in\Omega\}$ be a space of possible sequences which might occur
+    - A **probability distribution** $p(\omega)$ assigns a weight to subsets of this space of sequences
+- Given a probability distribution $p$, want to choose a rule with small **risk** 
+    - $R_p(f):=E_p[\ell(y_{T+h},f(\mathcal{Y}_T))]=\int\ell(y_{T+h}(\omega),f(\mathcal{Y}_T(\omega)))p(\omega)d\omega$
+- Difference in methods is how one finds such a rule
+
+## Statistical vs Bayesian Approach
+
+- Problem with pure average case approach is where distribution $p()$ comes from
+    - Want to assign more weight to sequences that will occur, less weight to those that won't
+    - But whole problem is you don't know what sequences will occur
+- One way to relax this: allow a family of distributions $\mathcal{P}$, called a **probability model**
+    - Expresses the types of features that reasonable sequences might exhibit
+    - May index distributions by a set $\Theta$ of such features $\theta$:  family $\mathcal{P}=\{p(\mathcal{Y}_{T+h},\theta):\ \theta\in\Theta\}$ called a **parametric probability model**
+- Statistical learning approach
+    - Find a rule such that, **for any** distribution $p\in\mathcal{P}$ which might describe the data, $R_p(f)$ is small
+- Saw in previous classes cases where statistical approach can work
+    - $\mathcal{P}$ is big but not universal class: a set of distributions which are stationary and weak dependent
+    - For all $p\in\mathcal{P}$, risk is "small" (or "probably not so big") **relative to** minimum (oracle) risk over some class $\mathcal{F}$ of rules
+    - Achieve this by Empirical or Structural Risk Minimization
+- Bayesian approach 
+    - Find a rule such that, **on average** over distributions $p\in\mathcal{P}$ which might describe the data, $R_p(f)$ is small    
+
+
+## Bayesian Approach: Average case over distributions
+
+- Weight more highly distributions which are more likely, rather than try to do well for all possible distributions
+- In Bayesian modeling, the family $\mathcal{P}$ of distributions over *sequences* is called the **likelihood**
+    - Expresses features of data like mean, variance, autocorrelation, quantiles, etc
+- Average over distributions must be with respect to another distribution $\pi(.)$ over subsets of $\mathcal{P}$
+    - $\pi(.)$ is called a **prior distribution**
+    - If $\mathcal{P}$ is parametric, $\pi()$ may equivalently assign weights to subsets of $\Theta$ 
+    - Expresses beliefs about chance of seeing data with different features *before* the data is observed
+- Average risk of a rule $f$ is then $R_{\pi}(f)=E_{\pi}[R_{p_{\theta}}(f)]$ 
+    - $=\int[\int \ell(y_{T+h},f(\mathcal{Y}_T))p(\mathcal{Y}_{T+h},\theta)d\mathcal{Y}_{T+h}]\pi(\theta)d\theta$ 
+- Applying Fubini's theorem (saying you can change order of integrands)
+    - $=\int \ell(y_{T+h},f(\mathcal{Y}_T))[\int p(\mathcal{Y}_{T+h},\theta)\pi(\theta)d\theta]d\mathcal{Y}_{T+h}$
+- In other words, averaging case over models just gives you back average case over sequences
+    - Distribution now $\int p(\mathcal{Y}_{T+h},\theta)\pi(\theta)d\theta$
+    - Optimal risk is the Bayes Risk, optimal forecast is the Bayes forecast
+    
+<!-- - Choosing a prior and computing the Bayes forecast will be subject of future classes on Bayesian methods -->
+<!--     - Sneak Preview: It will involve calculating a whole lot of integrals -->
+
+## Likelihoods and Priors
+
+- Whether Bayes forecasts are useful depends on how well likelihood and prior describe the data
+    - Likelihood represents possible processes producing the data
+    - Prior reflects knowledge of which features of process are more or less plausible
+- Both are opportunities to incorporate existing knowledge or intuition into forecast process
+- Likelihood reflects features that occur in the sequence
+    - What values can $Y$ take? Binary $\{0,1\}$, Real valued, nonnegative, bounded, vector-valued, etc 
+    - Is the sequence stationary (same features at all time) or does it have time-dependent features like trends, seasonality, breaks?
+    - Are observations independent, weakly dependent, or strongly dependent?
+    - What is shape of distribution? Bell-shaped, decreasing or increasing, multimodal (two or more peaks) etc
+    - What is magnitude of features: possible means, variances, skewness, etc
+- Prior reflects weighting on different subsets of these distributions 
+    - May have reason to think certain features are more probable
+    - Give larger weight to distributions with these features, less to others in proportion to how often they might be seen
+
+## Example: Bernoulli Likelihood
+
+- Suppose we want to know whether the sun will rise tomorrow.
+    - Example due to astronomer, physicist, and statistician Pierre-Simon Laplace 
+- More generally, applies to any binary yes-no event, like recession, default, etc    
+- Data: some number $T$ days of observations $y_t=1$ if the sun rose on day $t$, $y_t=0$ if the sun failed to rise. 
+- A probability model of this data might be that for each day, independently, the sun rises with probability $\theta$, where $\theta$ is a number in $\Theta:=[0,1]$.  
+    - The probability on each day is $p(y_t|\theta)=\theta^{y_t}(1-\theta)^{1-y_t}$
+    - Outcome $y_t=1$ occurs with probability $\theta$, outcome $y_t=0$ occurs with probability $1-\theta$.
+- Independence means distribution over $Y=\{y_t\}_{t=1}^{T}$ is product of $p(y_t|\theta)$
+    - $p(Y|\theta)=\prod_{t=1}^{T}p(y_t|\theta)=\prod_{t=1}^{T}\theta^{y_t}(1-\theta)^{1-y_t}$
+- This likelihood expresses features sequence might have
+    - The data take only two possible values, 0 and 1
+    - In any sequence, chance of seeing a 1 on one day is the same as, and unaffected by the chance on any other day 
+- A prior over this likelihood is a probability distribution $\pi()$ over $\theta\in\Theta=[0,1]$
+    - Expresses chance of seeing the sun rise on average a fraction $\theta$ of days    
+    
+## Priors for the Bernoulli Likelihood
+
+- May have a prior under which any fraction is as likely as any other before the data is seen
+    - The uniform distribution $\pi(\theta)=1$ on $[0,1]$
+- More generally, a prior can put greater weight on large values of $\theta$ if one expects a high average fraction of 1s
+    - Or lower weight if one expects a low average fraction of 1s
+- A simple family of priors which expresses these views is the **Beta distribution**
+    - Family of distributions over values in $[0,1]$ with parameters $\alpha$ and $\beta$ $\pi(\theta|\alpha,\beta)=\frac{\theta^{\alpha-1}(1-\theta)^{\beta-1}}{\int x^{\alpha-1}(1-x)^{\beta-1}dx}$
+- Mean of distribution is $\frac{\alpha}{\alpha+\beta}$ 
+    - Measures perceived chance of seeing a 1 relative to a 0: use this to reflect existing knowledge of frequency
+- Increasing both $\alpha$ and $\beta$ together while leaving mean the same increases concentration of distribution
+    - Higher values cause distribution to put more and more weight on $\theta$ near the average, and less on those far away
+- Use prior concentration to reflect confidence in existing knowledge
+    - With a lot of weight given to a small area, you will do well in cases where the distribution takes that form
+    - However, you will do poorly in cases where likelihood is given little weight
+    - $\alpha=\beta=1$ gives uniform prior
+
+
+## Inference
+
+- Key problem in Bayesian method is how to perform **inference**
+    - Starting with weighting of different sequences expressed by likelihood and prior
+    - Observe data 
+    - Produce forecast rule which is optimal based on that data
+- Given a likelihood, prior, and data, optimal forecast rule is **completely** determined by a mechanical procedure
+    - Called **Bayesian updating**
+- Introduced in 1763 by the Reverend Thomas Bayes in "An Essay towards solving a problem in the doctrine of Chances."
+![Artist's Depiction of Rev. Thomas Bayes](Figures/Thomas_Bayes.gif)
+
+
+
+
+## Bayes Rule
+
+- You may recall Bayes Rule from an elementary probability class
+- Use definition of conditional distributions
+    - $p(x,y)=p(x|y)p(y)=p(y|x)p(x)$
+- Divide through by p(y) to get **Bayes Rule**
+$$p(x|y)=\frac{p(y|x)p(x)}{p(y)}$$
+- How does Bayes Rule relate to the Bayes Forecast?
+- Let $y$ be observations, $x=\theta$ be parameters
+    - The **likelihood** can be thought of as family of conditional distributions $p(y|\theta)$ given the parameters
+    - **Prior** $\pi(\theta)$ gives weight attached to each model
+    - $p(y)=\int p(y|\theta)\pi(\theta)d\theta$ distribution of data known from above two
+- Rule gives us a way to get a conditional distribution for parameters given observed data
+    - $p(\theta|x)$ is the **posterior** distribution
+    - Describes *conditional* weights to be given to different distributions
+
+
+## Obtaining Bayes Forecast from Bayes Rule
+
+- Distribution $p(\mathcal{Y}_{T+1})=\int p(\mathcal{Y}_{T+1},\theta)\pi(\theta)d\theta$ factorizes as
+$$\int p(y_{T+1}|\mathcal{Y}_{T},\theta)p(\mathcal{Y}_T|\theta)\pi(\theta)d\theta=\int p(y_{T+1}|\mathcal{Y}_{T},\theta)p(\theta|\mathcal{Y}_T)p(\mathcal{Y}_T)d\theta$$
+    - Using $p(\theta,\mathcal{Y}_T)=p(\theta|\mathcal{Y}_T)p(\mathcal{Y}_T)=p(\mathcal{Y}_T|\theta)\pi(\theta)$
+- Results in risk $R_{\pi}(f)=\int[\int \ell(y_{T+1},f(\mathcal{Y}_T))[\int p(y_{T+1}|\mathcal{Y}_{T},\theta)p(\theta|\mathcal{Y}_T)d\theta]dy_{T+1}p(\mathcal{Y}_T)]d\mathcal{Y}_{T}$
+- Given data, have **Conditional Risk** $\int \ell(y_{T+1},f(\mathcal{Y}_T))[\int p(y_{T+1}|\mathcal{Y}_{T},\theta)p(\theta|\mathcal{Y}_T)d\theta]dy_{T+1}$
+- Result: To calculate risk, average over **posterior predictive distribution**
+$$\int p(y_{T+1}|\mathcal{Y}_{T},\theta)p(\theta|\mathcal{Y}_T)d\theta$$
+- $p(\theta|\mathcal{Y}_T)$ is posterior: Calculate by Bayes Rule
+- $p(y_{T+1}|\mathcal{Y}_{T},\theta)$ is conditional likelihood: often has a simple or closed form formula
+- Optimal forecast conditional on data $\mathcal{Y}_T$ now involves picking single number
+    - $\widehat{y}^{*}=\underset{\widehat{y}\in\mathrm{Y}}{\arg\min}\int\ell(y_{T+1},\widehat{y})\int p(y_{T+1}|\mathcal{Y}_{T},\theta)p(\theta|\mathcal{Y}_T)d\theta dy_{T+1}$
+
+## Interpretation
+
+- Bayesian inference learns about distribution of the data by changing the weights assigned to different elements of $\mathcal{P}$
+- Parameter values $\theta$ for which the likelihood of observed data $p(\mathcal{Y}_{T}|\theta)$ is high are given larger weight
+    - As are parameter values that we assigned larger weight to initially
+- Posterior distribution concentrates weight on parameters which produce sequences that look like data you have seen
+    - Allows refining "average case" forecast to average over plausible distributions
+    - Posterior may be thought of as "degree of plausibility" of different parameters
+- Posterior predictive distribution averages predictions for new data based on predictions from the models weighted by the posterior probability
+    - Predictions are average of predictions from many models, weighted towards those which are plausible
+- Distribution of possible values in future tells us which values might be produced by plausible probability models, weighted by their plausibility
+- Can obtain distribution of losses of any decision rule by weighting loss function by by this predictive distribution
+    - Minimizing over this distribution produces an optimal prediction
+
+## Choosing a Likelihood
+
+- Likelihoods $\mathcal{P}=\{p(Y_t,\theta):\theta\in\Theta\}$ express model of process generating the data
+    - Not just a predictive tool, but full description of all features of the data
+    - Parameters allow for parts of form not known in advance: eg, know data binary, but don't know proportion of different outcomes
+- Can be very helpful to build likelihood out of simpler parts    
+- If each distribution in $\mathcal{P}$ is iid, distribution factorizes $p(\mathcal{Y}_{T+h},\theta)=\Pi_{t=1}^{T+h}p(y_{t},\theta)$
+- Many models, like autoregression models, not iid but built from simpler parts that are
+    - Each data point satisfies $y_{t}=\beta_0+\beta_1y_{t-1}+\ldots\beta_py_{t-p}+e_t$, $e_{t}\overset{iid}{\sim}f_{\sigma}(e)$
+    - Here $f_{\sigma}()$ is a mean 0 distribution with unknown variance parameter $\sigma$ and $\theta=(\beta,\sigma)\in\Theta=\mathbb{R}^{p+2}$
+    - Then $p(y_t|\mathcal{Y}_t)=f_{\theta}(y_{t}=\beta_0+\beta_1y_{t-1}+\ldots\beta_py_{t-p})$ for all $t$
+- Likelihood of data can then factorize into product of conditional likelihoods $p(\mathcal{Y}_{T+h},\theta)=\Pi_{t=1}^{T+h}p(y_{t}|\mathcal{Y}_t,\theta)$  
+- Build likelihood to reflect features of data: e.g., AR(p) model can describe data with different ACFs
+    - But assumes 0 trend or seasonality, constant conditional distribution, etc
+- We will see many examples of probability models in classes to come    
+
+
+## Choosing a Prior
+
+- If you have already applied Bayesian inference to existing data, you already have a distribution over parameters
+    - The posterior is a new prior
+- Given new data, you can use the posterior as your new prior, and apply Bayes rule again to get a *new* posterior
+    - This is another application of Bayesian **updating**
+    - Allows transfering knowledge across data sets and time periods
+- Given a new problem, your prior should be the posterior you *would* have had after performing Bayesian updating over the information you have
+- In cases where this is not possible, like a completely new domain, can apply intuition and general principles
+    - e.g. **Cromwell's rule**: Do not assign prior of 0 to any event unless it is literally impossible
+    
+## Prior and Posterior Predictions 
+
+- **Prior predictive distribution**: even before data is seen, can construct predictions
+    - $\int p(\mathcal{Y}_{T}|\theta)\pi(\theta)d\theta$ is a distribution over sequences $\mathcal{Y}_{T}$
+    - Can simulate from it by drawing $\theta$ at random from $\pi$, then $\mathcal{Y}_{T}$ at random from $p(\mathcal{Y}_{T}|\theta)\pi(\theta)$
+- Prior predictive distribution should generate sequences that have features of typical distribution
+- Simulate and check: do the values look plausible or not, in terms of scale or other features
+    - If simulations lead to quarterly GDP growth of 3 million percent or more in a nontrivial fraction of years, probably some implausible guesses are given too high a weight
+    - If in 1000 simulations, never see a recession, probably assigning too little weight to some outcomes
+- Encompassing principle
+    - Prior predictive distribution should contain any plausible outcome, plus a bit more to account for surprises
+- If prior predictive distribution looks implausible, problem may be with prior **or** likelihood
+    - Adjust both to reflect data features
+- *Posterior* predictive distribution can also be compared to the data 
+    - If even after updating, simulations look very different from data, model may not be describing data very well
+    
+    
+## Computing the Posterior
+
+- Start by choosing a model expressing features of data distribution, a prior over these features, and data 
+- Inference then requires computation to find posterior $p(\theta|\mathcal{Y}_T)$
+- Applying Bayes rule means computing $\frac{p(\mathcal{Y}_{T}|\theta)\pi(\theta)}{\int p(\mathcal{Y}_{T}|\theta)\pi(\theta)d\theta}$
+- Numerator is (usually) easy: both terms come from probability model
+- Denominator is usually harder
+    - Just a constant (in $\theta$) which normalizes distribution to give mass 1 to set of all values
+    - But requires integral over parameter space
+- One possible solution: use likelihood and prior such that integral has known solution
+- Prior-posterior pairs which give closed form posterior in same family as prior are called **conjugate**
+    - Mid-20th century textbooks on Bayesian methods were mostly big compendia of conjugate families and integral tables
+    - Useful when applicable, but simple forms not always a reasonable model of likelihood or prior
+- Nowadays, can also use numerical integration to compute or simulate from $p(\theta|\mathcal{Y}_T)$
+    - Next class will be all about this
+
+## Computing Posterior Predictive Distribution and Bayes Forecast
+
+- Once posterior $p(\theta|\mathcal{Y}_T)$ is computed or simulated from, integrate again to compute posterior predictive distribution
+    - $p(y_{T+1}|\mathcal{Y}_{T})=\int p(y_{T+1}|\mathcal{Y}_{T},\theta)p(\theta|\mathcal{Y}_T)d\theta$
+- And integrate again to compute conditional risk with respect to this distribution 
+    - $\int \ell(y_{T+1},\widehat{y})p(y_{T+1}|\mathcal{Y}_{T})dy_{T+1}$
+- Conditional likelihood $p(y_{T+1}|\mathcal{Y}_{T},\theta)$ usually easy to calculate for fixed $\theta$
+    - Especially if likelihood factorizable
+- If simulations from distribution feasible, simple procedure: for $j=1\ldots J$ simulations
+    - Simulate $\theta_j$ from posterior $p(\theta|\mathcal{Y}_T)$
+    - Simulate $y_{t+1,j}$ from conditional likelihood $p(y_{T+1}|\mathcal{Y}_{T},\theta_j)$
+    - Estimate posterior predictive risk as $\frac{1}{J}\sum_{j=1}^{J}\ell(y_{t+1,j},\widehat{y})$
+    - Find $\widehat{y}$ minimizing approximate risk
+- In cases where risk minimization elicits a feature of distribution, can optimize by calculating that feature of posterior predictive distribution
+    - Square loss gives posterior predictive mean, absolute gives median, cross-entropy gives conditional probability, etc
+    
+
+## Example: Beta-Bernoulli Posterior
+
+- Beta distribution is a conjugate prior for a Bernoulli likelihood
+     - Posterior also a Beta distribution, with different parameters $\alpha,\beta$. 
+- Applying this prior along with Bayes rule to the Bernoulli formula, obtain
+$$\pi(\theta|\mathcal{Y}_{T})=\frac{p(\mathcal{Y}_T|\theta)f(\theta,\alpha,\beta)}{\int p(\mathcal{Y}_T|\theta)f(\theta,\alpha,\beta)d\theta}=\frac{\prod_{t=1}^{T}\theta^{y_t}(1-\theta)^{1-y_t}\frac{\theta^{\alpha-1}(1-\theta)^{\beta-1}}{\int x^{\alpha-1}(1-x)^{\beta-1}dx}}{\int\prod_{t=1}^{T}\theta^{y_t}(1-\theta)^{1-y_t}\frac{\theta^{\alpha-1}(1-\theta)^{\beta-1}}{\int x^{\alpha-1}(1-x)^{\beta-1}dx}d\theta}$$
+- Simplifies by symmetry: if $N$ is the # of times outcome $1$ observed, $M:=T-N$ is the # of times outcome $0$ observed
+    - Posterior density proportional to $\pi(\theta|Y)\propto\theta^{N+\alpha-1}(1-\theta)^{M+\beta-1}=f(\theta,N+\alpha,M+\beta)$
+- Parameters have a meaningful interpretation
+    - If $\alpha=\beta=1$, the Beta distribution is just a uniform distribution on $[0,1]$. 
+    - Starting with this prior, different parameter values correspond to the number of observations of $1$ or $0$ that have been seen. 
+- A prior of $\alpha=n+1,\beta=m+1$ corresponds to having seen $n$ ones and $m$ zeros. 
+    - Values of $\alpha$ and $\beta$ with non-integer components, or less than 1, are also feasible. 
+
+## Example Continued: Beta-Bernoulli Forecast
+
+- Posterior predictive probability that the sun rises tomorrow is the posterior mean 
+    - $p(y_{T+1}=1|\mathcal{Y}_{T})=\int\theta\frac{\theta^{N+\alpha-1}(1-\theta)^{M+\beta-1}}{\int x^{N+\alpha-1}(1-x)^{M+\beta-1}dx}d\theta$
+- Using that the mean of a Beta distribution with parameters $a,b$ is $\frac{a}{a+b}$, this is $\frac{N+\alpha}{T+\alpha+\beta}$ 
+    - So posterior predictive distribution is Bernoulli with probability $\frac{N+\alpha}{T+\alpha+\beta}$
+- With quadratic or cross-entropy loss, posterior predictive probability of 1 is exactly the optimal forecast $\widehat{y}$    
+- With finite prior $\alpha,\beta$, this converges to $\frac{N}{T}$
+    - Fraction of samples where a 1 was observed
+    - Seems like a sensible choice: ERM over all constant forecast rules
+
+## Example 2: Normal-Normal Model
+
+- Consider an example useful for continuous data $y\in\mathbb{R}$
+- **Likelihood**: Normal distribution with unknown mean $\mu$ known *precision* $\tau$ ($\tau=$ inverse of variance $\sigma^2$ )
+    - $y\sim N(\mu,\frac{1}{\tau})$ has density $p(y|\mu)=\frac{\sqrt{\tau}}{\sqrt{2\pi}}\exp(-\frac{\tau}{2}(y-\mu)^2)$
+- **Prior**: Normal distribution with fixed mean $m$, precision $t$ is conjugate 
+    - $\pi(\mu;m,t)=\frac{\sqrt{t}}{\sqrt{2\pi}}\exp(-\frac{t}{2}(\mu-m)^2)$
+- **Posterior**: Normal, with new precision $t^\prime=\tau+t$  and new mean $m^\prime=\frac{t}{\tau+t}m+\frac{\tau}{\tau+t}y$
+    - $p(\mu|y)=\frac{p(y|\mu)\pi(\mu;m,t)}{\int p(y|\mu)\pi(\mu;m,t)d\mu}=\frac{\sqrt{t^\prime}}{\sqrt{2\pi}}\exp(-\frac{t^\prime}{2}(\mu-m^\prime)^2)$
+    - See bonus slide for proof, by completing the square
+- Interpretation: posterior mean is weighted average of prior and data, and precision increases
+- Conjugacy extends to multivariate case, with any variance
+    - Includes any gaussian model of a sequence, including AR model with normal $e_t$, VAR, and many more
+    - Unknown variance case works with appropriate prior on variance
+- Historically, most work on Bayesian methods for time series based on normal-normal model
+    - Linear formulas make exact calculations feasible
+
+
+## Conclusion
+
+- The probability approach uses probability distribution to describe behavior of data sequences
+    - Comes from a **model** describing properties of the data
+- Bayesian approach puts a probability distribution, called a **prior** over the distribution of sequences
+    - Comes from existing beliefs or knowledge about these properties
+- Given observed data, a *conditional* distribution over the distribution of sequences, called a **posterior**, can be computed by Bayes Rule
+$$p(\theta|\mathcal{Y}_T)=\frac{p(\mathcal{Y}_T;\theta)\pi(\theta)}{\int p(\mathcal{Y}_T;\theta)\pi(\theta) d\theta}$$
+- Can compute a predictive distribution $p(y_{T+h}|\mathcal{Y}_T)$ by averaging over the posterior
+    - Use this to compute forecasts with lowest risk on average over the prior distribution
+- Complexity of Bayesian method comes from choosing a good model (likelihood and prior) and being able to compute the posterior
+
+## Bonus: Gaussian Posterior Calculation
+
+- Calculations for posterior in normal normal model
+- $p(\mu|y)=\frac{p(y|\mu)\pi(\mu;m,t)}{\int p(y|\mu)\pi(\mu;m,t)d\mu}$
+- $\propto\exp(-\frac{1}{2}(\tau(y-\mu)^2+t(m-\mu)^2))$ ignore constant of proportionality
+- $\propto\exp(-\frac{1}{2}(\tau(\mu^2-2\mu y)+t(\mu^2-2\mu m))$ expand square and drop terms not dependent on $\mu$
+- $=\exp(-\frac{\tau+t}{2}(\mu^2-2\mu\frac{\tau y +tm}{\tau+t}))$
+- $\propto\exp(-\frac{\tau+t}{2}(\mu-\frac{\tau y +tm}{\tau+t})^2)$ complete the square
+- Up to proportionality, this is density of a $N(\frac{\tau y +tm}{\tau+t},\frac{1}{\tau+t})$ distribution
+
+
+
+

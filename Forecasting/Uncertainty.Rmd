@@ -44,7 +44,7 @@ output:
     - What sales, business conditions, etc will look like determines profitability
 - Distribution of possible values outcome may affect distribution of profits
 - May not be able to describe different future scenarios by a single number, like the mean
-- May be predicted to have high sales on average next year, but distribution aound it matters 
+- May be predicted to have high sales on average next year, but distribution around it matters 
     - If distribution narrow around mean, can proceed as if value essentially known
     - If distribution wide around mean, need to consider chance of very high or very low sales
     - Could also be skewed: small chance of huge upside, but in most cases, sales are mediocre
@@ -110,7 +110,7 @@ output:
 
 - The conditional CDF at value z is equal to $p(y_{T+h}\leq z|\mathcal{Y}_T)=E_p[1\{y_{T+h}\leq z\}|\mathcal{Y}_T]$ and so is just the probability of a binary event
 - It can therefore be elicited by any loss function that elicits probabilities
-    - Eg cross-entropy loss where outcome is an indiator of event
+    - Eg cross-entropy loss where outcome is an indicator of event
     - Can use as predictor logistic transform $\frac{\exp(f)}{1+\exp(f)}$ of functions $f\in\mathcal{F}$
 - CDF forecasting equivalent to predicting chance of different levels of outcomes     
 - Procedure:
@@ -159,7 +159,7 @@ output:
     - If distribution stationary and weak dependent, can upper bound chance using sample size, though may be much lower
     - If stationarity fails, all bets are off
 - Best approach may be to try to gather more data
-    - In US, financial crises not seen at all 1945-2007. But over all countries, over past 200 years, have hundreds of observed crises
+    - In US, (major) financial crises not seen at all 1945-2007. But over all countries, over past 200 years, have hundreds of observed crises
     - If working for a company that still exists, **your** company (probably) has never gone out of business, but other companies do so all the time
 - May provide a lower bound if you **know** outcome can't fall below a minimum
     - Bankruptcy law protects investors from losses beyond a certain point
@@ -189,18 +189,17 @@ fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
 
 ## Obtain and transform SP500 Data
 #Original fredr approach
-#SPreturns<-fredr(series_id = "SP500",units="pch",observation_end=as.Date("2019-2-20")) #Percent Daily Change in S&P500 Index
+#SPreturns<-fredr(series_id = "SP500",units="pch",observation_end=as.Date("2021-3-15")) #Percent Daily Change in S&P500 Index
 
-#Saved File Obtained From FRED on 3/30/2019
-#Load from File: Change to your folder
-load("~/Dropbox/Forecasting/Website Version/Forecasting/Data/SPreturns.RData")
+#Saved File Obtained From FRED on 3/15/2021
+load("Data/SPreturns.RData")
 
 #Format as "zoo" object: irregularly spaced time series
 #Spacing not regular because SP500 traded only on non-holiday weekdays
 spz<-zoo(x=SPreturns$value,order.by=SPreturns$date)  
 
 autoplot(spz)+
-  ggtitle("S&P 500 Daily Percent Returns Since 2009")+
+  ggtitle("S&P 500 Daily Percent Returns Since 2011")+
   xlab("Date")+ylab("Percent Return")
 ```
 
@@ -209,28 +208,32 @@ autoplot(spz)+
 - Use linear and quadratic functions of returns for past 2 trading weeks (10 days) to predict return distribution
 
 ```{r,warning=FALSE,message=FALSE}
-spr<-window(spz,start="2009-4-13",end="2019-2-20") #Restrict to shared dates
+#Restrict to shared dates
+sdate<-"2011-03-30" #Start date of shared sample
+edate<-"2021-03-15" #End date of sample
+spr<-window(spz,start=sdate,end=edate) 
+
 #Construct lagged series and nonlinear transforms
-spl1<-window(stats::lag(spz,-1),start="2009-4-13",end="2019-2-20")
-spl2<-window(stats::lag(spz,-2),start="2009-4-13",end="2019-2-20")
-spl3<-window(stats::lag(spz,-3),start="2009-4-13",end="2019-2-20")
-spl4<-window(stats::lag(spz,-4),start="2009-4-13",end="2019-2-20")
-spl5<-window(stats::lag(spz,-5),start="2009-4-13",end="2019-2-20")
-spl6<-window(stats::lag(spz,-6),start="2009-4-13",end="2019-2-20")
-spl7<-window(stats::lag(spz,-7),start="2009-4-13",end="2019-2-20")
-spl8<-window(stats::lag(spz,-8),start="2009-4-13",end="2019-2-20")
-spl9<-window(stats::lag(spz,-9),start="2009-4-13",end="2019-2-20")
-spl10<-window(stats::lag(spz,-10),start="2009-4-13",end="2019-2-20")
-qspl1<-window(stats::lag(spz,-1)^2,start="2009-4-13",end="2019-2-20")
-qspl2<-window(stats::lag(spz,-2)^2,start="2009-4-13",end="2019-2-20")
-qspl3<-window(stats::lag(spz,-3)^2,start="2009-4-13",end="2019-2-20")
-qspl4<-window(stats::lag(spz,-4)^2,start="2009-4-13",end="2019-2-20")
-qspl5<-window(stats::lag(spz,-5)^2,start="2009-4-13",end="2019-2-20")
-qspl6<-window(stats::lag(spz,-6)^2,start="2009-4-13",end="2019-2-20")
-qspl7<-window(stats::lag(spz,-7)^2,start="2009-4-13",end="2019-2-20")
-qspl8<-window(stats::lag(spz,-8)^2,start="2009-4-13",end="2019-2-20")
-qspl9<-window(stats::lag(spz,-9)^2,start="2009-4-13",end="2019-2-20")
-qspl10<-window(stats::lag(spz,-10)^2,start="2009-4-13",end="2019-2-20")
+spl1<-window(stats::lag(spz,-1),start=sdate,end=edate)
+spl2<-window(stats::lag(spz,-2),start=sdate,end=edate)
+spl3<-window(stats::lag(spz,-3),start=sdate,end=edate)
+spl4<-window(stats::lag(spz,-4),start=sdate,end=edate)
+spl5<-window(stats::lag(spz,-5),start=sdate,end=edate)
+spl6<-window(stats::lag(spz,-6),start=sdate,end=edate)
+spl7<-window(stats::lag(spz,-7),start=sdate,end=edate)
+spl8<-window(stats::lag(spz,-8),start=sdate,end=edate)
+spl9<-window(stats::lag(spz,-9),start=sdate,end=edate)
+spl10<-window(stats::lag(spz,-10),start=sdate,end=edate)
+qspl1<-window(stats::lag(spz,-1)^2,start=sdate,end=edate)
+qspl2<-window(stats::lag(spz,-2)^2,start=sdate,end=edate)
+qspl3<-window(stats::lag(spz,-3)^2,start=sdate,end=edate)
+qspl4<-window(stats::lag(spz,-4)^2,start=sdate,end=edate)
+qspl5<-window(stats::lag(spz,-5)^2,start=sdate,end=edate)
+qspl6<-window(stats::lag(spz,-6)^2,start=sdate,end=edate)
+qspl7<-window(stats::lag(spz,-7)^2,start=sdate,end=edate)
+qspl8<-window(stats::lag(spz,-8)^2,start=sdate,end=edate)
+qspl9<-window(stats::lag(spz,-9)^2,start=sdate,end=edate)
+qspl10<-window(stats::lag(spz,-10)^2,start=sdate,end=edate)
 
 #Concatenate into data frame
 SPInfo<-data.frame(spr,spl1,spl2,spl3,spl4,spl5,spl6,spl7,spl8,spl9,spl10,
@@ -251,44 +254,26 @@ todayslags<-data.frame(spr[today],spl1[today],spl2[today],spl3[today],spl4[today
 names(todayslags)<-c("spl1","spl2","spl3","spl4","spl5","spl6","spl7","spl8","spl9","spl10",
                      "qspl1","qspl2","qspl3","qspl4","qspl5","qspl6","qspl7","qspl8","qspl9","qspl10")
 
-#Replace NAs from President's day Holiday with 0s
-todayslags$spl2<-0
-todayslags$spl3<-0
-todayslags$qspl2<-0
-todayslags$qspl3<-0
+#If any days are missing in recent sample, eg due to holidays, replace NAs with 0s: eg
+#todayslags$spl1<-0
+
 
 qpredictions<-predict(spquantile,newdata=todayslags)
-rownames(qpredictions)<-c("2019-2-21") #Forecasts made using data on 20th, for date of 21st
-
-## Following is a failed attempt to convert output to a forecast object
-## Issue seems to be with use of irregular time series
-# spmedian<-zoo(qpredictions[4],"2019-2-21")
-# spupper<-qpredictions[5:7]
-# names(spupper)=c("50%","80%","90%")
-# splower<-qpredictions[1:3]
-# names(splower)=c("90%","80%","50%")
-# output<-list(mean=spmedian,x=spr,upper=spupper,
-#              lower=splower,level=c(50,80,90),method="Quantile Regression")
-# qfcst<-structure(output,class='forecast')
-
-# #Display Forecasts as a table
-# kable(qpredictions,
-#   caption="Quantile Regression Return Forecasts") %>%
-#   kable_styling(bootstrap_options = "striped")
-
-
-
+rownames(qpredictions)<-c("2021-3-16") #Forecasts made using data on 15th, for date of 16th
+```
+```{r,warning=FALSE,message=FALSE}
 ## Distribution Regression
 
 library(dplyr) #Manipulate data frame
 
 #Use values -2,-1,-0.5,-0.2,0,0.2,0.5,1,2
+
 #Adjust formula
 fmla <- as.formula(paste(paste("spr1 ~ ", paste(lnam, collapse= "+")),paste("+",paste(qlnam, collapse= "+"))))
 
 SPInfo<-mutate(SPInfo,spr1=ifelse(spr<=-2,1,0))
 spdr1<-glm(fmla,family=binomial(link="logit"), data=SPInfo)
-#Predictions should be o type "response" to get probabilities
+#Predictions should be of type "response" to get probabilities
 pred1<-predict(spdr1,newdata=todayslags,type="response")
 
 SPInfo<-mutate(SPInfo,spr1=ifelse(spr<=-1,1,0))
@@ -322,18 +307,20 @@ pred8<-predict(spdr8,newdata=todayslags,type="response")
 SPInfo<-mutate(SPInfo,spr1=ifelse(spr<=2,1,0))
 spdr9<-glm(fmla,family=binomial(link="logit"), data=SPInfo)
 pred9<-predict(spdr9,newdata=todayslags,type="response")
-
+```
+```{r,warning=FALSE,message=FALSE}
+#Make forecasts into data frames and plot
 predvec<-c(pred1,pred2,pred3,pred4,pred5,pred6,pred7,pred8,pred9)
-spreturnvals<-c(-2,-1,-0.5,-0.2,0,0.2,0.5,1,2)
+spreturnvals<-c(-2,-1,-0.5,-0.2,0,0.2,0.5,1,2) 
 dtype<-c("DistributionRegression","DistributionRegression","DistributionRegression","DistributionRegression",
         "DistributionRegression","DistributionRegression","DistributionRegression","DistributionRegression",
-        "DistributionRegression")
+        "DistributionRegression") 
 
 
 distfcst<-data.frame(spreturnvals,predvec,dtype)
 colnames(distfcst)<-c("Returns","Probabilities","Type")
 
-#MAke data.frame of quantile regression forecasts
+#Make data.frame of quantile regression forecasts
 tauvec<-c(0.01,0.05,0.1,0.25,0.5,0.75,0.9,0.95,0.99)
 rtype<-c("QuantileRegression","QuantileRegression","QuantileRegression","QuantileRegression",
          "QuantileRegression","QuantileRegression","QuantileRegression","QuantileRegression",
@@ -341,15 +328,14 @@ rtype<-c("QuantileRegression","QuantileRegression","QuantileRegression","Quantil
 qregfcst<-data.frame(t(as.matrix(qpredictions)),tauvec,rtype)
 colnames(qregfcst)<-c("Returns","Probabilities","Type")
 
-#MArge quantile and distribution forecasts for plotting
+#Merge quantile and distribution forecasts for plotting
 fcsts<-full_join(distfcst,qregfcst)
 
 #Plot Both forecasts on same plot
 ggplot(fcsts,aes(x=Returns,y=Probabilities,color=Type))+geom_point()+geom_line()+
-  ggtitle("Distribution and Quantile Regression Forecasts of S&P500 Returns for 2-21-2019",
+  ggtitle("Distribution and Quantile Regression Forecasts of S&P500 Returns for 3-16-2021",
           subtitle="Quantile regression fixes Y values and estimates X, Distribution regression the reverse")+
   xlab("Percent Return")+ylab("Conditional Cumulative Probability")
-
 ```
 
 
@@ -381,8 +367,8 @@ and is **low complexity**, so the **estimation error** $\widehat{f}-f^{*}$ is su
     - Variance of normal distribution is $\frac{\sigma^2_{\widehat{f}}}{T}$, where $\sigma^2_{\widehat{f}}$ is estimable from data
     - See Hyndman book for formulas for most common classes
 - To get full error distribution: 
-    1. Draw independent samples from forecast error distribution and residual error distribution and add them
-    2. Repeat until you have a large sample of estimate errors
+    1. Draw independent samples from estimation error distribution and residual error distribution and add them
+    2. Repeat until you have a large sample of estimated errors
     3. Use empirical distribution of sum to construct quantiles or other distribution features
     
 ## Normal Residuals Case
@@ -443,19 +429,31 @@ library(tseries) #Perform tests, including Jarque Bera Test for Normality
 
 #US GDP components 
 GDP<-fredr(series_id = "GDP",
-           observation_start = as.Date("1947-01-01")) #Gross Domestic Product
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-03-15"), 
+           vintage_dates = as.Date("2021-03-15")) #Gross Domestic Product
 
 #US GDP components from NIPA tables (cf http://www.bea.gov/national/pdf/nipaguid.pdf)
 PCEC<-fredr(series_id = "PCEC",
-            observation_start = as.Date("1947-01-01")) #Personal consumption expenditures
+            observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-03-15"), 
+           vintage_dates = as.Date("2021-03-15")) #Personal consumption expenditures
 FPI<-fredr(series_id = "FPI",
-           observation_start = as.Date("1947-01-01")) #Fixed Private Investment
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-03-15"), 
+           vintage_dates = as.Date("2021-03-15")) #Fixed Private Investment
 CBI<-fredr(series_id = "CBI",
-           observation_start = as.Date("1947-01-01")) #Change in Private Inventories
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-03-15"), 
+           vintage_dates = as.Date("2021-03-15")) #Change in Private Inventories
 NETEXP<-fredr(series_id = "NETEXP",
-              observation_start = as.Date("1947-01-01")) #Net Exports of Goods and Services
+              observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-03-5"), 
+           vintage_dates = as.Date("2021-03-15")) #Net Exports of Goods and Services
 GCE<-fredr(series_id = "GCE",
-           observation_start = as.Date("1947-01-01")) #Government Consumption Expenditures and Gross Investment
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-03-15"), 
+           vintage_dates = as.Date("2021-03-15")) #Government Consumption Expenditures and Gross Investment
 
 #Format the series as quarterly time series objects, starting at the first date
 gdp<-ts(GDP$value,frequency = 4,start=c(1947,1),names="Gross Domestic Product") 
@@ -471,19 +469,19 @@ NIPAdata<-ts(data.frame(diff(log(gdp)),diff(log(pcec)),diff(log(invest)),diff(lo
 
 # Construct lags
 
-l1NIPA<-window(stats::lag(NIPAdata,-1),start=c(1949,2),end=c(2018,3))
-l2NIPA<-window(stats::lag(NIPAdata,-2),start=c(1949,2),end=c(2018,3))
-l3NIPA<-window(stats::lag(NIPAdata,-3),start=c(1949,2),end=c(2018,3))
-l4NIPA<-window(stats::lag(NIPAdata,-4),start=c(1949,2),end=c(2018,3))
-l5NIPA<-window(stats::lag(NIPAdata,-5),start=c(1949,2),end=c(2018,3))
-l6NIPA<-window(stats::lag(NIPAdata,-6),start=c(1949,2),end=c(2018,3))
-l7NIPA<-window(stats::lag(NIPAdata,-7),start=c(1949,2),end=c(2018,3))
-l8NIPA<-window(stats::lag(NIPAdata,-8),start=c(1949,2),end=c(2018,3))
+l1NIPA<-window(stats::lag(NIPAdata,-1),start=c(1949,2),end=c(2020,4))
+l2NIPA<-window(stats::lag(NIPAdata,-2),start=c(1949,2),end=c(2020,4))
+l3NIPA<-window(stats::lag(NIPAdata,-3),start=c(1949,2),end=c(2020,4))
+l4NIPA<-window(stats::lag(NIPAdata,-4),start=c(1949,2),end=c(2020,4))
+l5NIPA<-window(stats::lag(NIPAdata,-5),start=c(1949,2),end=c(2020,4))
+l6NIPA<-window(stats::lag(NIPAdata,-6),start=c(1949,2),end=c(2020,4))
+l7NIPA<-window(stats::lag(NIPAdata,-7),start=c(1949,2),end=c(2020,4))
+l8NIPA<-window(stats::lag(NIPAdata,-8),start=c(1949,2),end=c(2020,4))
 
 #convert to matrices
 xvarsdf<-data.frame(l1NIPA,l2NIPA,l3NIPA,l4NIPA,l5NIPA,l6NIPA,l7NIPA,l8NIPA)
 xvars<-as.matrix(xvarsdf)
-NIPAwindow<-matrix(window(NIPAdata,start=c(1949,2),end=c(2018,3)),length(l1NIPA[,1]),4)
+NIPAwindow<-matrix(window(NIPAdata,start=c(1949,2),end=c(2020,4)),length(l1NIPA[,1]),4)
 
 
 #Calculate information criteria
@@ -509,19 +507,16 @@ autoplot(GDPline,showgap=FALSE)+
 
 ## Residual Diagnostics for VAR(1) Forecast
 
-```{r,class.source='fold-show'}
+```{r}
 checkresiduals(BICVAR$varresult$diff.log.gdp..) #GDP Growth forecast residual diagnostic
 ```
 
 ## Residual Diagnostics for VAR(5) Forecast
 
-```{r,class.source='fold-show'}
+```{r}
 checkresiduals(AICVAR$varresult$diff.log.gdp..) #GDP Growth forecast residual diagnostic
 ```
-```{r,,class.source='fold-show'}
-jbt<-jarque.bera.test(AICVAR$varresult$diff.log.gdp..$residuals) #Test normality
-archt<-arch.test(AICVAR) #Test heteroskedasticity
-```
+
 
 ## Interpretation
 
@@ -532,10 +527,18 @@ archt<-arch.test(AICVAR) #Test heteroskedasticity
     - Suggests uncorrelatedness with sample error not terrible assumption
 - Normal distribution doesn't look so close: asymmetry, etc in plot, so intervals may have wrong shape
 - Heteroskedasticity may also be a problem: variance seems to have declined over time
-    - Formal tests soundly reject normality and no ARCH effects
+```{r,class.source = 'fold-show'}
+jbt<-jarque.bera.test(AICVAR$varresult$diff.log.gdp..$residuals) #Test normality
+archt<-arch.test(AICVAR) #Test heteroskedasticity
+```
+- Formal tests soundly reject normality and no ARCH effects (p-values `r jbt$p.value` and `r archt$arch.mul$p.value`, respectively)
 - So prediction intervals also likely to not have appropriate coverage
     - Could try to model ARCH effects, standardize residuals, and use empirical distribution to construct
     - Or just run quantile regressions...
+    
+## Exercise: Risk mangement
+
+- Try some distribution modeling tools for yourself on the S&P 500 data in a [Kaggle notebook](https://www.kaggle.com/davidchilders/financial-risk-management).
     
 ##  Conclusions
 

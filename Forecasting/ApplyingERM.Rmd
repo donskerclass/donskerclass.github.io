@@ -1,11 +1,10 @@
 ---
-title: "Applying ERM"
+title: "Applying Empirical Risk Minimization"
 author: "73-423 Forecasting for Economics and Business"
 output:
   html_document:
     code_folding: hide
 ---
-
 
 ## Empirical Risk Minimization
 
@@ -79,7 +78,7 @@ $$\widehat{\beta}=\underset{\beta\in\mathbb{R}^d}{\arg\min}\frac{1}{T-h}\sum_{t=
     - For case where predictors are past values, have `Arima`,`arima`, `Ar` commands
     - For general predictors $z_t$, use `lm` (or `tslm` or `dynlm` when working with lags)
 
-```{r, eval=FALSE, class.source='fold-show'}
+```{r, eval=FALSE, class.source = 'fold-show'}
 #Select coefficients (b0,b1,b2,b3) by minimizing square loss
 regression<-lm(y~z1+z2+z3)
 #Produce forecasts by evaluating regression function at latest values
@@ -111,24 +110,30 @@ fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
 #US GDP components 
 GDP<-fredr(series_id = "GDP",
            observation_start = as.Date("1947-01-01"),
-           observation_end=as.Date("2019-02-12")) #Gross Domestic Product
+           observation_end=as.Date("2021-02-27"),
+           vintage_dates = as.Date("2021-02-27")) #Gross Domestic Product
 
 #US GDP components from NIPA tables (cf http://www.bea.gov/national/pdf/nipaguid.pdf)
 PCEC<-fredr(series_id = "PCEC",
-            observation_start = as.Date("1947-01-01"),
-            observation_end=as.Date("2019-02-12")) #Personal consumption expenditures
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-02-27"),
+           vintage_dates = as.Date("2021-02-27")) #Personal consumption expenditures
 FPI<-fredr(series_id = "FPI",
            observation_start = as.Date("1947-01-01"),
-           observation_end=as.Date("2019-02-12")) #Fixed Private Investment
+           observation_end=as.Date("2021-02-27"),
+           vintage_dates = as.Date("2021-02-27")) #Fixed Private Investment
 CBI<-fredr(series_id = "CBI",
            observation_start = as.Date("1947-01-01"),
-           observation_end=as.Date("2019-02-12")) #Change in Private Inventories
+           observation_end=as.Date("2021-02-27"),
+           vintage_dates = as.Date("2021-02-27")) #Change in Private Inventories
 NETEXP<-fredr(series_id = "NETEXP",
-              observation_start = as.Date("1947-01-01"),
-              observation_end=as.Date("2019-02-12")) #Net Exports of Goods and Services
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-02-27"),
+           vintage_dates = as.Date("2021-02-27")) #Net Exports of Goods and Services
 GCE<-fredr(series_id = "GCE",
            observation_start = as.Date("1947-01-01"),
-           observation_end=as.Date("2019-02-12")) #Government Consumption Expenditures and Gross Investment
+           observation_end=as.Date("2021-02-27"),
+           vintage_dates = as.Date("2021-02-27")) #Government Consumption Expenditures and Gross Investment
 
 #Format the series as quarterly time series objects, starting at the first date
 gdp<-ts(GDP$value,frequency = 4,start=c(1947,1),names="Gross Domestic Product") 
@@ -154,30 +159,30 @@ gce<-ts(GCE$value,frequency = 4,start=c(1947,1),names="Government Spending")
 #gdpdynlm<-dynlm(d(gdp)~L(d(gdp))+L(d(pcec))+L(d(invest))+L(d(gce))+L(d(netexp)))
 
 #Restate as aligned variables of same length
-dgdp<-window(diff(log(gdp)),start=c(1947,3),end=c(2018,3))
-ldgdp<-window(lag(diff(log(gdp)),-1),end=c(2018,3))
-ldpcec<-window(lag(diff(log(pcec)),-1),end=c(2018,3))
-ldinvest<-window(lag(diff(log(invest)),-1),end=c(2018,3))
-ldgce<-window(lag(diff(log(gce)),-1),end=c(2018,3))
-#ldnetexp<-window(lag(diff(netexp),-1),end=c(2018,3)) #Exclude net exports, which is sometimes negative
+dgdp<-window(diff(log(gdp)),start=c(1947,3),end=c(2020,4))
+ldgdp<-window(lag(diff(log(gdp)),-1),end=c(2020,4))
+ldpcec<-window(lag(diff(log(pcec)),-1),end=c(2020,4))
+ldinvest<-window(lag(diff(log(invest)),-1),end=c(2020,4))
+ldgce<-window(lag(diff(log(gce)),-1),end=c(2020,4))
+#ldnetexp<-window(lag(diff(netexp),-1),end=c(2020,4)) #Exclude net exports, which is sometimes negative
 
 #Predict using OLS
 gdpOLS<-lm(dgdp~ldgdp+ldpcec+ldinvest+ldgce)
 
-#Collect Q32018 Data for Q42018 Forecast
-last<-length(diff(pcec)) #Index of last observation for all series, Q3 2018
+#Collect Q42020 Data for Q12021 Forecast
+last<-length(diff(pcec)) #Index of last observation for all series, Q4 2020
 zt<-data.frame(diff(log(gdp))[last],diff(log(pcec))[last],diff(log(invest))[last],diff(log(gce))[last])
 colnames(zt)<-c("ldgdp","ldpcec","ldinvest","ldgce")
 
 #Predict 
-gdp2018Q4fcstOLS<-predict(gdpOLS,zt)
+gdpfcstOLS<-predict(gdpOLS,zt)
 
 ```
-```{r,eval=FALSE,,class.source='fold-show'}
+```{r,eval=FALSE, class.source = 'fold-show'}
 #Use OLS to predict GDP growth from lagged component growth
 gdpOLS<-lm(dgdp~ldgdp+ldpcec+ldinvest+ldgce)
-#Predict value for 2018Q4, using Q3 data
-gdp2018Q4fcstOLS<-predict(gdpOLS,zt)
+#Predict value for 2021Q1, using 2020Q4 data
+gdpfcstOLS<-predict(gdpOLS,zt)
 ```
 
 ## Loss Guarantees for OLS
@@ -189,9 +194,10 @@ gdp2018Q4fcstOLS<-predict(gdpOLS,zt)
     - Probability that excess risk relative to oracle exceeds any fixed constant $c$ goes to 0 as $T\to\infty$
     - p(($\frac{1}{T-h}\sum_{t=1}^{T-h}(y_{t+h}-\sum_{j=1}^dz_{jt}\widehat{\beta}^{\text{OLS}}_j)^2-\underset{f\in\mathcal{F}}{\min}E_p[(y_{t+h}-\sum_{j=1}^dz_{jt}\beta_j)^2])>c)\overset{T\to\infty}{\to}0$
 - Above conditions do not say anything about finite $T$ excess risk
-    - No uniform bounds
-    - "Its performance is... typically poor in most applications" (Mohri et al 2012, p246)
+    - Uniform bounds require stronger conditions
     - Problem is that $\mathcal{F}$ unbounded: predictions could be anywhere
+    - A claim: "Its performance is... typically poor in most applications" (Mohri et al 2018, p276)
+    - Depends on the use case: often a strong performer in economic data
 - Simplicity, interpretability, ease of use make it popular method
 
 ## Least Absolute Deviations regression
@@ -205,18 +211,18 @@ $$\widehat{\beta}=\underset{\beta\in\mathbb{R}^d}{\arg\min}\frac{1}{T-h}\sum_{t=
     - Searches for a value so you are as likely to be wrong above as below
 - Implementation: minimizer computable by fast algorithm as a special case of quantile regression
     - Use `rq` command in library `quantreg`
-```{r,class.source='fold-show'}
+```{r, class.source = 'fold-show'}
 #Select coefficients (b0,b1,b2,b3,b4) by minimizing absolute loss
 gdpLAD<-rq(dgdp~ldgdp+ldpcec+ldinvest+ldgce)
 #Produce forecasts by evaluating regression function at latest values
-gdp2018Q4fcstLAD<-predict(gdpLAD,zt)
+gdpfcstLAD<-predict(gdpLAD,zt)
 ```
 
 ## Application: Comparison of LAD and OLS Forecasts
 
-- Forecasts of log GDP growth in 2018Q4
-    - OLS: `r gdp2018Q4fcstOLS`
-    - LAD: `r gdp2018Q4fcstLAD`,  
+- Forecasts of log GDP growth in 2021Q1
+    - OLS: `r gdpfcstOLS`
+    - LAD: `r gdpfcstLAD`,  
 
 ```{r,message=FALSE,warning=FALSE}
 library(knitr)
@@ -253,6 +259,11 @@ autoplot(dgdp,series="Log GDP Growth")+
    guides(colour=guide_legend(title="Series"))
 ```
 
+## Exercise
+
+- Try out OLS and LAD regression yourself with a Kaggle notebook on [Covid and Economic Activity](https://www.kaggle.com/davidchilders/covid-and-economic-activity)
+
+
 ## Binary Prediction
 
 - $y_t$ a binary (0,1) variable: 1 if something happened, 0 if it didn't
@@ -280,7 +291,7 @@ autoplot(dgdp,series="Log GDP Growth")+
 $$\widehat{\beta}=\underset{\beta\in\mathbb{R}^d}{\arg\min}\frac{1}{T-h}\sum_{t=1}^{T-h}(y_{t+h}\log(F(\sum_{j=1}^dz_{jt}\beta_j))+(1-y_{t+h})\log(1-F(\sum_{j=1}^dz_{jt}\beta_j)))$$
 - Implementation: minimizer computable by fast algorithm
     - Use `glm` command with option `family=binomial(link="logit")`
-```{r, eval=FALSE,class.source='fold-show'}
+```{r, eval=FALSE, class.source = 'fold-show'}
 #Select coefficients (b0,b1,b2,b3) by minimizing categorical cross-entropy loss
 logitregression<-glm(y~z1+z2+z3,family=binomial(link="logit"))
 #Produce forecasts by evaluating regression function at latest values
@@ -314,14 +325,15 @@ logitregressionforecast<-predict(logitregression,zt,type="response")
 ```{r}
 #The NBER recession indicator has FRED ID "USREC"
 #1 in NBER declared recession, 0 in any other date
-USREC<-fredr(series_id = "USREC")
+USREC<-fredr(series_id = "USREC",
+           vintage_dates = as.Date("2021-02-27"))
 usrec<-ts(USREC$value,frequency=12,start=c(1854,12)) #Convert to time series
 #Produce lagged values
-l1usrec<-window(lag(usrec,-1),start=c(1855,2),end=c(2019,1))
-l2usrec<-window(lag(usrec,-2),start=c(1855,2),end=c(2019,1))
-recession<-window(usrec,start=c(1855,2),end=c(2019,1))
+l1usrec<-window(lag(usrec,-1),start=c(1855,2),end=c(2021,1))
+l2usrec<-window(lag(usrec,-2),start=c(1855,2),end=c(2021,1))
+recession<-window(usrec,start=c(1855,2),end=c(2021,1))
 ```
-```{r}
+```{r, class.source = 'fold-show'}
 recessionlogit<-glm(recession~l1usrec+l2usrec,family=binomial(link="logit"))
 ```
 ```{r}
@@ -384,7 +396,7 @@ $$R_{p_{T+h}}(f):=E_{p_{T+h}}\ell(y_{T+h},f_{T}(\mathcal{Y}_T))$$
     - Detrending, deseasonalizing, break removal    
 - Other models may require other transformations
 - Differencing: $\Delta y_t=y_{t}-y_{t-1}$
-    - Turns linear trends into constant $Delta(ct)=c$, random walk $y_{t}=y_{t-1}+e_{t}$ into $e_t$, stationary series 
+    - Turns linear trends into constant $\Delta(ct)=c$, random walk $y_{t}=y_{t-1}+e_{t}$ into $e_t$, stationary series 
 - Double (triple, etc) differencing   $\Delta^{k}y_t=\Delta\Delta\ldots\Delta{y}_t$
     - Removes linear and quadratic (cubic, etc) trends
     - If difference of series is a random walk, double difference is stationary
@@ -425,7 +437,7 @@ $$R_{p_{T+h}}(f):=E_{p_{T+h}}\ell(y_{T+h},f_{T}(\mathcal{Y}_T))$$
 - Joint procedure extremely easy to implement for linear model class
     - Just add $T(.,\theta)$ to regression equation
 - Commands `dynlm`, `tslm` can include linear trend, seasonality, etc in ordinary least squares formula    
-```{r,eval=FALSE,class.source='fold-show'}
+```{r,eval=FALSE, class.source = 'fold-show'}
 #OLS with prediction rule b_0+b1*z1_t+b2*y_{t-1}+c*t+sum(a_j*season_j)
 regression<-dynlm(y~z1+L(y)+trend(y)+season(y))
 ```
@@ -476,18 +488,19 @@ regression<-dynlm(y~z1+L(y)+trend(y)+season(y))
 - Let all $f\in\mathcal{F}$ be $L_2$ Lipschitz in all $d$ arguments
     - Permits linear predictors if coefficients bounded
 - Want to bound excess risk of post-detrending predictor relative to oracle with known $T(t)$ and distribution $p$
-$$\underset{f\in\mathcal{F}}{\min}\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\{y_s-\widehat{T}(s)\}_{s=1}^{t})+\widehat{T}(t+h))-\underset{f\in\mathcal{F}}{\min}E_{p}[\ell(y_{T+h},f(y_{t+h},f(\{y_s-T(s)\}_{s=1}^{T})+T(T+h))]$$
+
+$$\underset{f\in\mathcal{F}}{\min}\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\{y_s-\widehat{T}(s)\}_{s=1}^{t})+\widehat{T}(t+h))-\underset{f\in\mathcal{F}}{\min}E_{p}[\ell(y_{T+h},f(\{y_s-T(s)\}_{s=1}^{T})+T(T+h))]$$
 
 ## Bonus Slide 2: Proof of Bound
 
 - Consider approximate detrended empirical risk minus exactly detrended empirical risk
-$$\underset{f\in\mathcal{F}}{\min}\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\{y_s-\widehat{T}(s)\}_{s=1}^{t})+\widehat{T}(t+h))-\underset{f\in\mathcal{F}}{\min}\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\{y_s-T(s)\}_{s=1}^{t})-T(t+h))$$
+$$\underset{f\in\mathcal{F}}{\min}\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\{y_s-\widehat{T}(s)\}_{s=1}^{t})+\widehat{T}(t+h))-\underset{f\in\mathcal{F}}{\min}\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\{y_s-T(s)\}_{s=1}^{t})+T(t+h))$$
 - Difference in min bounded by max of difference 
-$$\leq \underset{f\in\mathcal{F},t\in1\ldots T}{\sup}\left|\ell(y_{t+h},f(\{y_s-\widehat{T}(s)\}_{s=1}^{t})+\widehat{T}(t+h)-\ell(y_{t+h},f(\{y_s-T(s)\}_{s=1}^{t})+T(t+h)\right|$$
-- By Lipschitz conditions bound by $\leq dL_1L_2\underset{t\in1\ldots T+h}{\max}\left|\widehat{T}(t)-T(t)\right|$
-- Add and subtract exactly detrended empirical risk to bound excess risk by $dL_1L_2\underset{t\in1\ldots T+h}{\max}\left|\widehat{T}(t)-T(t)\right|+$
-$$(\underset{f\in\mathcal{F}}{\min}\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\{y_s-T(s)\}_{s=1}^{t})+T(t+h))-\underset{f\in\mathcal{F}}{\min}E_{p}[\ell(y_{T+h},f(y_{t+h},f(\{y_s-T(s)\}_{s=1}^{T})+T(T+h))])$$
-- Last term is excess risk or ERM for exactly detrended data
+$$\leq \underset{f\in\mathcal{F},t\in1\ldots T}{\sup}\left|\ell(y_{t+h},f(\{y_s-\widehat{T}(s)\}_{s=1}^{t})+\widehat{T}(t+h)-\ell(y_{t+h},f(\{y_s-T(s)\}_{s=1}^{t})-T(t+h)\right|$$
+- By Lipschitz conditions bound by $\leq (dL_1L_2+1)\underset{t\in1\ldots T+h}{\max}\left|\widehat{T}(t)-T(t)\right|$
+- Add and subtract exactly detrended empirical risk to bound excess risk by $(dL_1L_2+1)\underset{t\in1\ldots T+h}{\max}\left|\widehat{T}(t)-T(t)\right|+$
+$$(\underset{f\in\mathcal{F}}{\min}\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\{y_s-T(s)\}_{s=1}^{t})+T(t+h))-\underset{f\in\mathcal{F}}{\min}E_{p}[\ell(y_{T+h},f(\{y_s-T(s)\}_{s=1}^{T})+T(T+h))])$$
+- Last term is excess risk of ERM for exactly detrended data
     - Bounded with high probability by standard ERM inequality under usual assumptions 
 - First term bounded with high probability by (uniform) consistency of detrending method
 

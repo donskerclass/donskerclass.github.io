@@ -6,14 +6,13 @@ output:
     code_folding: hide
 ---
 
-
 ## Outline
 
 - Online Learning Review 
 - Follow The Leader
 - Follow the Regularized Leader
     - Online Gradient Descent
-    - Exponntial Weights
+    - Exponential Weights
     - Extensions
 - Applications
     - Electricity Forecasts
@@ -27,8 +26,8 @@ output:
 - Apply **algorithm** $\mathcal{A}$: sequence of decision rules $\{\widehat{y}_{t+1}=f_t(\mathcal{Y}_t)\}_{t=1}^{T}$
 - Given a **comparison class** $\mathcal{F}_t=\{f_{t,\theta}(): \otimes_{s=1}^{t}\mathrm{Y}\to\mathrm{Y}:\ \theta\in\Theta\}$
 - Want to minimize $reg_{T}(\mathcal{A})=\underset{\{y_{t+1}\}_{t=1}^{T}\in\otimes_{t=1}^{T}\mathrm{Y}}{\max}\left\{\sum_{t=1}^{T}\ell(y_{t+1},f_t(.))-\underset{\theta\in\Theta}{\min}\sum_{t=1}^{T}\ell(y_{t+1},f_{\theta,t}(.))\right\}$
-- Last class: Prediction With Expert Advice: $\mathrm{Y}=\{0,1\}$, $\Theta$ finite, $\ell()=1\{y_{t+1}\neq\widehat{y}_{t+1}\}$
-    - Saw algorithms (Majority Vote, Hedge) which produce low regret in this setting
+- Last class: Prediction With Expert Advice: $\Theta$ finite, e.g. with $\mathrm{Y}=\{0,1\}$, $\ell()=1\{y_{t+1}\neq\widehat{y}_{t+1}\}$
+    - Saw algorithms (Majority Vote, Randomized Weighted Majority, Hedge) which produce low regret in this setting
 
 
 ## General Purpose Algorithms
@@ -75,7 +74,7 @@ output:
 - Other predictor classes may fail to be convex: e.g., general nonlinear functions $f(z_t,\theta)$
     - Can allow nonlinearities in predictors $(z_t,z_t^2,z_t^3,\ldots)$, but not usually in parameters
 - Prediction with Expert Advice/Hedge
-    - Setting with deterministic choices is *not* convex, but setting with probabilitic strategies is
+    - Setting with deterministic choices is *not* convex, but setting with probabilistic strategies is
     - $\mathcal{K}=\{p\in\mathbb{R}^{n}:\ \sum_{i=1}^{n}p_i=1,p_i\geq 0\}$ $g_t(p)=\sum_{i=1}^{n}p_{i,t}\ell(y_{t+1},\widehat{y}_{i,t+1})$
 - Improper version: allow weighted average of expert predictions $\{\widehat{y}_{i}\}_{i=1}^{n}$
      - $\mathcal{K}=\{p\in\mathbb{R}^{n}:\ \sum_{i=1}^{n}p_i=1,p_i\geq 0\}$ $g_t(p)=\ell(y_{t+1},\sum_{i=1}^{n}p_{i,t}\widehat{y}_{i,t+1})$
@@ -106,7 +105,7 @@ output:
     - $g_1=-0.5$, then
     - $g_t=1$ if $t$ even
     - $g_t=-1$ if $t>1$ odd
-- For odd $t$, FTL chooses $x_t=\underset{x\in[-1,1]}{\arg\min} 0.5x$, which is $-1$
+- For odd $t$, FTL chooses $x_t=\underset{x\in[-1,1]}{\arg\min}\ 0.5x$, which is $-1$
 - For even $t$, FTL chooses $x_t=\underset{x\in[-1,1]}{\arg\min}-0.5x$, which is $1$
 - Loss of FTL therefore $\propto T$, while loss of best fixed alternative in hindsight, $x=0$, is 0
 - Regret of algorithm is $\propto T$: average regret is constant: no matter how much data, predictions don't improve
@@ -124,7 +123,7 @@ output:
 - For each $t$, **Follow the Regularized Leader** algorithm chooses $x_{t}=\underset{x\in\mathcal{K}}{\arg\min}(\sum_{s=1}^{t-1}g_s(x)+\frac{1}{\eta}R(x))$
     - Shortened to **FTRL**, **FoReL** or **RFTL** (for "Regularized Follow the Leader")
     - Parameter $\eta>0$ determines strength of the regularization: large values closer to FTL, small values closer to minimizing $R$
-- In forecast setting, $\widehat{\theta}_{t}=\underset{\theta\in\Theta}{\arg\min}(\sum_{s=1}^{t-1}\ell(y_{s+1},f_{s,\theta}(.))+R(\theta))$
+- In forecast setting, $\widehat{\theta}_{t}=\underset{\theta\in\Theta}{\arg\min}(\sum_{s=1}^{t-1}\ell(y_{s+1},f_{s,\theta}(.))+\frac{1}{\eta}R(\theta))$
     - Then predict $f^{FTRL}_{t}(.)=f_{t,\widehat{\theta}_t}(.)$ each round
 - Corresponds exactly to running *Penalized Empirical Risk Minimization* each round
 - With appropriate choice of $\eta$ and a few conditions, can guarantee low regret
@@ -137,6 +136,7 @@ output:
 - If constraint that $x_t\in\mathcal{K}$ not binding (eg if $\mathcal{K}=\mathbb{R}^n$, or we allow improper choices), solution of this problem gives
     - $x_1=0$, $x_{t+1}=-\eta\sum_{s=1}^{t}g_s=x_{t}-\eta g_t$ for any $t>1$
     - Update in direction of latest linear direction, by an amount $\eta$
+- Otherwise, update is $\text{Proj}_{\mathcal{K}}(x_{t}-\eta g_t)$, closest point in $\mathcal{K}$ to above   
 - With sufficiently small choice of $\eta$, fluctuations are damped relative to unregularized case
     - $\eta\approx \frac{1}{\sqrt{T}}$ gives regret $\approx\sqrt{T}$ against bad sequence from before
 - In fact, can show regret bound of $\sqrt{2T}$ holds against *any* sequence of $g_t\in[-1,1]$ if $\mathcal{K}=[-1,1]$
@@ -161,15 +161,15 @@ output:
 
 - Algorithm which takes (sub)gradient of $g_t(x_t)$ and runs online linear optimization with quadratic penalty is called **Online Gradient Descent** (OGD)
 - Starting with $x_1=0$, each round suffer loss $g_t(x_t)$, and calculate subgradient $\nabla g_t(x_t)\in\partial g_t(x_t)$
-    - Then predict $x_{t+1}=\underset{x}{\arg\min}(\sum_{s=1}^{t}\sum_{i=1}^{n}\nabla g_{i,t}x_{it}+\frac{1}{2\eta}\sum_{i=1}^{n}x_{i,t}^2)$
-- Update step simplifies to $x_{t+1}=x_t-\eta\nabla g_{t}$
+    - Then predict $x_{t+1}=\underset{x\in\mathcal{K}}{\arg\min}(\sum_{s=1}^{t}\sum_{i=1}^{n}\nabla g_{i,t}x_{i}+\frac{1}{2\eta}\sum_{i=1}^{n}x_{i}^2)$
+- Update step simplifies to $x_{t+1}=x_t-\eta\nabla g_{t}$ (or $x_{t+1}=\text{Proj}_{\mathcal{K}}(x_t-\eta\nabla g_{t})$)
     - This is exactly gradient descent algorithm used for optimization
 - Regret guarantee (cf Shalev-Shwartz Cor. 2.7): suppose $\underset{t}{\max}\Vert\nabla g_{t}\Vert^2\leq L$ and $\mathcal{K}\subseteq\{x\in\mathbb{R}^{n}:\ \Vert x\Vert\leq B\}$ 
     - Bound on subgradients is a smoothness condition, bound on $\mathcal{K}$ restricts comparison class
     - Result: if $\eta=\frac{B}{L^2\sqrt{2T}}$, obtain $Reg_{T}(OGD)\leq BL^2\sqrt{2T}$
 - Application: Online Regression: Consider $g(\beta_t)=\ell(y_{t+1},z_{t+1}^{\prime}\beta_t)$
     - Corresponds to $L_2$ penalized regression each period
-    - Update rule is $\beta_1=0$, $\beta_{t+1}=\beta_t-\eta \frac{d}{d\widehat{y}}\ell(y_{t+1},z_{t+1}^{\prime}\beta)z_t$
+    - Update rule is $\beta_1=0$, $\beta_{t+1}=\beta_t-\eta \frac{d}{d\widehat{y}}\ell(y_{t+1},z_{t+1}^{\prime}\beta_t)z_{t+1}$
     - If $z_{t+1}$ bounded, subgradient bound holds for absolute loss or logistic regression 
         - Not for square loss: needs another approach
 
@@ -187,9 +187,12 @@ output:
 - If $\underset{i,t}{\max}|\nabla g_{i,t}|\leq G$ and $\eta=\sqrt{\frac{\log n}{2TG^2}}$ regret bound (cf Hazan cor. 5.5)
     - $Reg_{T}\leq 2G\sqrt{2T\log n}$: sublinear, logarithmic dependence on number of experts
 - Application: weighted averages, $g_t():=\ell(y_{t+1},\sum_{i=1}^{n}p_{i,t}\widehat{y}_{i,t+1})$
-    - $\nabla g_{i,t}=\frac{\partial}{d\widehat{y}_{t+1}}\ell(y_{t+1},\sum_{i=1}^{n}p_{i,t}\widehat{y}_{i,t+1})y_{i,t+1}$
+    - $\nabla g_{i,t}=\frac{\partial}{d\widehat{y}_{t+1}}\ell(y_{t+1},\sum_{i=1}^{n}p_{i,t}\widehat{y}_{i,t+1})\widehat{y}_{i,t+1}$
     - Exponentiated gradient method provides combination of any set of predictions with bounded prediction, smooth loss
     
+## Try it yourself
+
+- Try out online regression using JOLTS data in a [Kaggle notebook](https://www.kaggle.com/davidchilders/online-prediction-of-jolts)
 
 ## General Results (Shalev-Shwartz Thm 2.11/Hazan Thm 5.1)
 
@@ -236,9 +239,9 @@ output:
 - Can also use continuously-updated penalties, e.g. $\eta_t=\frac{1}{\sqrt{t}}$    
 - If smoothness not known, popular method is **Adagrad**
     - Change Online Gradient Descent update to $x_{i,t+1}=x_{i,t}-\frac{\eta}{\sqrt{\sum_{s=1}^{t}\nabla g_{i,s}^2}}\nabla g_{i,t}$
-    - Updates slower for big gradients, smaller for large ones
-- For online gradient descent, can enforce choices in $\mathcal{K}$: called "Projected Online Gradient Descent"
-    - After each update, move to closest point in $\mathcal{K}$ to $x_{t+1}$ after each gradient step    
+    - Updates slower for big gradients, faster for small ones
+- For online gradient descent option to enforce choices in $\mathcal{K}$ called "Projected Online Gradient Descent"
+    - After each update, moves to closest point in $\mathcal{K}$ to $x_{t+1}$ after each gradient step    
 
 ```{r,message=FALSE,warning=FALSE}
 library(opera) #Library for online learning
@@ -297,7 +300,7 @@ exponentialexperts<- mixture(Y=Y, experts=X, model = "EWA", loss.type = "absolut
 - Several prediction with expert advice algorithms implemented in R in library `opera`
 - Toy example: predict weekly electricity consumption
     - Task important for power companies, which must buy and sell excess production on interchange markets
-- Train 3 complicated statistical/machine learning models on training set, then every week use their forecasts with incoming predictors (tempurature, season, etc) to predict that week's usage
+- Train 3 complicated statistical/machine learning models on training set, then every week use their forecasts with incoming predictors (temperature, season, etc) to predict that week's usage
     - Label as gam.fcst, ar.fcst, and gbm.fcst
 - Best expert of 3 ex post, by absolute loss over 112 weeks, is gam.fcst with loss of `r oracle.expert$loss`
 - Predict online using weighted average of 3 experts, by exponential weights and projected Online Gradient Descent
@@ -353,9 +356,12 @@ plot(exponentialexperts)
 ## References
 
 - Elad Hazan *Introduction to Online Convex Optimization* Foundations and Trends in Optimization, vol. 2, no. 3-4 (2015) 157–325.
+    - [Version 2.0](https://sites.google.com/view/intro-oco/) forthcoming, MIT Press
 - Shai Shalev-Shwartz *Online Learning and Online Convex Optimization*  Foundations and Trends in Machine Learning
 Vol. 4, No. 2 (2011) 107–194  
 - H. Brendan McMahan et. al. *Ad Click Prediction: a View from the Trenches* KDD'13 (2013)
     - Description of Google's online-learning system
+- Jérémy Fouliard, Michael Howell, Hélène Rey. [*Answering the Queen: Machine Learning and Financial Crises*](https://www.nber.org/papers/w28302) (2020) NBER w.p. 28302
+    - Applies online methods (OGD and others) to financial crisis prediction
 
     

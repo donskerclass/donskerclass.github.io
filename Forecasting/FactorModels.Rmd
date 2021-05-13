@@ -6,7 +6,6 @@ output:
     code_folding: hide
 ---
 
-
 ## Outline 
 
 - Dimensionality Reduction
@@ -23,13 +22,13 @@ output:
     - Or add a small set of carefully chosen predictors, chosen based on knowledge of economic or business process
 - Can we do better by using more of the data available to us?
     - It seems like the extra information should help: even if only slightly related, forecast should improve
+- Especially with up-to-date data: have variables more recent than last observation   
 - But handling many predictors also creates big problems for existing methods
     - Adding predictors adds noise, increasing overfitting
     - If many or most predictors don't help much, adding them could just make predictions worse
     - With as many series as values of outcome, can always get a perfect fit even if all predictors pure nonsense
 - Can we find a way to get benefits from the extra information in a reliable way?
     - Today: Some classic approaches
-    - Next two classes: Some more modern methods
     
 ## Setup
 
@@ -51,7 +50,7 @@ output:
     - $d$ can be much smaller than $N$
 - $F_t$ is calculated from $X$, and replaces it in forecasting procedure 
     - Make forecasts using $(\mathcal{Y}_T,F)$, rather than $(\mathcal{Y}_T,X)$
-- Choose $F_t$ is a reasonable number of dimensions and contains the relevant info in $X$ 
+- Choose $F_t$ so it is a reasonable number of dimensions and contains the relevant info in $X$ 
     - Preserve information gain from using large set of series
     - Avoid complexity and overfitting from overly complicated models
     
@@ -75,7 +74,7 @@ output:
     
 ## Factor Models: Static Case
 
-- Unsupervied approach to get $d$ factors $F_t=\{f_{j,t}\}_{j=1}^{d}$, which predict $\{X_{i,t}\}_{i=1}^{N}$ where $N>>d$
+- Unsupervised approach to get $d$ factors $F_t=\{f_{j,t}\}_{j=1}^{d}$, which predict $\{X_{i,t}\}_{i=1}^{N}$ where $N>>d$
 - Want to minimize squared error loss of predictions using some *linear* combination of $d$ factors
 - Find coefficients $\Lambda$, called *loadings* and factors $F$ which give best prediction
     - $V(\Lambda,F)=\frac{1}{NT}\sum_{i=1}^{N}\sum_{t=1}^{T}(x_{i,t}-\sum_{j=1}^{d}\lambda_{i,j}f_{j,t})^2$
@@ -112,44 +111,50 @@ output:
     - Technical definition for linear algebra fans only: it plots the **eigenvalues** of the covariance matrix, in order
 - If model is well described by a few factors, scree plot will flatten off after those factors
 - Can also treat problem like model selection, and choose a number using an **information criterion**
-- Bai and Ng (2002) suggested $IC^{\text{Bai-Ng}}(d)=IC^{\text{Bai-Ng}}(d)=\ln (V(\widehat{\lambda},\widehat{F})) +dg(N,T)$
+- Bai and Ng (2002) suggested $IC^{\text{Bai-Ng}}(d)=\ln (V(\widehat{\lambda},\widehat{F})) +dg(N,T)$
     - $g(N,T)$ is some function of N and T, e.g. $\frac{N+T}{NT}\ln(\frac{NT}{N+T})$
 - Choosing d to minimize $IC^{\text{Bai-Ng}}(d)$ selects a set of factors which provide good performance without overfitting   
 
 ```{r,message=FALSE,warning=FALSE}
 library(dplyr) #Data Manipulation
 library(ggplot2)
+library(fbi) #Tools specifically for working with FRED-MD and FRED-QD data
 
 #Load Current FRED-MD Series, as downloaded from https://research.stlouisfed.org/econ/mccracken/fred-databases/
 # Described in McCracken and Ng (2014) http://www.columbia.edu/~sn2294/papers/freddata.pdf
+# For detrending, use "fbi" library, available by running commands
+#library(devtools)
+#devtools::install_github("cykbennie/fbi")
 
-#Series of 729 observations of 129 macroeconomic indicators
-currentMD<-read.csv("Data/current.csv")
-#Drop data column, so result contains only data
-fmd<-select(currentMD,-one_of("sasdate"))
+#Series of 748 observations of 129 macroeconomic indicators
+currentMD<-read.csv("Data/fredmdcurrent.csv")
+
+
+#PCA without detrending: not recommended, components pick up trends
+#Drop date column, so result contains only data
+fmd<-dplyr::select(currentMD,-one_of("sasdate"))
 #Turn into time series
 fredmdts<-ts(fmd,frequency=12,start=c(1959,1))
-
 #Take PCA of Scaled Series
 mdPCA<-prcomp(~.,data=fmd,na.action=na.exclude,scale=TRUE)
-
 #Compute statistics
 mdPCAinfo<-summary(mdPCA)
 
-#Collect all Group 6 Variables: These are financial series
-finseries<-data.frame(currentMD$FEDFUNDS,currentMD$CP3Mx,currentMD$TB3MS,currentMD$TB6MS, currentMD$GS1,currentMD$GS5,currentMD$GS10, currentMD$AAA,currentMD$BAA,currentMD$COMPAPFFx,currentMD$TB3SMFFM,currentMD$TB6SMFFM,
-                      currentMD$T1YFFM,currentMD$T5YFFM,currentMD$T10YFFM,currentMD$AAAFFM,
-                      currentMD$BAAFFM,currentMD$TWEXMMTH,currentMD$EXSZUSx,
-                      currentMD$EXJPUSx,currentMD$EXUSUKx,currentMD$EXCAUSx)
-
-finpca<-prcomp(~.,data=finseries,na.action=na.exclude,scale=TRUE)
+#PCA with detrending: uses differencing, log differencing, double differencing etc as needed
+fmdtransformed<-fbi::fredmd(file="Data/fredmdcurrent.csv",transform = TRUE)
+#Drop date column, so result contains only data
+fmddt<-fmdtransformed[,2:129]
+#Take PCA of Scaled Series
+dtPCA<-prcomp(~.,data=fmddt,na.action=na.exclude,scale=TRUE)
+#Compute statistics
+dtPCAinfo<-summary(dtPCA)
 ```
 
 ```{r,eval=FALSE}
 #Alternate PCA Approaches in R
 
 ?prcomp #Default PCA in stats library
-?princomp #As above, but with slightly different scaling?
+?princomp #As above, but with slightly different scaling; former is recommended for numerical accuracy reasons
 
 ?screeplot #Use to investigate magnitude of components
 
@@ -173,25 +178,33 @@ library(kernlab) #Contains kernel PCA (and spectral clustering)
 ## Example: Principal Components Decomposition
 
 - Use FRED-MD (McCracken & Ng 2014) Database of macro indicators available on FRED
-    - 129 Macroeconomic series, 728 observations
+    - 128 Macroeconomic series, 748 observations to Feb 2021
+    - Transform each to ensure stationarity according to recommended transforms
 - Take PCA of (normalized to mean 0 variance 1) series using `prcomp` command (`princomp` also can be used)
-- First principal component accounts for `r 100*mdPCAinfo$importance[3,1]` percent of variability in observations
-- First 2 account for  `r 100*mdPCAinfo$importance[3,2]`, 3 for `r 100*mdPCAinfo$importance[3,3]`, etc
-- Over 99% Accounted for in first 20: can go from 129 data series to 20 dimensions, and lose very little variation in data
-    - The vector of principal components can replace the full 129-dimensional observation $x_t$
-- Factor *loadings* or *rotations* are vector of weights placed on each of the 129 series to produce each principal component     
+- First principal component accounts for `r 100*dtPCAinfo$importance[3,1]` percent of variability in observations
+- First 2 account for  `r 100*dtPCAinfo$importance[3,2]`, 3 for `r 100*dtPCAinfo$importance[3,3]`, etc
+- Over 2/3 accounted for in first 15: can go from 128 data series to 15 dimensions, and lose little variation in data
+    - The vector of principal components can replace the full 128-dimensional observation $x_t$
+- Factor *loadings* or *rotations* are vector of weights placed on each of the 128 series to produce each principal component     
 
 
 ## 2 Dimensional PCA Approximation of Data Set
 
 ```{r,message=FALSE,warning=FALSE}
-#You can use default biplot(mdPCA) to get a version of this, including arrows displaying loadings, but it is too busy to read
+#You can use default biplot(dtPCA) to get a version of this, including arrows displaying loadings, but it is too busy to read
 # cf https://stackoverflow.com/questions/6578355/plotting-pca-biplot-with-ggplot2
 
-data <- data.frame(obsnames=row.names(mdPCA$x), mdPCA$x)
-plot <- ggplot(data, aes_string(x="PC1", y="PC2")) + geom_text(alpha=.4, size=3, aes(label=obsnames))+
-        ggtitle("First 2 Principal Components of Macro Series",subtitle="Data Labels are Time Period")
-plot
+## Plot PCA of series without detrending
+# data <- data.frame(obsnames=row.names(mdPCA$x), mdPCA$x)
+# plot <- ggplot(data, aes_string(x="PC1", y="PC2")) + geom_text(alpha=.4, size=3, aes(label=obsnames))+
+#         ggtitle("First 2 Principal Components of Macro Series",subtitle="Data Labels are Time Period")
+# plot
+
+# Plot PCA of detrended series
+data2 <- data.frame(obsnames=row.names(dtPCA$x), dtPCA$x)
+plot2 <- ggplot(data2, aes_string(x="PC1", y="PC2")) + geom_text(alpha=.4, size=3, aes(label=obsnames))+
+        ggtitle("First 2 Principal Components of Detrended Macro Series",subtitle="Data Labels are Time Period")
+plot2
 
 ```
 
@@ -204,7 +217,7 @@ plot
 - Finding a good nonlinear transformation can be difficult, as not all cases preserve structure of data
 - Case allowing for general nonlinearities called "manifold learning"
     - Variety of approaches exist: diffusion maps (`diffusionMap` in R), isomap, LLE, kernel PCA, etc
-    - **Autoeencoders** use neural network functions as map: recently most popular method    
+    - **Autoencoders** use neural network functions as map: recently most popular method    
 - All used in similar way to PCA, to extract low-dimensional set of features to use for visualization and prediction
 - Alternative approach is to just pick small subset of series: **sparse** representation
     - Problem is that you may not know which series best describe $X_t$ and/or $y_t$
@@ -221,7 +234,7 @@ plot
 - Format is exactly that of of a state space model, with $d$-dimensional state, $N$ dimensional observations
 - If we assume $e_{i,t}\overset{iid}{\sim} N(0,\sigma^2_e)$, $u_{j,t}\overset{iid}{\sim} N(0,\sigma^2_u)$, can estimate and predict using Kalman Filter
     - Estimate like any other state space model, and predict using filtered estimates $\widehat{F}_{T}$ of factors
-    - Use likelihood for Bayesian version with priors on coefficients, cf R library `bayesdfa`
+    - Use likelihood for Bayesian version with priors on coefficients, eg R library `bayesdfa`
 - Can allow additional lags of factors in model, or including standard state space components like trends, seasons, etc
 - Would it help to predict $X_t$ using lags of $F_{t-j}$, i.e. $X_t=B(L) F_t+e_t$ for some lag polynomial?
     - It turns out, not needed: if lags matter for $X_t$, they show up as extra factors
@@ -245,7 +258,7 @@ plot
     
 ## Factor-Augmented Regression
 
-- To predict series $y_{t+h}$ which is not in $X$ using dynamic factors, simply include $\widehat{F}_t$ as predictors
+- To predict series $y_{t+h}$ which may not be in $X$ using dynamic factors, simply include $\widehat{F}_t$ as predictors
     - Estimate $\widehat{F}_t$ by PCA, which is appropriate in static or dynamic case
 - Use predictor class $\mathcal{F}=\{f(\widehat{F},\beta)=\beta_0+\sum_{j=1}^{d}f_j\beta_{j}:\ \beta\in\mathbb{R}^{d+1}\}$ inside ERM or other estimator
 - Like standard ERM with minor caveat that predictors no longer given but first estimated using the data
@@ -280,8 +293,16 @@ plot
 
 # options(mc.cores = parallel::detectCores()) #Use parallel computing when running MCMC
 
+# #Collect all Group 6 Variables: These are financial series
+# finseries<-data.frame(currentMD$FEDFUNDS,currentMD$CP3Mx,currentMD$TB3MS,currentMD$TB6MS, currentMD$GS1,currentMD$GS5,currentMD$GS10, currentMD$AAA,currentMD$BAA,currentMD$COMPAPFFx,currentMD$TB3SMFFM,currentMD$TB6SMFFM,
+#                       currentMD$T1YFFM,currentMD$T5YFFM,currentMD$T10YFFM,currentMD$AAAFFM,
+#                       currentMD$BAAFFM,currentMD$TWEXAFEGSMTHx,currentMD$EXSZUSx,
+#                       currentMD$EXJPUSx,currentMD$EXUSUKx,currentMD$EXCAUSx)
+# 
+# finpca<-prcomp(~.,data=finseries,na.action=na.exclude,scale=TRUE)
+
 ### Warning: With Data Size this large, following command does not appear feasible on a laptop
-## Command works fune on small data sets, but not on this one
+## Command works fine on small data sets, but not on this one
 ## #Fit Bayesian Dynamic Factor Model using "bayesdfa"
 ## dynfactormodel<- fit_dfa(
 ##   y = t(finseries), num_trends = 3, zscore = TRUE,
@@ -307,13 +328,15 @@ plot
 
 ```
 
+## Exercise: GDP forecasting with a FAVAR
 
+- Try out FAVAR based forecasting yourself in a [Kaggle notebook](https://www.kaggle.com/davidchilders/gdp-forecasting-with-favars)
 
 ## Nowcasting 
 
 - A common problem when using many data series is that not all are available at the same time
 - Some may be at different frequencies: e.g., quarterly, annual, monthly
-    - Even within a month, some may come out earlier or later in month, 
+    - Even within a month, some may come out earlier or later in month 
 - Result is that current period information is incomplete, containing some series but not others
 - Goal of **Nowcasting** is to use this incomplete info to predict a missing or external series
     - E.g., use monthly releases to predict quarterly GDP
@@ -397,23 +420,35 @@ nowcast.plot(now2s,type="factors")
 #Additional Displays, Not Shown
 
 ##Fraction of variance Explained by each factor
-#nowcast.plot(now2s,type="eigenvalues")
+#nowcast.plot(now2sq,type="eigenvalues")
 ## Display factor loadings of each series on Factor 1
-#nowcast.plot(now2s,type="eigenvectors")
+#nowcast.plot(now2sq,type="eigenvectors")
 
 ```
 
 
-## Application: Financial Times Nowcast
+## Application: Fulcrum Nowcast
 
-- Gavyn Davies at Financial Times reports nowcasts and forecasts global economic growth each month 
-    - Uses Bayesian Dynamic Factor Model due to Juan Antolin-Diaz et al at Fulcrum Asset Management
-- Uses releases from all major economies to predict global and region-specific factors
+- Fulcrum asset management uses Bayesian Dynamic Factor Model due to Juan Antolín-Díaz et al
+    - Nowcasts and forecasts reported monthly in Financial Times
 - Bayesian state space model with unit roots, seasonality, heavy tailed errors and time-varying variance
     - Additional features improve uncertainty forecasts, account for correlation properties of data
-![April 2019 Fulcrum Global Growth Nowcast (Davies 2019)](Figures/FTFulcrumWorldNowcast.png)    
+    
+![US daily growth nowcast](Figures/AntolinDiazUSGDPNowcast.png)    
 
+## NY Fed Nowcast
 
+- The New York Fed maintains weekly GDP Nowcast: <https://www.newyorkfed.org/research/policy/nowcast>
+    - Uses dynamic factor model as above, estimated by maximum likelihood and Kalman filter
+    - Useful source for understanding impacts of recent economic news
+- Many economic statistics appear with a lag, so can still be a bit slow
+    - But some, like finanical markets and surveys, incorporate current opinion and expectations
+    - Provides information from non-economic news indirectly
+    
+![April 9 2021 NYFed US Q2 GDP Growth Nowcast](Figures/NYFedNowcast.png)     
+    
+        
+    
 
 ## Conclusions
 
@@ -432,8 +467,10 @@ nowcast.plot(now2s,type="factors")
 - Jushan Bai and Serena Ng (2002) "Determining the Number of Factors in Approximate Factor Models" *Econometrica* Volume 70, No.1, pp 191-221.
 - Ben Bernanke, Jean Boivin, Piotr Eliasz (2005) "Measuring the Effects of Monetary Policy: A Factor-Augmented Vector Autoregressive (FAVAR) Approach" *The Quarterly Journal of Economics*, Volume 120, Issue 1, February, pp 387–422.
     - Introduced FAVARs
-- Gavyn Davies "Global economy may still defy the pessimists this year" Financial Times, April 7, 2019
-    - Access nowcasts without FT subscription via [Fulcrum Asset Management](https://www.fulcrumasset.com/uk-iach/blog/)
+- Brandyn Bok, Daniele Caratelli, Domenico Giannone, Argia Sbordone, and Andrea Tambalotti (2017) "[Macroeconomic Nowcasting and Forecasting with Big Data](https://www.newyorkfed.org/medialibrary/media/research/staff_reports/sr830.pdf)"  *Federal Reserve Bank of New York Staff Reports*, no. 830  
+    - Describes methods for NY Fed Nowcast 
+- Juan Antolín-Díaz, Thomas Drechsel and Ivan Petrella (2021) "Advances in Nowcasting Economic Activity: Secular Trends, Large Shocks, and New Data"
+    - Updated version of model behind Fulcrum/Financial Times nowcasts
 - Domenico Giannone, Lucrezia Reichlin, David Small (2008) "Nowcasting: The real-time informational content of macroeconomic data" *Journal of Monetary Economics* 55 pp 665-676.
 - Michael McCracken and Serena Ng (2014) "FRED-MD: A Monthly Database for Macroeconomic Research"
 - James Stock and Mark Watson (2002) "Forecasting Using Principal Components From a Large Number of Predictors" *Journal of the American Statistical Association* December, Vol 97, No 460

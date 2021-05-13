@@ -5,7 +5,8 @@ output:
   html_document:
     code_folding: hide
 ---
-    
+
+
 ## Exchange Rate Forecasting 
 
 - Influential early forecasting study: Meese and Rogoff (1983)
@@ -18,7 +19,7 @@ output:
     - Compare performance (MSE, MAE)
     - Learn about what works
     
-![Do they Fit?](Figures/MeeseRogoffAbstract.png)    
+![Do they Fit?](Figures/MeeseRogoffAbstract.png){height=300px}   
 
 ## Exchange Rate Series
 
@@ -29,7 +30,7 @@ library(fredr) #Access FRED, the Federal Reserve Economic Data
 #You need to request a key: you can do so at https://research.stlouisfed.org/docs/api/api_key.html
 fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
 ```
-```{r,message=FALSE,warning=FALSE} 
+```{r} 
 #Get 1970s data
 #Let's get the (main) series for the Yen-Dollar Exchange rate
 EXJPUS<-fredr(series_id = "EXJPUS",observation_end=as.Date("1982-01-04")) 
@@ -63,12 +64,10 @@ autoplot(ukus, series="Pound (U.K.)")+autolayer(jpus,series="Yen (Japan)")+autol
     - Called "hypotheses" in Machine Learning
 - Find a way to pick the best performing method
 - Construct a forecast by applying the chosen method
-
 - Looks extremely similar to above
     - Can be thought of as a generalization
     - Difference 1: Data assumed to come from wider class of models
     - Difference 2: Hypothesis class not restricted to same parameterization as models
-    
 - Today: Focus on shared features, using machine learning notation    
 
 
@@ -140,9 +139,9 @@ ukARf<-forecast(Arima(ukus,order=c(2,0,0)))
 ```
 ```{r}
 #Plot results
-autoplot(ukmeanf,PI=FALSE,series="U.K. Mean")+autolayer(jpmeanf,PI=FALSE,series="Japan Mean")+autolayer(gemeanf,PI=FALSE,series="Germany Mean")+
+autoplot(ukus, series="Pound (U.K.)")+autolayer(jpmeanf,PI=FALSE,series="Japan Mean")+autolayer(gemeanf,PI=FALSE,series="Germany Mean")+
   autolayer(ukARf, PI=FALSE, series="U.K. AR(2)")+autolayer(jpARf,PI=FALSE,series="Japan AR(2)")+autolayer(geARf,PI=FALSE,series="Germany AR(2)")+
-  autolayer(ukus, series="Pound (U.K.)")+autolayer(jpus,series="Yen (Japan)")+autolayer(geus,series="Deutschmark (Germany)")+
+  autolayer(ukmeanf,PI=FALSE,series="U.K. Mean")+autolayer(jpus,series="Yen (Japan)")+autolayer(geus,series="Deutschmark (Germany)")+
       labs(x="Date",y="Units/Dollar", title="Dollar Exchange Rates in the 1970s and ERM forecasts",
       subtitle="Monthly From 1971 to 1982, Index Starting at 1 in January 1971, with Forecasts")+
       guides(colour=guide_legend(title="Currency & Forecast Method"))
@@ -172,10 +171,10 @@ $$R_p(\widehat{f})= \stackrel{\text{Empirical Risk}}{\widehat{R}(\widehat{f})}+\
 - How do we get small generalization error?
     - Ex ante bounds: prove that procedure $\widehat{f}$ has small generalization error
     - This will depend on class $\mathcal{P}$ of distributions and details of procedure: for ERM, class $\mathcal{F}$ of hypotheses
-- Simple upper bound on generalization error $R_p(\widehat{f})-\widehat{R}(\widehat{f})$ 
-- Error of $\widehat{f}$  can be no worse than Uniform Error: maximum error of any $f\in\mathcal{F}$
+- Simple upper bound on generalization error $R_p(\widehat{f})-\widehat{R}(\widehat{f})$: 
+    - Error of $\widehat{f}$  can be no worse than **Uniform Error**: maximum error of any $f\in\mathcal{F}$
 $$(R_p(\widehat{f})-\widehat{R}(\widehat{f}))\leq \underset{f\in\mathcal{F}}{\sup}\left|\widehat{R}(f)-R_p(f)\right|$$
-- Overfitting bounded when Empirical Risk is good approximation of true risk **uniformly** over $\mathcal{F}$ for any $p\in\mathcal{P}$
+- Overfitting bounded when Empirical Risk is good approximation of true risk *uniformly* over $\mathcal{F}$ for any $p\in\mathcal{P}$
 - Easy to see that uniform error is *increasing* in size of $\mathcal{F}$
     - More overfitting possible when choosing from many models
 - ERM principle has tradeoff when choosing model $\mathcal{F}$
@@ -216,22 +215,20 @@ $$\leq2\underset{f\in\mathcal{F}}{\sup}\left|\widehat{R}(f)-R_p(f)\right|$$
 <!-- $$R_p^*(\mathcal{F})=\underset{f\in\mathcal{F}}{\min}E_p\ell(y_{t+h},f(\mathcal{Y}_t))=$$ -->
 <!-- $$\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},\widehat{f}(\mathcal{Y}_t)) +(\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},\widehat{f}(\mathcal{Y}_t))-E_{p}[\ell(y_{t+h},f^*(\mathcal{Y}_T))])$$ -->
 
-
 ## When is uniform error small?
 
 - If $\underset{f\in\mathcal{F}}{\sup}\left|\widehat{R}(f)-R_p(f)\right|$ is small $\forall p\in\mathcal{P}$, ERM has small excess risk and small generalization error
 - Uniform bound can be guaranteed to be true under certain conditions on $\mathcal{P}$ and $\mathcal{F}$
     - Here, "small" means bounded above by something that goes to 0 as amount of data increases
     - May not actually be small without long history of observations
-- The future is "like" the past
-    - **Stationarity**
-- Averages are close to expectations
-    - **Ergodicity**
-- Closeness is true for any $f$ we pick
-    - **Uniformity** (or limited **Complexity**)
-
-    <!-- - When oracle risk $R_p(f^{*})$ does not depend on $p$, excess risk bound also gives minimax risk bound -->
-    <!-- - Ex: when perfect forecast rule exists, $R_p(f^{*})=0$ for all $p$ -->
+- Note that this only a good idea if true $p$ is actually in $\mathcal{P}$
+    - Risk criteria controls average loss over distribution $p$
+    - If realizations not like those from $p$, realized performance may be bad
+- Conditions on $\mathcal{P}$
+    - **Stationarity**: The future is "like" the past
+    - **Ergodicity** or **Weak Dependence**: Averages are close to expectations
+- Conditions on $\mathcal{F}$
+    - **Uniformity** or limited **Complexity**: Closeness is true for any $f$ we pick
 
 ## Stationarity 
 
@@ -249,6 +246,97 @@ $$\leq2\underset{f\in\mathcal{F}}{\sup}\left|\widehat{R}(f)-R_p(f)\right|$$
     - But correlation should be same as between $y_{t+60}$ and $y_{t+62}$
 - Rules out many commonly observed patterns
     - Seasonality, trends, and many other cases to be discussed later
+    
+## Nonstationary Series: Simulations
+
+```{r, message=FALSE, warning=FALSE}
+library(knitr) #Tables
+library(fpp2) #Forecast commands
+library(kableExtra) #More tables
+library(tidyverse) #Data manipulation
+library(gridExtra) #Graph Display
+
+
+tl<-240 #Length of simulated series
+set.seed(55) #Initialize random number generator for reproducibility
+e1<-ts(rnorm(tl)) #standard normal shocks
+e2<-ts(rnorm(tl)) #standard normal shocks
+e3<-ts(rnorm(tl)) #standard normal shocks
+e4<-ts(rnorm(tl)) #standard normal shocks
+rho<-0.7 #AR1 parameter
+#AR2 parameters
+b0<-3 
+b1<-0.4
+b2<-0.3
+ss<-0.98 #LArge AR parameter
+yAR1<-numeric(tl)
+yAR1[1]<-(1/(1-rho))*rnorm(1) #Initialize at random draw
+yRW<-numeric(tl)
+yslowAR<-numeric(tl)
+
+for(s in 1:(tl-1)){
+  #Stationary AR(1)
+  yAR1[s+1]<-rho*yAR1[s]+e1[s]
+  #Stationary but close to nonstationary AR(1)
+  yslowAR[s+1]<-ss*yslowAR[s]+e4[s]
+  #Random walk 
+  yRW[s+1]<-yRW[s]+e3[s]  
+}
+
+yAR2<-numeric(tl)
+yAR2[1]<-3/0.3 #Initialize at mean
+yAR2[2]<-3/0.3 #Initialize at mean
+
+for(s in 1:(tl-2)){
+  #Stationary AR(2)
+  yAR2[s+2]=b0+b1*yAR2[s+1]+b2*yAR2[s]+e2[s]
+}
+
+trend<-0.05*seq(1,tl) #Increasing trend
+season<-cos((2*pi/12)*seq(1,tl)) #Seasonal pattern
+#Jump at particular time
+breakseries<-ts(numeric(tl),start=c(1990,1),frequency=12)
+for(s in 1:(tl)){
+  if(s>180){
+    breakseries[s]<-6
+  }
+}
+
+
+#Represent as time series
+yAR1<-ts(yAR1, start=c(1990,1),frequency=12)
+yRW<-ts(yRW, start=c(1990,1),frequency=12)
+yAR2<-ts(yAR2,start=c(1990,1),frequency=12)
+yslowAR<-ts(yslowAR,start=c(1990,1),frequency=12)
+
+#Construct nonstationary series
+ytrend<-yAR2+trend
+yseason<-yAR1+3*season
+ybreak<-yAR1+breakseries
+
+tsgraphs<-list()
+
+tsgraphs[[1]]<-autoplot(ytrend)+
+  labs(y="Value",title="Series with Trend")
+tsgraphs[[2]]<-autoplot(yseason)+
+  labs(y="Value",title="Series with Seasonal Pattern")
+tsgraphs[[3]]<-autoplot(ybreak)+
+  labs(y="Value",title="Series with Structural Break")
+tsgraphs[[4]]<-autoplot(yRW)+
+  labs(y="Value",title="Random Walk",subtitle="Nonstationary because variance grows")
+
+grid.arrange(grobs=tsgraphs,nrow=2,ncol=2) #Arrange In 2x2 grid
+```
+
+    
+## Stationary Series: Simulations
+
+```{r}
+autoplot(yAR1,series="AR(1), b=0.7")+autolayer(yAR2,series="AR(2)")+autolayer(yslowAR,series="AR(1), b=0.98")+
+  labs(y="Value",title="Stationary Series")+
+  guides(colour=guide_legend(title="Series"))
+```  
+    
 
 ## Approximating the Mean
 
@@ -275,25 +363,92 @@ $$p(\left|\frac{1}{T}\sum_{t=1}^{T}g(y_t)-E_p g(y_t)\right|>c)\to 0\text{ as }T\
     - For long enough series of observations
 - Sufficient conditions for ergodicity are fast enough decay of certain measures of dependence
     - Autocorrelation function decreasing rapidly to 0 is characteristic of distributions where approximation error is small
-
-## Evaluating Weak Dependence
+    
+## Evaluating Stationarity and Weak Dependence
 
 - How far sample mean is from population mean controlled by dependence
 - Variance: $E_p[y_t^2]-E_p[y_t]^2$ measures how far a variable deviates from mean
-- Variance of sample mean $\frac{1}{T}\sum_{t=1}^{T}z_t=\frac{1}{T^2}\sum_{t=1}^{T}\sum_{h=1}^{T}Cov(y_t,y_{t+h})$
-    - Equals sum of autocovariances, which are approximated by ACF
-    - If small, sample mean and population mean close
+- Variance of sample mean $Var(\frac{1}{T}\sum_{t=1}^{T}z_t)=\frac{1}{T^2}\sum_{s=1}^{T}\sum_{t=1}^{T}Cov(z_t,z_{s})$
+    - With stationarity, equals sum of autocovariances $Cov(z_1,z_1)+2\sum_{h=1}^{T-1}\frac{T-h}{T}Cov(z_1,z_{1+h})\overset{T\to\infty}{\to}\sum_{h=-\infty}^{+\infty}Cov(z_1,z_{1+h})$
+    - If small, sample mean and population mean usually close
     - If large or unbounded, sample mean may be arbitrarily far away
-- Rules of thumb 
+- Rules of thumb: autocovariances approximated by ACF, so 
     - If ACF falls to 0 exponentially fast, approximation is close
     - If ACF goes to 0 but (polynomially) slowly, approximation works but need much more data
     - If ACF decay looks like straight line, stationarity likely fails: approximation bad no matter how much data you have
 - Consider distributions $\mathcal{P}$ where for any bounded $f,g$, $Corr(f(y_{t}),g(y_{t+h}))<\rho(h)$ for some function $\rho(h)\to0$
     - These are called $\rho$-mixing: Autocorrelation Function goes to 0
     - Can replace correlation with other measures to get other types of mixing
-    - Ensures sufficient closeness for uniform bounds to work
-    - See Yu (1994) for rigorous statements
+    - Ensures sufficient closeness for uniform bounds to work  
     
+## ACFs of Example Series
+
+```{r}
+ACFplots<-list()
+ACFplots[[1]]<-ggAcf(yAR1)+
+  labs(title="Stationary AR(1)",subtitle="Exponential decay")
+ACFplots[[2]]<-ggAcf(yAR2)+
+  labs(title="Stationary AR(2)",subtitle="Exponential decay")
+ACFplots[[3]]<-ggAcf(yslowAR)+
+  labs(title="Barely Stationary AR(1)",subtitle="Slow but eventual decay")
+ACFplots[[4]]<-ggAcf(yRW)+
+  labs(title="Random Walk",subtitle="Linear decay")
+ACFplots[[5]]<-ggAcf(ybreak)+
+  labs(title="Series with Break",subtitle="Linear decay")
+ACFplots[[6]]<-ggAcf(yseason)+
+  labs(title="Deterministic Seasonal Series",subtitle="Spikes do not decay")
+ACFplots[[7]]<-ggAcf(ytrend)+
+  labs(title="Trending Series",subtitle="Linear Decay")
+grid.arrange(grobs=ACFplots,nrow=4,ncol=2)
+```
+
+## ACF of US Dollar Exchange Rates in 1970s
+
+```{r,warning=FALSE,message=FALSE}
+library(fpp2)
+library(fredr) #Access FRED, the Federal Reserve Economic Data
+#To access data by API, using R rather than going to the website and downloading
+#You need to request a key: you can do so at https://research.stlouisfed.org/docs/api/api_key.html
+fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
+#Get 1970s data
+#Let's get the (main) series for the Yen-Dollar Exchange rate
+EXJPUS<-fredr(series_id = "EXJPUS",observation_end=as.Date("1982-01-04")) 
+#You can also download this series at https://fred.stlouisfed.org/series/DEXJPUS
+#Let's get the (main) series for the Dollar-Pound Exchange rate
+EXUSUK<-fredr(series_id = "EXUSUK",observation_end=as.Date("1982-01-04"))
+#Let's get the (main) series for the German Deutschmark-Dollar Exchange rate
+EXGEUS<-fredr(series_id = "EXGEUS",observation_end=as.Date("1982-01-04"))
+#convert to time series and normalize so 1971-1 value is 1
+ukus<-ts(EXUSUK$value[1]/EXUSUK$value,start=c(1971,1),frequency=12)
+jpus<-ts(EXJPUS$value/EXJPUS$value[1],start=c(1971,1),frequency=12)
+geus<-ts(EXGEUS$value/EXGEUS$value[1],start=c(1971,1),frequency=12)
+
+currACFplots<-list()
+currACFplots[[1]]<-ggAcf(jpus)+
+  labs(title="Autocorrelation Function of Dollar-Yen Exchange Rate",subtitle = "Linear rate of decline is characteristic of nonstationary series")
+currACFplots[[2]]<-ggAcf(ukus)+
+  labs(title="Autocorrelation Function of Dollar-Pound Exchange Rate",subtitle = "Linear rate of decline is characteristic of nonstationary series")
+currACFplots[[3]]<-ggAcf(geus)+
+  labs(title="Autocorrelation Function of Dollar-Deutschmark Exchange Rate",subtitle = "Linear rate of decline is characteristic of nonstationary series")
+grid.arrange(grobs=currACFplots)
+```      
+    
+## Conditions on Hypothesis Class
+
+- For uniform error control need $\mathcal{F}$ to be "not too complicated"
+- Many measures of complexity used
+- $\left|\mathcal{F}\right|$ Number of hypotheses
+    - Compare method 1, method 2, method 3, etc
+    - If $\log\left|\mathcal{F}\right|\approx T$, uniformity fails
+    - Note, hypothesis should not itself be based on choosing from many hypotheses
+- Dimension of parameter space
+    - Eg, AR(p) class $\mathcal{F}=\{f(\mathcal{Y}_T)=b_0+b_1y_{t-1}+b_2y_{T-2}+\ldots b_py_{T-p}:\ b\in\mathbb{R}^{p+1}\}$ has dimension $p+1$
+    - If dimension of parameter space $\approx T$, uniformity fails
+- Maximum correlation of predictor with random noise
+    - $E_{\sigma}\underset{f\in\mathcal{F}}{\max}\frac{1}{T}\sum_{t=1}^T\sigma_tf(\mathcal{Y}_t)$, $\sigma_t\overset{iid}{\sim}\{-1,+1\}$ w/ prob (1/2,1/2)
+    - Called **Rademacher Complexity**
+    - If some $f\in{F}$ can perfectly match iid random noise, expect low error even with **no** true forecasting ability
+- Choosing from too complicated a set of forecast rules means in sample fit can be good but out of sample fit terrible    
 
 ## Model Size and Uniform Error
 
@@ -302,10 +457,10 @@ $$p(\left|\frac{1}{T}\sum_{t=1}^{T}g(y_t)-E_p g(y_t)\right|>c)\to 0\text{ as }T\
 - We need more: good approximation uniformly over functions in $\mathcal{F}$
 - Consider 2 functions $f_1,f_2$ with identical true risk $R^*$
 - For each, empirical risk approximates true risk $\widehat{R}(f_1)\approx R^{*}$, $\widehat{R}(f_2)\approx R^{*}$
-- By random chance variation, one will be larger than the other
-- So $\max\{\hat{R}(f_1),\hat{R}(f_2)\}-R^*$ will be bigger of the two single approximation errors
+- By random chance variation, one will be smaller than the other
+- So $|\min\{\hat{R}(f_1),\hat{R}(f_2)\}-R^*|$ will be the biggest of two single (downwards) approximation errors
 - Now suppose $\mathcal{F}$ has many functions, all with identical true risk
-    - Then maximizer will be larger still
+    - Then minimizer will have even bigger downward discrepancy
 - Uniform error over class $\mathcal{F}$ must increase with size of $\mathcal{F}$
 
 ## A cautionary tale for overfitting
@@ -319,17 +474,16 @@ $$p(\left|\frac{1}{T}\sum_{t=1}^{T}g(y_t)-E_p g(y_t)\right|>c)\to 0\text{ as }T\
 - $\widehat{f}^{ERM}$ will be an $T-h$ polynomial with crazy coefficients and 0 in sample risk
 - On any new samples, performance will be worse than trivial forecast
 
-
 ## Controlling Uniform Error: Theory
 
 - Many beautiful mathematical results exist giving upper bounds on uniform error for different classes $\mathcal{P}$, $\mathcal{F}$
-- Form of these bounds (eg Yu (1994), Mohri et al (2012)) is: for any $p\in\mathcal{P}$ with probability at least $1-\delta$,
+- Form of these bounds (eg Yu (1994), Mohri et al (2009, 2018)) is: for any $p\in\mathcal{P}$ with probability at least $1-\delta$,
 $$\underset{f\in\mathcal{F}}{\sup}\left|\frac{1}{T}\sum_{t=1}^{T}f(y_{t})-E_p f(y_t)\right|\leq b(\delta,T,complexity(\mathcal{F}), dependence(\mathcal{P}))$$
 - For any distribution over sequences with some properties, uniform error over a class $\mathcal{F}$ of sample average can be bounded with high probability by some function 
 - Bound goes to 0 as $T\to\infty$, so for large enough sample, probability of large uniform error disappears
 - Bound increasing in some measure of size or *complexity* of $\mathcal{F}$
     - For finite set, this is number of possible choices
-    - For models with continuous parameters (eg $\theta_0,\theta_1$) other measures, like number of parameters, can be used
+    - For models with continuous parameters (eg $\theta_0,\theta_1$) other measures, like number of parameters or Rademacher complexity, can be used
 - Bound increasing in measure of how strong dependence is between samples
     - If iid or nearly so, error decreases with T
     - If observations highly correlated, so events 5 years apart are related, need much longer time to get same approximation
@@ -338,10 +492,10 @@ $$\underset{f\in\mathcal{F}}{\sup}\left|\frac{1}{T}\sum_{t=1}^{T}f(y_{t})-E_p f(
 
 <!-- ## Stronger conditions and results -->
 
-
+<!--  -->
 <!-- - Set of ergodic distributions large and hard to characterize -->
 <!-- - Weak dependence easier to describe -->
-<!--     - A measure of relationship between $y_{t},y_{t+h}$ has bound going to 0 -->
+<!--     - A measure of relationship between $y_{t},y_{t+h}$ has bound going to 0  -->
 <!--     - E.g. $Corr(y_{t},y_{t+h})\to 0$ as $h\to\infty$ -->
 <!-- - Consider distributions $\mathcal{P}$ where for any functions $f,g$, $Corr(f(y_{t}),g(y_{t+h}))<\rho(h)$ for some function $\rho(h)\to0$ -->
 <!--     - These are called $\rho$-mixing: Autocorrelation Function goes to 0 -->
@@ -349,7 +503,7 @@ $$\underset{f\in\mathcal{F}}{\sup}\left|\frac{1}{T}\sum_{t=1}^{T}f(y_{t})-E_p f(
 <!-- - Can strengthen ergodic theorem to explicitly quantify bound -->
 <!-- - For any $p\in\mathcal{P}$ stationary distributions with sufficiently fast mixing, for any bounded $g$ -->
 <!-- $$p(\left|\frac{1}{T}\sum_{t=1}^{T}g(y_t)-E_p g(y_t)\right|>c)<b(c,T)\to0$$ -->
-<!-- - In words: for *any* distribution in class, we have *uniform* bound on probability of large approximation error -->
+<!-- - In words: for *any* distribution in class, we have *uniform* bound on probability of large approximation error  -->
 <!--     - c.f. (Bin Yu (1994)) -->
 
 
@@ -358,8 +512,8 @@ $$\underset{f\in\mathcal{F}}{\sup}\left|\frac{1}{T}\sum_{t=1}^{T}f(y_{t})-E_p f(
 <!-- - Above "concentration" result says that for bounded losses, empirical risk of a *single* forecast rule approximates true risk -->
 <!-- - We need approximation bound for any $f\in\mathcal{F}$ to be good -->
 <!-- - True if $\forall p\in\mathcal{P}$ $\underset{f\in\mathcal{F}}{\sup} p(\left|\frac{1}{T}\sum_{t=1}^{T-h}f(y_{t+h})-E_p f(\mathcal{Y}_t)\right|>c)\to0$ -->
-<!-- - If $\mathcal{F}$ finite, with $\left|\mathcal{F}\right|$ elements, can apply **Union Bound** -->
-<!--     - $P({\cup}_{i} A_i)\leq \sum_{i}P(A_i)$ -->
+<!-- - If $\mathcal{F}$ finite, with $\left|\mathcal{F}\right|$ elements, can apply **Union Bound**  -->
+<!--     - $P({\cup}_{i} A_i)\leq \sum_{i}P(A_i)$  -->
 <!--     - Probability that at least one event $A_i$ happens is less than sum of probabilities of each $A_i$ -->
 <!-- - Obtain -->
 
@@ -382,8 +536,116 @@ $$\underset{f\in\mathcal{F}}{\sup}\left|\frac{1}{T}\sum_{t=1}^{T}f(y_{t})-E_p f(
     - Sample size is large: for small model classes and fast enough decay, generalization error bounded by constant times $\frac{1}{\sqrt{T}}$
 - ERM does fine in these situations
     - Excess risk $R_p(\widehat{f}^{ERM})-R_p(f^{*})$ and generalization error $R_p(\widehat{f})-\widehat{R}(\widehat{f})$ are small
-- Can do poorly if models chosen from are very complicated, data is strongly dependent or samples are small, or stationarity fails
+- Can do poorly if models class is very complicated, data is strongly dependent or nonstationary, or samples are small
 - In those cases, good in sample performance may still give bad out of sample performance in future predictions
+
+## What happens if these conditions fail?
+
+- Generalization error bounds are upper bounds
+    - Sometimes error is smaller than predicted
+    - Generalization error sometimes still very small also for models with very high complexity
+        - Active research area on "benign overfitting" and "double descent" on when and why this happens ([Hardt & Recht 2021 Ch 6](https://mlstory.org/generalization.html))
+- But if no guarantee or large upper bound, generalization error can be very bad
+    - With nonstationarity, it may not become smaller as time grows
+    - Without weak dependence, permitted error may be huge until T huge
+- ERM minimizes one component of risk, but total risk might not be minimized
+    - There are some cases where better options than ERM exist
+    - With complicated models, total risk may be worse for ERM than some other method
+    
+## Simulations Showing Overfitting as Function of Complexity
+
+- Consider AR(d) classes $\mathcal{F}_d=\{f(\mathcal{Y}_T)=b_0+b_1y_{t-1}+b_2y_{T-2}+\ldots b_dy_{T-d}:\ b\in\mathbb{R}^{d+1}\}$
+- Use square loss $\ell(y,\widehat{y})=(y-\widehat{y})^2$
+    - Empirical risk is Mean Squared Error (MSE)
+    - Optimal forecast is the conditional mean
+- Simulate series $\mathcal{Y}_T$ of length $T$ from a distribution $p$
+    - For simplicity of exposition and analysis, let $p$ be IID N(0,1)
+    - Stationary and as weakly dependent as possible, so we can focus on complexity only
+    - Best possible forecast is $\widehat{y}=0$ and oracle risk is 1
+- Run ERM over data for each $\mathcal{F}_d$
+- Simulate many times to calculate average empirical risk and average population risk
+    - Average population risk $E_p[(y_{T+1}-\widehat{f}^{ERM}(\mathcal{Y}_T))^2]$
+    - $=E_{\mathcal{Y}_T}[E_{y_{T+1}}[(y_{T+1}-\widehat{f}^{ERM}(\mathcal{Y}_T))^2|\mathcal{Y}_T]]=E_{\mathcal{Y}_T}[1+(\widehat{f}^{ERM}(\mathcal{Y}_T))^2]\approx 1+\frac{1}{N_{sims}}\sum_{n=1}^{N_{sims}}(\widehat{f}^{ERM}(\mathcal{Y}^{n}_T))^2$ by iid law of large numbers
+    - Average empirical risk approximated by $\frac{1}{N_{sims}}\sum_{n=1}^{N_{sims}}MSE(\widehat{f}^{ERM}_n)$
+- Compute average generalization error by average difference of empirical and population risk
+    - Compute quantile (object bounded by theory) by quantile of difference over simulations  
+
+
+## Simulation Results
+
+```{r,message=FALSE,warning=FALSE}
+#Tlist<-c(50,100,300,500,1000)
+Tlist<-c(80)
+plist<-c(1,2,3,5,8,12,18,25,30,35,40,45)
+nsims<-500
+
+generalizationerror<-matrix(nrow=length(Tlist),ncol=length(plist))
+
+for(T in 1:length(Tlist)){
+  empiricalrisk<-matrix(nrow=nsims,ncol=length(plist))
+  fcast<-matrix(nrow=nsims,ncol=length(plist))
+  for(n in 1:nsims){
+    datasim<-ts(rnorm(Tlist[T]))
+    
+    for(p in 1:length(plist)){
+      arfc<-ar(datasim,aic = FALSE,order = plist[p])
+      fcast[n,p]<-forecast(arfc,1)$mean
+      empiricalrisk[n,p]<-mean((arfc$resid)^2,na.rm =TRUE) 
+    }
+  }
+  approxrisk<-1+colMeans(fcast^2) 
+      #Population risk is average over data sets of conditional risk given data
+      #Conditional Risk given data is just mean squared error over y of fixed forecast yhat 
+      #E_p(y-yhat)^2=1+yhat^2 using fact that true y is iid N(0,1)
+  averageemprisk<-colMeans(empiricalrisk)
+  generalizationerror[T,]<-approxrisk-averageemprisk
+}
+
+
+generrordist<-approxrisk-empiricalrisk
+generrorq90<-numeric(length(plist))
+
+for(p in 1:length(plist)){
+       generrorq90[p]<-quantile(generrordist[,p],0.9) #90% quantile of generalization error for model p
+}
+
+oraclerisk<-numeric(length(plist))+1 #Oracle risk=1 for all models, because true data iid N(0,1), so optimal forecast is 0, with MSE 1
+
+#Collect into dataset format for plotting
+generalizationgap<-as.vector(generalizationerror[1,])
+errormeasures<-data.frame(plist,approxrisk,averageemprisk,generalizationgap,generrorq90,oraclerisk)
+errortable<-errormeasures %>%
+  gather(approxrisk,averageemprisk,generalizationgap,generrorq90,oraclerisk,key="RiskMeasure",value="Risk")
+
+#Plot Results
+ggplot(errortable,aes(x=plist,y=Risk,color=RiskMeasure))+geom_point(size=2)+
+  scale_color_discrete(labels =
+        c("(Approximate) Population Risk", "Average Empirical Risk",
+        "Average Generalization Error","90% Quantile of Generalization Error", "Oracle Risk")) +
+  labs(title="Empirical vs Population Risk for AR(d) Models",
+       subtitle="T=80, True Data IID N(0,1), 500 draws of dataset simulated",
+       x="Order of Autoregressive Process",
+       y="Average Square Loss",
+       color="Risk Measure")
+```
+
+## Interpretation
+
+- Average empirical risk goes down with complexity measure $d$
+    - Complexity gives better past performance because we are looking at best past performance of any rule in $\mathcal{F}$
+    - A fixed rule may perform better or worse in future, with no reason to think it will be either 
+    - But selecting based on past performance means finding models with good past performance, holding fixed future performance 
+- Generalization error and excess risk relative to oracle rise with $d$
+    - More complicated model gives more opportunity for overfitting
+- If we care about population risk, must trade off empirical and generalization errors
+    - First goes down, second goes up with complexity
+- For this simulation, optimum is reached at 0 complexity
+    - This is because data distribution has minimal risk in 0 parameter class
+    - Not general: if more complexity improves fit, empirical risk can go down faster and optimum reached at some intermediate $d$
+- In general, nothing forces tradeoff to be optimized at a "true" class $\mathcal{F}$
+    - Generalization error depends basically just on size of $\mathcal{F}$
+    - Adding lots of terrible rules to $\mathcal{F}$ just makes generalization error worse
+    - Adding low risk rules to $\mathcal{F}$ makes generalization error worse, but total error better     
 
 ## Generalization Error Control: Alternatives
 
@@ -400,11 +662,12 @@ $$\underset{f\in\mathcal{F}}{\sup}\left|\frac{1}{T}\sum_{t=1}^{T}f(y_{t})-E_p f(
 
 ## Validation in practice 
 
-- Better choice: Use independent sequence $\{\tilde{y}_s\}_{s=1}^{S}$ with same distribution as $\{y_t\}_{t=1}^T$, called a test set
+- Better choice: Use independent sequence $\{y_s\}_{s=1}^{S}$ with same distribution as $\{y_t\}_{t=1}^T$, called a test set
 - Estimate risk by empirical test set risk $\frac{1}{S}\sum_{s=1}^{S}\ell(y_{s+h},\widehat{f}(\mathcal{Y}_s))$
 - Since $\widehat{f}$ independent of test set, if distribution stationary and ergodic, can bound approximation error by LLN
     - Don't need uniform bounds since only have one function
 - Problem: Unless data known to be iid, can't obtain such a test set
+    - Or if distribution known, as in simulations above
 - Alternative 1: Blocking
     - Split sample into 3 time ordered subsets: Training set, middle, and Test set
     - Run ERM on training set, estimate risk on test set, discard the middle
@@ -426,6 +689,7 @@ $$\underset{f\in\mathcal{F}}{\sup}\left|\frac{1}{T}\sum_{t=1}^{T}f(y_{t})-E_p f(
     - Big complicated models produced by economists do very badly
     - Best performer is naive (random walk) forecast: $\widehat{y}_{t+h}=y_t$
     - Random walk forecast performs even better than AR forecast, even though random walk is special case of AR forecast 
+    
 
 ## What does this tell us?
 
@@ -442,13 +706,6 @@ $$\underset{f\in\mathcal{F}}{\sup}\left|\frac{1}{T}\sum_{t=1}^{T}f(y_{t})-E_p f(
     - But amount error decreases with time depends on strength of dependence
     - If strong, like ACF shows, need much longer series to reduce error same amount
 
-## ACF of US Dollar Japanese Yen Exchange Rate in 1970s
-
-```{r}
-ggAcf(jpus)+
-  labs(title="Autocorrelation Function of USD-JPY Exchange Rate",subtitle = "Linear rate of decline is characteristic of nonstationary series")
-```  
-
 ## Interpretation of Results
 
 - Many economists interpreted study as saying that random walk is best economic model of exchange rates
@@ -461,16 +718,21 @@ ggAcf(jpus)+
 - If goal is to forecast, simplicity is a virtue!
 
 
+## Next topics
+
+- More hypothesis classes
+- Finagling stationarity and weak dependence out of clearly nonstationary or highly dependent data
+
 ## References 
 
+- Moritz Hardt and Benjamin Recht. Ch. 6 "Generalization" in *Patterns, predictions, and actions: A story about machine learning* (2021) <https://mlstory.org/>
 - Richard Meese and Kenneth Rogoff. "Empirical Exchange Rate Models of the Seventies. Do they Fit out of Sample?" Journal of International Economics 14 (1983) pp. 3-24
-- Mehryar Mohri, Afshin Rostamizadeh, and Ameet Talwalkar. "Foundations of Machine Learning" MIT Press 2012
+- Mehryar Mohri, Afshin Rostamizadeh, and Ameet Talwalkar. "Foundations of Machine Learning" 2e MIT Press 2018
     - Textbook treatment of statistical learning
 - Mehryar Mohri and Afshin Rostamizadeh "Rademacher Complexity Bounds for Non-I.I.D. Processes" Advances in Neural Information Processing Systems (NIPS 2008). pp 1097-1104, Vancouver, Canada, 2009. MIT Press.
     - Extension of textbook statistical learning results to time series data
 - Bin Yu. "Rates of Convergence for Empirical Processes of Stationary Mixing Sequences" The Annals of Probability, Vol. 22, No. 1 (Jan., 1994), pp. 94-116
     - Foundational paper on when ERM works for time series data
-
 
 
 

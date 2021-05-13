@@ -3,7 +3,7 @@ title: "Judgment"
 author: "73-423 Forecasting for Economics and Business"
 output:
   html_document:
-    code_folding: show
+    code_folding: hide
 ---
 
 ## Outline
@@ -27,7 +27,7 @@ output:
 <!--     - Failure of EUT in experimental subjects -->
 <!--         - Over/Underconfidence -->
 <!--         - Prospect theory: Framing dependence, (loss vs gain), probability reweighting -->
-<!--         - Sterotyping and "representativeness heuristic" -->
+<!--         - Stereotyping and "representativeness heuristic" -->
 <!--             - Linda the banker -->
 <!--         - Ambiguity aversion: (might be consistent with non-Bayesian approaches like Minimax) -->
 <!-- - "Superforecasters" -->
@@ -68,7 +68,7 @@ output:
 - The starting point for a forecast should be a clearly defined goal
 - What do we want to know that we don't yet know?
     - Choice of what to forecast is most consequential component of forecasting process
-- What are the consequnces of getting it right or wrong?
+- What are the consequences of getting it right or wrong?
 - These questions should be answered based on the particular business context
     - Is there some action we are going to take depending on what we think will happen?
     - Can we quantify the effects of this action in terms of profit or other first order business priorities?
@@ -98,7 +98,7 @@ output:
     - Even with model combination, need a set of models or methods to include
 - Class of predictors or models is consequential: by *no free lunch* principle, no one class is universally better
     - Need some knowledge of features of environment to ensure model captures them
-- Visualizing and exploring data useful, as are explicit model selection methods like cross validation information criteria
+- Visualizing and exploring data useful, as are explicit model selection methods like cross validation \& information criteria
     - But can only help choose between set of models you have in mind already (or can find software to implement)
 - Process of turning expert knowledge of features of environment you face into model not easy to formalize
     - Knowledge of, say, medical billing or collateralized loans or SMEs in Mozambique may be helpful for figuring out model features
@@ -114,7 +114,7 @@ output:
 - Bayesian inference often called subjective because prior encodes beliefs
     - This is not really a distinction: so does any other feature of a model or method. Forecast class, selection method, etc, should all reflect beliefs
 - Priors can and should be chosen to reflect known characteristics of environment
-    - Some parameter values are obviouly implausible, and this can be encoded by prior
+    - Some parameter values are obviously implausible, and this can be encoded by prior
 - Consider autoregressive model $\log y_t=b_0+\sum_{j=1}^{J}b_j\log y_{t-j}+\epsilon_t$ and suppose $y_t$ is dollars of sales of a small company
     - US GDP is $\approx 20$ trillion = $2\times 10^{13}$
     - If prior on $b_0$ is $N(0,\sigma^2)$, $\sigma>7$ means about 3% chance of sales equal to entire economy
@@ -122,7 +122,7 @@ output:
 - More generally, can draw parameters from prior and simulate from likelihood, making sure that samples reasonable  
 - Priors *are* useful place to incorporate numerical adjustments not seen in data directly
     - But only if you can express this as a parameter of your model: If you can't, maybe you need a new parameter in your model? 
-- E.g., suppose you have a pretty good additive model for web traffic, but you figure out people stop visiting your website when a new epsisode of some TV show is airing
+- E.g., suppose you have a pretty good additive model for web traffic, but you figure out people stop visiting your website when a new episode of some TV show is airing
     - A prior adjustment to an hour of day or day of week effect will change outcome at that time, but also at times when you don't want it to
     - Adding TV schedules as a covariate is change in likelihood that will encode this knowledge
 
@@ -145,7 +145,7 @@ output:
 ## Judgmental Adjustment - Approaches
 
 - A long established method for "fixing" a forecast that needs nonsystematic changes is an **add factor**
-    - Take the quantitative mthod output, and change it by a bit to reflect non-systematic patterns
+    - Take the quantitative method output, and change it by a bit to reflect non-systematic patterns
     - Difference from pure judgement is only in view that quantitative forecast is good starting point
 - Can also include add factors in model or method parameters, changing them by some amount after fitting
     - Useful when parameters have interpretation and natural units, because you can use common sense about these parameter size to make sure change is reasonable
@@ -162,7 +162,7 @@ output:
 - Most extreme case of this is **Cold Start Problem**: prediction for outcome that hasn't happened yet
     - Want to know sales for new product not yet introduced, or new hire, or new customer, etc
 - Even more extreme, may have **one shot** prediction task: event hasn't happened, and will only happen once
-    - Who will win the 2020 election? What is chance Argentina will default on this bond issue? 
+    - Who will win the next election? What is chance Argentina will default on this (particular) bond issue? 
 - In these cases, can't use data on past performance to construct own forecast
 - Can still apply formal modeling frameworks and loss criteria, but not much advice on what to do
     - Statistical learning approach guarantees performance only when available data is abundant
@@ -191,23 +191,23 @@ output:
 ## Biases in Judgment
 
 - A non-comprehensive list of well-documented decision-making biases includes
-- **Overconfidence**: Decisionmakers tend to *underestimate* degree of uncertainty in outcomes
+- **Overconfidence**: Decision makers tend to *underestimate* degree of uncertainty in outcomes
 - **Probability Weighting**: For low probability events, reported chance either set to 0 or much too large 
-- **Sterotypes**/**Base Rate Neglect**: Asked to express conditional probabilities of event $P(B|A)$, may report high value when $P(A|B)$ large, even if $P(B)$ known to be tiny
+- **Stereotypes**/**Base Rate Neglect**: Asked to express conditional probabilities of event $P(B|A)$, may report high value when $P(A|B)$ large, even if $P(B)$ known to be tiny
     - Bayes rule requires $P(B|A)\propto P(A|B) P(B)$, but ignore $P(B)$ even when it is known to be rare
-    - Can even result in guesses implying $P(A \cup B)>P(A)$, impossible for any genuine probability
+    - Can even result in guesses implying $P(A \cap B)>P(A)$, impossible for any genuine probability
 - **Saliency bias**: Perceived probability affected by order or emphasis with which information is presented
     - More recently or prominently displayed outcomes are considered more likely
 - **Reference Dependence**: In a decision between action A with payoffs $(A_1,A_2)$ in state 1 and 2, respectively, and $B$ with constant payoff, choice  of A vs B depends on whether decision is framed as chance of loss or of gain
     - This difference cannot be expressed by a loss function
-- In general, decision making often neglects important components of the problem, and responds strongly to "superficial" aspects which correspond to mere relabelings of the same problem
+- In general, decision making often neglects important components of the problem, and responds strongly to "superficial" aspects which correspond to mere relabeling of the same problem
 
 ## Biases and Alternative Approaches
 
 - Evidence is strong that Bayesian approach does not come naturally to people
 - Maybe shouldn't be a surprise given that it isn't even easy for computers
     - Although differences not well understood, cognition also limited by memory and speed  
-- One sytematic bias noted early on in literature is in response to decisions where probability not explicitly given
+- One systematic bias noted early on in literature is in response to decisions where probability not explicitly given
     - Choose between bet with an explicit probability distribution, like a coin flip, and bet with no explicit distribution
     - **Ambiguity Aversion**: Decision makers likely to favor choice with explicit probability
 - This is consistent with a min max risk criterion, since choice with no distribution *could* be worse than with
@@ -244,10 +244,10 @@ output:
 - This also has costs in that additional sources of bias can arise in interpersonal settings
 - Those making predictions may have reason to misreport to others
     - They may have concerns for reputation or standing, and so, e.g. prefer to be wrong at same time as others
-    - They may simply have different goals than you have and want to influence you, as in financial advisors who "talk their book"
+    - They may simply have different goals than you have and want to influence you, as in financial advisers who "talk their book"
 - If multiple forecasters communicate as a team, info is shared directly
     - Adds information for each forecaster, but possibly also reinforces errors
-    - Working together intially, can be driven to consensus which concentrates on highly biased prediction: **groupthink**
+    - Working together initially, can be driven to consensus which concentrates on highly biased prediction: **groupthink**
     - [Hyndman suggests](https://otexts.com/fpp2/delphimethod.html) iterating, starting by recording independent forecasts, then discussing, then getting new forecasts before aggregating
 
 ## Steps for Effective Forecasts, Quantitative or Not
@@ -274,16 +274,15 @@ output:
     - Can **adjust** quantitative forecasts or parameters to reflect information external to model
     - In extreme case, may derive number directly using personal judgment
 - Human prediction and decision making shows pervasive biases, especially without careful systematic reevaluation
-    - Subjective judgmental forecasts should be subject to scrutiny, evaluaton, and modification to improve performance
+    - Subjective judgmental forecasts should be subject to scrutiny, evaluation, and modification to improve performance
 - By following disciplined process and performing honest evaluation, can help to ensure that knowledge and judgment contribute to achieving goals
-
 
 
 ## References
 
 - Daniel Kahneman (2011) *Thinking, Fast and Slow* Farrar, Straus and Giroux: New York.
     - Overview of psychology of decision making
-- Philip Tetlock and Dan Gardner (2015) *Superforcasting: The Art and Science of Prediction* Crown Publishers: New York.
+- Philip Tetlock and Dan Gardner (2015) *Superforecasting: The Art and Science of Prediction* Crown Publishers: New York.
     - Findings from experiments in forecasting competitions
 
     

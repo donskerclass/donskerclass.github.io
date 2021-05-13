@@ -35,7 +35,7 @@ $$\widehat{y}_{T+h}=f(\mathcal{Y}_T)$$
 - Observe realized value $y_{T+h}$
 - Evaluate by loss function 
 $$\ell(.,.): \mathrm{Y}\times\mathrm{Y}\to\mathbb{R}^+$$ 
-- Loss is $$\ell(y_{t+h},\widehat{y}_{t+h})$$
+- Loss is $$\ell(y_{T+h},\widehat{y}_{T+h})$$
 
 ## Decision Theory: Goals
 
@@ -100,7 +100,7 @@ ggplot(data=dframe,mapping=aes(x=t))+
 - Average vs worst case
     - Can try to do reasonably well in any situation, even the worst
     - Can try to do well over many situations, with different priority given to each
-          - Have different degrees of of prioritizing
+        - Have different degrees of of prioritizing
 - Absolute vs relative
     - Can use a criterion which judges forecast only by its own loss
     - Can instead try to do well relative to some benchmark (which may do better or worse depending on the situation)
@@ -122,7 +122,7 @@ text_tbl <- data.frame(
     ),
   Average.Average.Case = c(
     "Bayesianism",
-    " (?) " 
+    " Bayesian Regret* " 
     ),
   Worst.Average.Case = c(
     "Minimax Theory",
@@ -143,7 +143,7 @@ kable(text_tbl) %>%
 <!-- Average Case  | Worst Case Average | Minimax Theory           | Statistical Learning -->
 <!-- Worst Case    |  ...               | Adversarial Prediction   | Online Learning -->
 
-- (?) could be done (Bayesian regret minimization?), but to my knowledge isn't
+*rarely used, so will not be covered
 
 
 ## Average case analysis: probability
@@ -152,16 +152,16 @@ kable(text_tbl) %>%
 - Most commonly, this is done by means of **probability**
     - Roughly, a set of nonnegative weights that sum to 1
 - Probability assigns to each subset $A:=\{\omega\in \Omega: \omega\in A\}$ of a (discrete) set $\Omega$ a number $p(A)$ such that
-      - $0\leq p(A) \leq 1$
-      - $p(\Omega)=1$
-      - If $A_1,A_2,\ldots$ are disjoint sets in $\Omega$, $p(\cup_{j}A_j)=\sum_j p(A_j)$
+    - $0\leq p(A) \leq 1$
+    - $p(\Omega)=1$
+    - If $A_1,A_2,\ldots$ are disjoint sets in $\Omega$, $p(\cup_{j}A_j)=\sum_j p(A_j)$
 - For continuous case, probability defined by a *density* $p()$ which integrates to 1      
 - For forecasting, the set over which we define a probability is the *set of sequences* $\otimes_{t=1}^{T+h}\mathrm{Y}$
 - Once a probability is defined, a sequence is a **random variable**
     - A function of the event $\omega$
 - E.g. might give weights $(1/4,1/4,1/4,1/4)$ to sequences
     - $\{1,1,1,1\}$, $\{0,0,0,0\}$, $\{1,0,1,0\}$, $\{1,1,1,0\}$
-    - Any two events have combined probability 1/2, any 3 $3/4$, etc
+    - Any two events have combined probability 1/2, any three $3/4$, etc
 
 
 ## Expected values and Risk
@@ -177,7 +177,7 @@ $$R_p(f):=E_p[\ell(y_{T+h},f(\mathcal{Y}_T))]$$
 - *Given a distribution*, we can now compare forecast methods based on a single number
     - Smaller risk means smaller loss, *on average*
     
-## Average-Case Decision-making
+## Average-Case decision-making
 
 - Choosing a rule which is low risk tells us that our guess will do well across possible sequences
 - Weights tell us about subjective importance of different sequences
@@ -245,7 +245,72 @@ ggplot(data=dframe,mapping=aes(x=t))+
 
 - For outcomes with probability 0, like $\{0,1,0\}$, again any prediction is optimal: changing it has no effect on risk
 
-## Probability Models
+## Worst case analysis of sequences
+
+- To express extreme agnosticism, can try to find methods that work for all sequences, rather than on average over a distribution on sequences
+- One potentially desirable goal would be to find a rule which performs well for all sequences in $\otimes_{t=1}^{T+h} \mathrm{Y}$
+- That is, consider **worst case loss** over all sequences of decision rule $f$
+$$L^{\max}(f)=\underset{\mathcal{Y}_{T+h}\in\otimes_{t=1}^{T+h} \mathrm{Y}}{\sup}\ell(y_{T+h},f(\mathcal{Y}_T))$$
+- This criterion then tells you loss of a "best" rule
+$$L^{\min\max}=\underset{f}{\inf}\underset{\mathcal{Y}_{T+h}\in\otimes_{t=1}^{T+h} \mathrm{Y}}{\sup}\ell(y_{T+h},f(\mathcal{Y}_T))$$
+- In words, this says: pick a rule that has the best worst case outcome over any sequence
+- This can be wildly pessimistic
+    - Does well in sequences where loss might be high, but may do quite poorly in sequences where loss may be low  
+- Also may not define rule uniquely
+
+## Adversarial Decision-Making 
+
+- There are ways to consider worse cases than even the worst sequence
+- May have an outcome that responds to decision rule chosen, in a way which is **adversarial**
+    - The sequence adjusts to make outcome as bad as possible.
+- This kind of analysis might make sense if outcome decided by malicious adversary
+    - A competitor (in business, politics, or games) wants you to do poorly
+    - Indeed, it comes from **game theory**, where this is the situation
+- Standard in game theory to work with slightly modified spaces of rules: **randomized strategies**
+    - Choose random rule, and allow adversary to respond only to distribution
+    - Goal is to minimize expected loss, over own distribution choice $\widehat{y}_{T+h}\sim \widehat{p}_{T+h}()$ 
+    - Adversary also allowed to randomize $y_{T+h}\sim q_{T+h}$
+$$L^{Adversarial}= \underset{\widehat{p}_{T+h}()}{\inf}\underset{q_{T+h}}{\sup}E_{\widehat{p}_{T+h}(),q_{T+h}}\ell(y_{T+h},\widehat{y}_{T+h})$$ 
+- In this setting, randomized algorithms can help by restricting the ability to respond of the adversary 
+
+<!-- - Might try to represent this loss as -->
+<!-- $$L^{MaxMin}=\underset{y_{T+h}\in\mathrm{Y}}{\sup}\underset{\widehat{y}_{T+h}\in\mathrm{Y}}{\inf}\ell(y_{T+h},\widehat{y}_{T+h})$$ -->
+    
+## Example: Sequences
+
+- Let loss function be 0-1 loss: $\ell(y,\widehat{y})=1\{y\neq\widehat{y}\}$
+- If all possible length 4 $\{0,1\}$ sequences are in set considered, for any rule, always possible that next outcome is other outcome
+- $L^{\min\max}=1$ 
+    - Cannot prevent mistakes in at least some cases
+- $L^{Adversarial}=\frac{1}{2}$ 
+    - By guessing at random, any strategy of adversary will give wrong guess 1/2 the time
+    - But cannot do better than guessing at random
+
+## Online Learning and Regret Minimization
+
+- Worst case and adversarial analysis do not let you take advantage of particular features of sequence
+    - Usually obtain trivial results
+- Want good *relative* performance over sequences
+    - Attempt to do better on some sequences while allowing doing worse on others
+- Asks for **regret** of learning rule
+    - Given set $\mathcal{F}$ of comparison rules $f():\otimes_{t=1}^{T}\mathrm{Y}\to\mathrm{Y}$
+    - Want rule which does not much worse than the rule in that set which is best ex post, after sequence is observed
+    - Usually compare over full sequence, where rule is updated each period
+$$Regret(\{f_t\}_{t=1}^{T})=\sum_{t=1}^{T}\ell(y_{t},f_t(\mathcal{Y}_{t-1}))-\underset{f\in\mathcal{F}}{\inf}\sum_{t=1}^{T}\ell(y_{t},f(\mathcal{Y}_{t-1}))$$
+    
+## Applying Online Learning
+
+- Usual goal is to minimize maximum regret over any possible sequence $\{y_t\}_{t=1}^{T}$
+    - Rules $f_t$ are allowed to adapt to the sequence, and in some cases, be randomized
+- Sequence may be allowed to adapt to (distribution) of rules
+- Best possible result is
+    - $\underset{f_T\sim p}{\inf}\underset{y_T\sim q}{\sup}\ldots\underset{f_T\sim p}{\inf}\underset{y_T\sim q}{\sup}Regret(\{f_t\}_{t=1}^{T})$
+- Smaller comparator class makes low regret easier, but allows worse absolute performance
+- Could find good rule by solving long sequence of optimization problems
+- In practice, some very simple rules are used, and shown to work well
+
+
+## Refining the average case approach: Probability Models
 
 - Given a distribution $p$, Bayes forecast tells us exactly what to do to get low risk
 - Problem: Where does $p$ that we are averaging over come from?
@@ -273,7 +338,7 @@ ggplot(data=dframe,mapping=aes(x=t))+
     - In time series, called "White Noise": uninteresting model
 - Simple non-iid model: Normal-AR(1) Model
     - Let $\phi(x)=\frac{1}{\sqrt{2\pi}}\exp(-\frac{1}{2}x^2)$ be standard normal density
-    - $p(\mathcal{Y}_T,\theta)=\phi(y_1)\cdot\Pi_{t=2}^{T+h}\phi(y_t-\theta y_{t-1})$
+    - $p(\mathcal{Y}_{T+h},\theta)=\phi(y_1)\cdot\Pi_{t=2}^{T+h}\phi(y_t-\theta y_{t-1})$
     - Recursively, $y_{t}=\theta y_{t-1}+e_t$, $e_t\overset{iid}{\sim} N(0,1)$ 
 - Will introduce many more models later in class
     - Many related to simple forecasting rules we have covered
@@ -281,9 +346,9 @@ ggplot(data=dframe,mapping=aes(x=t))+
 
 ## Working with probability models
 
-- How can we assess forecasts with many models? 
+- How can we assess forecasts with many distributions? 
     - No longer a single fixed standard
-- Need some way of evaluation across models    
+- Need some way of evaluation across distributions    
 - Things to consider
     - Set of rules
     - Set of risk functions
@@ -396,69 +461,6 @@ $$\underset{{\theta}\in\Theta}{\sup}(E_{p_{\theta}}\ell(y_{t+h},f(\mathcal{Y}_T)
 <!--     - $p(y_{T+1}|\mathcal{Y}_{T},\theta)$ is conditional forecast distribution: often has a simple or closed form formula -->
 <!-- - Optimal forecast conditional on data $\mathcal{Y}_T$ now involves picking single number     -->
 
-## Worst case analysis of sequences
-
-- Going in other direction in terms of agnosticism, can try to find methods that work for all sequences, rather than on average over a distribution on sequences
-- One potentially desirable goal would be to find a rule which performs well for all sequences in $\otimes_{t=1}^{T+h} \mathrm{Y}$
-- That is, consider **worst case loss** over all sequences of decision rule $f$
-$$L^{\max}(f)=\underset{\mathcal{Y}_{T+h}\in\otimes_{t=1}^{T+h} \mathrm{Y}}{\sup}\ell(y_{T+h},f(\mathcal{Y}_T))$$
-- This criterion then tells you loss of a "best" rule
-$$L^{\min\max}=\underset{f}{\inf}\underset{\mathcal{Y}_{T+h}\in\otimes_{t=1}^{T+h} \mathrm{Y}}{\sup}\ell(y_{T+h},f(\mathcal{Y}_T))$$
-- In words, this says: pick a rule that has the best worst case outcome over any sequence
-- This can be wildly pessimistic
-    - Does well in sequences where loss might be high, but may do quite poorly in sequences where loss may be low  
-- Also may not define rule uniquely
-
-## Adversarial Decision-Making 
-
-- There are ways to consider worse cases than even the worst sequence
-- May have an outcome that responds to decision rule chosen, in a way which is **adversarial**
-    - The sequence adjusts to make outcome as bad as possible.
-- This kind of analysis might make sense if outcome decided by malicious adversary
-    - A competitor (in business, politics, or games) wants you to do poorly
-    - Indeed, it comes from **game theory**, where this is the situation
-- Standard in game theory to work with slightly modified spaces of rules: **randomized strategies**
-    - Choose random rule, and allow adversary to respond only to distribution
-    - Goal is to minimize expected loss, over own distribution choice $\widehat{y}_{T+h}\sim \widehat{p}_{T+h}()$ 
-    - Adversary also allowed to randomize $y_{T+h}\sim q_{T+h}$
-$$L^{Adversarial}= \underset{\widehat{p}_{T+h}()}{\inf}\underset{q_{T+h}}{\sup}E_{\widehat{p}_{T+h}(),q_{T+h}}\ell(y_{T+h},\widehat{y}_{T+h})$$ 
-- In this setting, randomized algorithms can help by restricting the ability to respond of the adversary 
-
-<!-- - Might try to represent this loss as -->
-<!-- $$L^{MaxMin}=\underset{y_{T+h}\in\mathrm{Y}}{\sup}\underset{\widehat{y}_{T+h}\in\mathrm{Y}}{\inf}\ell(y_{T+h},\widehat{y}_{T+h})$$ -->
-    
-## Example: Sequences
-
-- Let loss function be 0-1 loss: $\ell(y,\widehat{y})=1\{y\neq\widehat{y}\}$
-- If all possible length 4 $\{0,1\}$ sequences are in set considered, for any rule, always possible that next outcome is other outcome
-- $L^{\min\max}=1$ 
-    - Cannot prevent mistakes in at least some cases
-- $L^{Adversarial}=\frac{1}{2}$ 
-    - By guessing at random, any strategy of adversary will give wrong guess 1/2 the time
-    - But cannot do better than guessing at random
-
-## Online Learning and Regret Minimization
-
-- Worst case and adversarial analysis do not let you take advantage of particular features of sequence
-    - Usually obtain trivial results
-- Want good *relative* performance over sequences
-    - Attempt to do better on some sequences while allowing doing worse on others
-- Asks for **regret** of learning rule
-    - Given set $\mathcal{F}$ of comparison rules $f():\otimes_{t=1}^{T}\mathrm{Y}\to\mathrm{Y}$
-    - Want rule which does not much worse than the rule in that set which is best ex post, after sequence is observed
-    - Usually compare over full sequence, where rule is updated each period
-$$Regret(\{f_t\}_{t=1}^{T})=\sum_{t=1}^{T}\ell(y_{t},f_t(\mathcal{Y}_{t-1}))-\underset{f\in\mathcal{F}}{\inf}\sum_{t=1}^{T}\ell(y_{t},f(\mathcal{Y}_{t-1}))$$
-    
-## Applying Online Learning
-
-- Usual goal is to minimize maximum regret over any possible sequence $\{y_t\}_{t=1}^{T}$
-    - Rules $f_t$ are allowed to adapt to the sequence, and in some cases, be randomized
-- Sequence may be allowed to adapt to (distribution) of rules
-- Best possible result is
-    - $\underset{f_T\sim p}{\inf}\underset{y_T\sim q}{\sup}\ldots\underset{f_T\sim p}{\inf}\underset{y_T\sim q}{\sup}Regret(\{f_t\}_{t=1}^{T})$
-- Smaller comparator class makes low regret easier, but allows worse absolute performance
-- Could find good rule by solving long sequence of optimization problems
-- In practice, some very simple rules are used, and shown to work well
 
 
 

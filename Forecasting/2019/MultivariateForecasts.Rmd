@@ -1,0 +1,366 @@
+---
+title: "Multivariate Forecasts"
+author: "73-423 Forecasting for Economics and Business"
+output:
+  html_document:
+    code_folding: hide
+---
+    
+## Today 
+
+- Multivariate forecasts
+- Multi-period forecasts
+- Vector Autoregression (VAR) methods
+
+## Multivariate Forecasts
+
+- Previous problems we have seen in class involve forecasting a single number $y_{T+h}$
+- Often need to forecast more than a single object
+    - Need to know multiple aspects of future situationto make policy or decisions
+        - Ideal monetery policy depends on future state of both inflation and unemployment
+    - May need to make multiple related decisions
+        - Business may care about performance of each of its many establishments
+- Even when forecasting a single target, can help to use multiple variables
+    - May be used directly to improve predictions
+    - May be used indirectly to construct a better univariate forecast from a multivariate one
+    
+## Multivariate Forecasting Setup
+
+- Similar to univariate case, except we care about $m$ different outcomes 
+- Formally, data $\mathbf{y}_t=(y_{1t},y_{2t},\ldots,y_{mt})^{\prime}$ is an m-dimensional **vector** in $\mathbf{Y}=\mathbb{R}^m$
+- Data available at time t is to build a forecast is $\mathcal{Z}_t=\{\mathcal{Y}_t,\mathcal{X}_t\}\in\underset{t}{\times}\mathbf{Z}=\underset{t}{\times}(\mathbf{Y}\times\mathbf{X})$
+    - $\mathcal{Y}_t=\{\mathbf{y}_s\}_{s=1}^{t}$ are past observations of the series to be forecast
+    - $\mathcal{X}_t=\{\mathbf{x}_s\}_{s=1}^{t}$ are past observations of other series which are not the target of forecast, but may be used for forecasting
+- Produce a multivariate forecast $\widehat{\mathbf{y}}_{T+h}=f(\mathcal{Z}_t)=(f_1(\mathcal{Z}_t),f_2(\mathcal{Z}_t),\ldots,f_m(\mathcal{Z}_t))^{\prime}$ using a forecasting rule  $f: \underset{t}{\otimes}\mathbf{Z}\to\mathbf{Y}$
+- As always, quality of forecast can be expressed using a *loss function* $\ell():\ \mathbf{Y}\times\mathbf{Y}\to\mathbb{R}$
+- In statistical setting, $\{z_t\}_{t=1}^{T+h}$ taken to come from a probability distribution $p\in\mathcal{P}$
+    - Goal is to choose rule with small **risk** $E_p[\ell(\mathbf{y}_{T+h},f(\mathcal{Z}_{T}))]$
+    - Empirical Risk Minimizer $\widehat{f}^{ERM}=\underset{f\in\mathbf{F}}{\arg\min}\frac{1}{T-h}\sum_{t=1}^{T}\ell(\mathbf{y}_{t+h},f(\mathcal{Z}_{t}))$ remains a fine choice 
+
+## Multivariate Forecasting Goals
+
+- Loss function $\ell(\mathbf{y}_{T+h},\widehat{\mathbf{y}}_{T+h})$ should express preferences over different degrees of accuracy of different parts of the forecast 
+- Simplest case: **Additive loss**
+    - For univariate loss functions $\{\ell_i(.,.)\}_{i=1}^{m}$ and weights $\{w_i\}_{i=1}^{m}$
+    - $\ell(\mathbf{y}_{T+h},\widehat{\mathbf{y}}_{T+h})=\sum_{i=1}^{m}w_{i}\ell_{i}(y_{i,T+h},f_{i}(\mathcal{Z}_t))$
+    - Weights reflect importance of each problem, and $\ell_i$ describes cost of errors in each
+- When problem depends on joint performance across tasks, loss function can express this directly
+    - Example: weighted square loss $\ell(\mathbf{y},\widehat{\mathbf{y}})=\sum_{i,j=1}^m w_{ij}(y_{i}-\widehat{y}_{i})(y_{j}-\widehat{y}_{j})$ 
+    - Weights $w_{ij}$, restricted so $w_{ij}=w_{ji}$, reflect attention to interactions between problems
+        - Additional restrictions needed to make sure loss always positive and increasing
+    - If $w_{ij}=0$ for $i\neq j$, get back to additive loss 
+    
+
+## Forecasting Rules for Multivariate Forecasts
+
+- Simplest way to build a class of multivariate forecast rules is to combine univariate classes
+    - $\mathcal{F}=\times_{i=1}^{m}\mathbf{F}_i$, where $\mathcal{F}_i=\{f:\mathbf{Z}\to\mathbb{R}\}$ is a univariate class like the linear classes from before, is called **separable**
+- When loss is additive AND rule class $\mathcal{F}$ **separable**, ERM reduces to solving all the problems separately
+    - Weights don't matter since problems do not interact 
+    - Often a reasonable choice when there is no direct relationship between the problems
+- Even if problems separate, may make sense to use method combining information    
+    - Stein (1956) showed an example where even with additive loss and all components of $\mathbf{y_t}$ independent, can do better than separable rules
+    - Shrinkage: share info across forecasts to spread error across different components
+- May use rule sets $\mathcal{F}$ where, e.g., one parameter affects forecast rule for multiple variables
+    - Common in model-based macroeconomics, where theory can help specify rules
+        - Called "cross-equation restrictions"
+    - In cases where multiple series directly linked by accounting equations, can help to impose them
+        - Called "hierarchical forecasts"
+    - Example: restrict coefficients $\beta_1,\beta_2,\ldots,\beta_{m}$ in set of linear forecasts so that total size bounded
+        - E.g. $\sum_{i=1}^m|\beta_i|\leq B$ or $\sum_{i=1}^m(\beta_i)^2\leq B$
+  
+<!-- - In case where we really only care about one component, may *still* want to make a multivariate forecast -->
+<!--     - Forecasts of other variables can be an input into rule for variable of interest -->
+    
+  
+## Vector Autoregression  
+
+- Most common (explicitly) multivariate forecasting method by far
+    - Popularized in economics by Sims (1980)
+- Combines $m$ linear regression classes based on $p$ lags of all $m$ variables
+    - Called a Vector Autoregression of Order $p$ or **VAR(p)**
+- Forecast of $y_{it}$ depends linearly on $p$ lags of itself and of the other $m-1$ variables
+$$\mathcal{F}=\{\forall i=1\ldots m,\ f_{i}(\mathcal{Y}_{t})=\beta_{i,0}+\sum_{k=1}^{m}\sum_{j=1}^{p}\beta_{i,jk}y_{k,t-j}, \beta\in\mathbb{R}^{m\times p(m+1)}\}$$
+- Distinct from running $m$ separate *AR(p)* models because other variables enter in
+    - All variables enter in same way in all equations, so simple to specify
+- With (additive) square loss for each variable, ERM estimation can be done by running Ordinary Least Squares Regression for each outcome separately
+- Also commonly estimated with weighted square loss: **Generalized Least Squares**
+
+## Implementation and Example: GDP Forecasting Revisited
+
+- Estimation by equation-by-equation OLS implemented as command `VAR` in library `vars`
+- Input is a `ts` object containing $m$ time series and choice of order $p$
+    - Options to include linear trend (`type=trend`) and seasonal dummies at frequency f  (`season=f`) in each equation 
+```{r, message=FALSE,warning=FALSE}
+#Libraries
+library(fpp2) #Forecasting and Plotting tools
+library(vars) #Vector Autoregressions
+library(fredr) #Access FRED Data
+library(knitr) #Use knitr to make tables
+library(kableExtra) #Extra options for tables
+
+##Obtain and transform NIPA Data (cf Lecture 08)
+
+fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
+
+#US GDP components 
+GDP<-fredr(series_id = "GDP",
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2019-02-12")) #Gross Domestic Product
+
+#US GDP components from NIPA tables (cf http://www.bea.gov/national/pdf/nipaguid.pdf)
+PCEC<-fredr(series_id = "PCEC",
+            observation_start = as.Date("1947-01-01"),
+            observation_end=as.Date("2019-02-12")) #Personal consumption expenditures
+FPI<-fredr(series_id = "FPI",
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2019-02-12")) #Fixed Private Investment
+CBI<-fredr(series_id = "CBI",
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2019-02-12")) #Change in Private Inventories
+NETEXP<-fredr(series_id = "NETEXP",
+              observation_start = as.Date("1947-01-01"),
+              observation_end=as.Date("2019-02-12")) #Net Exports of Goods and Services
+GCE<-fredr(series_id = "GCE",
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2019-02-12")) #Government Consumption Expenditures and Gross Investment
+
+#Format the series as quarterly time series objects, starting at the first date
+gdp<-ts(GDP$value,frequency = 4,start=c(1947,1),names="Gross Domestic Product") 
+pcec<-ts(PCEC$value,frequency = 4,start=c(1947,1),names="Consumption")
+fpi<-ts(FPI$value,frequency = 4,start=c(1947,1),names="Fixed Investment")
+cbi<-ts(CBI$value,frequency = 4,start=c(1947,1),names="Inventory Growth")
+invest<-fpi+cbi #Private Investment
+netexp<-ts(NETEXP$value,frequency = 4,start=c(1947,1),names="Net Exports")
+gce<-ts(GCE$value,frequency = 4,start=c(1947,1),names="Government Spending")
+
+#Convert to log differences to ensure stationarity and collect in frame
+NIPAdata<-ts(data.frame(diff(log(gdp)),diff(log(pcec)),diff(log(invest)),diff(log(gce))),frequency = 4,start=c(1947,1),end=c(2018,3))
+```
+- Suppose we want to forecast GDP growth and subcomponents **C**onsumption+**I**nvestment+**G**overnment jointly
+- Estimate a VAR(1) model using log differences of NIPA nominal measurements
+```{r}
+NIPAVAR<-VAR(NIPAdata,p=1) #VAR(1) in Y=log.diff.gdp, C=log.diff.pcec, I=log.diff.invest, G=log.diff.gce
+NIPAfcst<-forecast(NIPAVAR) #Produce forecasts of all series
+```
+```{r,echo=FALSE}
+#Collect Coefficients into a Data Frame
+var1table<-data.frame(
+  GDP<-NIPAVAR$varresult$diff.log.gdp..$coefficients,
+  Consumption<-NIPAVAR$varresult$diff.log.pcec..$coefficients,
+  Investment<-NIPAVAR$varresult$diff.log.invest..$coefficients,
+  Government<-NIPAVAR$varresult$diff.log.gce..$coefficients
+)
+rownames(var1table)<-c("Lagged Change log Y","Lagged Change log C",
+                       "Lagged Change log I","Lagged Change log G",
+                       "Constant")
+#Make Table of Estimated Coefficients
+kable(var1table,
+  col.names=c("GDP","Consumption","Investment","Government"),
+  caption="Estimated VAR Coefficients") %>%
+  kable_styling(bootstrap_options = "striped", font_size = 16)
+```
+
+
+## Forecast Results
+
+```{r}
+autoplot(NIPAfcst)+
+  labs(title = "VAR(1) Forecasts of GDP and and NIPA Component Growth")
+```
+
+## Multi-period Forecasts
+
+- Existing setup and procedures have described how to make a forecast at a single period $T+h$
+- For some decision problems, may want to forecast over multiple future periods $1,2,3,\ldots,h$
+    - When deciding whether to invest in long-lived durable business asset, may need to know how sales will change over lifetime of the asset
+- Forecasting $(y_{T+1},y_{T+2},\ldots,y_{T+h})$ is a special case of a multivariate forecasting problem
+- Simplest approach: forecast separately at each period up to horizon h
+    - Apply ERM (or other rule) at each distance ahead in time
+    - In case of OLS predictions, goes by name of **local projection approach**
+- Local projections compute different coefficients for each period
+    - Reflects different relationships between variables over time
+    - Allows for flexibility especially if best predictor changes at different lengths
+- Especially with many time periods, unrestricted approach has disadvantages
+    - Does not exploit relationships across horizons
+    - Uses many parameters or high model complexity, so is prone to overfitting
+        - h times as many as 1 period
+    - Can be computationally costly to run procedure $h$ times
+    
+    
+## Alternate Approaches
+
+- In principle, could use multivariate forecasting rule in $h$ dimensions to fit these values
+    - E.g., minimize joint empirical risk over all horizons
+- In most cases, including commands in `forecast` library, use a different and faster method
+- **Recursive substitution** is a simple way to turn a forecast rule at horizon h=1 into a forecast for any horizon
+- Especially common for autoregression forecasts, but can be applied in many cases  
+- Steps
+    1. Compute a single forecast rule $\widehat{f}(\mathcal{Y}_T)$ for horizon $h=1$, eg by ERM
+    2. Compute prediction $\widehat{y}_{T+1}=\widehat{f}(\mathcal{Y}_T)$ and add forecast to $\mathcal{Y}_T$ to produce "augmented" data $\widehat{\mathcal{Y}}_{T+1}=(\mathcal{Y}_T,\widehat{y}_{T+1})$
+    3. Use same rule to produce forecast $\widehat{y}_{T+2}=\widehat{f}(\widehat{\mathcal{Y}}_{T+1})$, and add forecast to $\widehat{\mathcal{Y}}_{T+1}$ to produce "augmented" data $\widehat{\mathcal{Y}}_{T+2}=(\widehat{\mathcal{Y}}_{T+1},\widehat{y}_{T+2})$
+    4. Continue as above until horizon $h$ is reached
+
+## Recursive Substitution for Multi-period Forecasts
+
+- Idea is that if $\widehat{f}$ is a good forecasting rule and data distribution is stationary, it would continue to be a good forecasting rule next period, if the data to implement existed
+    - This data isn't available, but if forecasts are good, the forecast might be a reasonable substitute
+- The change in this sequence of forecasts as a function of horizon $h$ in response to a one unit change in $y_t$ is called the **impulse response function** of the rule
+    - Useful for understanding how predictions are affected by data realizations
+- Because method uses only a single fit, it is fast and does not suffer from overfitting problem to same degree as disconnected approach
+    - Provides sensible way to "share" parameters across multiple forecasts 
+    - Doesn't explicitly optimize multiperiod objective, but can work well **so long as** initial forecast rule is high quality
+
+## Example: Extending an AR(2) Forecast
+
+- Fit $\widehat{f}(\mathcal{Y}_{T})$ by OLS by minimizing square loss over AR(2) rules 
+$$\widehat{\beta}=\underset{\beta_0,\beta_1,\beta_2}{\arg\min}\frac{1}{T-2}\sum_{t=2}^{T-1}(y_{t+1}-\beta_0-\beta_1y_{t}-\beta_2y_{t-1})^2$$
+- Predict $\widehat{y}_{T+1}=\widehat{\beta}_0+\widehat{\beta}_1y_{T}+\widehat{\beta}_2y_{T-1}$
+- Predict $\widehat{y}_{T+2}=\widehat{\beta}_0+\widehat{\beta}_1\widehat{y}_{T+1}+\widehat{\beta}_2y_{T}$ $=\widehat{\beta}_0+\widehat{\beta}_1(\widehat{\beta}_0+\widehat{\beta}_1y_{T}+\widehat{\beta}_2y_{T-1})+\widehat{\beta}_2y_{T}$
+$$=(\widehat{\beta}_0+\widehat{\beta}_1\widehat{\beta}_0)+(\widehat{\beta}_1^2+\widehat{\beta}_2)y_{T}+\widehat{\beta}_1\widehat{\beta}_2y_{T-1}$$
+- Predict $\widehat{y}_{T+3}=\widehat{\beta}_0+\widehat{\beta}_1\widehat{y}_{T+2}+\widehat{\beta}_2\widehat{y}_{T+1}$
+$$=\widehat{\beta}_0+\widehat{\beta}_1((\widehat{\beta}_0+\widehat{\beta}_1\widehat{\beta}_0)+(\widehat{\beta}_1^2+\widehat{\beta}_2)y_{T}+\widehat{\beta}_1\widehat{\beta}_2y_{T-1})+\widehat{\beta}_2(\widehat{\beta}_0+\widehat{\beta}_1y_{T}+\widehat{\beta}_2y_{T-1})$$
+$$=(\widehat{\beta}_0+\widehat{\beta}_1\widehat{\beta}_0+\widehat{\beta}_1^2\widehat{\beta}_0+\widehat{\beta}_2\widehat{\beta}_0)+(\widehat{\beta}_1^3+2\widehat{\beta}_1\widehat{\beta}_2)y_{T}+(\widehat{\beta}_1^2\widehat{\beta}_2+\widehat{\beta}_2^2)y_{T-1}$$
+
+- At every horizon the forecast rule is an AR(2), with different coefficients
+    - Acts like local projection rule, but sequence of coefficients fixed by h=1 estimate
+    
+## More Applications of Recursive Substitution
+
+- Exact same procedure can be performed for multivariate forecasts, like VARs
+    - `VAR` command in R (and all other VAR software I know of) produces multi-period forecasts this way
+- Recursive substitution can also be used to produce univariate forecasts when data $\mathcal{Z}_t=(\mathcal{Y}_t,\mathcal{X}_t)$ used to produce forecast contains variables $\mathcal{X}_t$ other than predictor of interest 
+    - Like regression forecasts from previous lecture
+    - Want to predict GDP, but use multiple components to do so
+- Suppose we have a forecast rule $\widehat{y}_{t+1}=\widehat{f}(\mathcal{Y}_t,\mathcal{X}_t)$
+    - Cannot directly perform resursive update to obtain $\widehat{y}_{t+2}$ because $x_{t+1}$ not known
+    - Solution: forecast $x_{t+1}$!
+- If we extend a univariate forecast $\widehat{y}_{t+1}=\widehat{f}(\mathcal{Z}_t)$ to a multivariate forecast $(\widehat{y}_{t+1},\widehat{x}_{t+1})=(\widehat{f}(\mathcal{Z}_t),\widehat{f}_X(\mathcal{Z}_t))$, can produce updated forecasts by substitution rule
+    - Adds some complexity since $x$ forecasts produced, but limits complexity of multi-period forecast  
+- If original forecast is linear regression and other forecasts are also, this produces a VAR
+    - VAR is natural extension of regression forecast
+    - In fact, GDP equation in VAR example is exactly GDP equation in linear regression example
+    
+## Economic Motivation for VAR models
+
+- Can use forecasts to replace realized values not just with a known forecast rule, but also with other equations
+    - If $y_t$ related to $x_t$, replace $x_t$ with forecast to predict $y_t$
+- Can be hard to think through which variables might *predict* $y_t$ in the future
+    - Easier to think of variables that might be related right now
+- Economic theory and intuition can suggest variables and relationships which may matter 
+    - Incentives, tastes and beliefs, constraints, accounting identies, all those things you learn about in other econ classes
+- If you can predict $x_t$, then through contemporaneous relationship you can predict $y_t$ (or vice-versa)
+- Consider a simple example
+    - Let $y_t=ax_t+u_t$ where $u_t$ is independent of $x_t$ and over time  
+    - Suppose $x_t$ depends on itself and $z_{t-1}$, eg $x_t=\rho x_{t-1}+\gamma z_{t-1}+e_t$ with $e_t$ independent over time
+    - Then $y_t=(a\rho) x_{t-1}+(a\gamma) z_{t-1}+(u_{t}+ae_t)$: Lagged relationship depends on strength of persistence and on current relationship
+- More elaborate versions of this example inspired Sims use of VAR models in macroeconomics
+    - Existing macro theory c.1980 had a lot to say about contemporaneous relationships, very little about dynamics
+    - Implied relationship over time a mix of both: predictive relationships for one variable can extend to others linked indirectly
+    - For accurate predictions, many variables can be relevant
+
+## Classical Statistics Perspective
+
+- Usual justification for autoregression forecasts is in terms of **autoregressive probability model**
+$$y_{t+1}=\beta_0+\sum_{j=1}^{p}\beta_{j}y_{t-j}+e_{t+1}\text{ for all t}$$
+    - Where $e_{t}$, the "residual" is independent or uncorrelated over time: stationary **white noise** 
+    - And $E[e_{t+1}|\mathcal{Y}_t]=0$ for all $t$: residual is unpredictable part
+- *If* data is drawn from such a probability distribution, oracle forecast for *square loss* among any *linear predictor* based on past data would be autoregressive forecast rule $\beta_0+\sum_{j=1}^{p}\beta_{j}y_{t-j}$
+    - Further, oracle forecast at horizon $h$ would be the recursive update of this rule
+    - If $e_{t+1}$ iid Normal random variable, this is also the Bayes forecast: even nonlinear rules can't do better
+- Under some conditions on $\beta$ so that the implied distribution is stationary
+    - Rule selected by ERM for any AR(d) class with $d\geq p$ gets close to oracle rule
+- *If* data known to come from this model, recursive forecast not just reasonable, but optimal
+- Also true for VARs and other regression forecasts with multivariate version of this model 
+
+## Evaluating Autoregressive Forecasts
+
+- Forecast residuals from *optimal* forecast $\widehat{e}_{t+1}=y_{t+1}-\widehat{y}_{t+1}$ are white noise in autoregressive model
+- This is in fact true when forecast rule is Bayes predictor in square loss for any stationary distribution
+    - Holds for VARs, regression, etc
+- So if you are using a rule which is approximately the Bayes rule, residuals should be close to white noise
+    - ACF of $\widehat{e}_{t+1}$ should be close to 0 everywhere
+    - Use `checkresiduals` to inspect and compare various measures of distance
+- Usually little reason to believe chosen family contains Bayes forecast rule
+    - May not be exactly linear, or may depend on information further back than number of lags used 
+    - Or even if it did that approximation is close enough that all properties of Bayes forecast hold for approximate rule
+- These two issues are in conflict
+    - Can always increase complexity of hypothesis class to try to get closer to Bayes forecaster
+    - But doing so can worsen overfitting, making rule actually chosen further away
+- Residual checks measure closeness of fit, but are unrelated to degree of overfitting
+    - Generally **not** a reliable tool for finding a good forecast, as opposed to checking ex post
+    - Use genuine measures of loss instead!
+    
+## Application to GDP Series in VAR(1) Example
+
+```{r, class.source='fold-show'}
+checkresiduals(NIPAVAR$varresult$diff.log.gdp..) #GDP Growth forecast residual diagnostic
+```
+- Patterns in residual plot and ACF, and formal test of white noise, suggest VAR(1) is not super close to white noise
+    - Suggests patterns in data may differ somewhat from VAR(1) model: in-sample fit could be improved
+    - To decide whether this or another forecast should be used, should compare loss measures 
+
+## Summary
+
+- Multivariate forecasting relies on same principles as single variable case
+    - Can improve predictive power by including other predictors and sharing information across forecasts
+- Vector Autoregressions describe most natural extension of single outcome regression models
+- Multi-period forecasts are a special case of multivariate forecasts
+    - Recursive substitution method provides simple and parsimonious way to extend forecasts into the future
+    - Suggests using multivariate forecasts to produce better predictions even if goal is longer horizon forecasts of just one item
+- Autoregressive probability model shows properties of cases in which autoregressive forecasts are particularly desirable
+
+
+## Caveats
+
+- While multivariate forecasts and models can improve quality of oracle predictions a lot
+- But they can also massively increase problems with overfitting
+    - VAR(p) in m variables has $m^2(p+1)$ parameters: easily huge given large number of possibly relevant predictors
+    - In practice, this seriously reduces performance of these methods, makes them less attractive in practice
+- Suggests seeking out methods which do more to control overfitting than ERM over linear class
+    - ERM looks explicitly  only at empirical risk, not at all at generalization error
+    - Popularity of VAR methods relies strongly on combination with techniques to control overfitting
+- Next class: methods which take into account generalization error in a more explicit way
+    - Ways to reduce complexity of class
+    - Ways to choose element of class which generalizes better 
+
+## References
+
+- Christopher A. Sims,  "Macroeconomics and reality." *Econometrica* (1980): 1-48.
+- Charles Stein, "Inadmissibility of the usual estimator for the mean of a multivariate distribution", *Proc. Third Berkeley Symp. Math. Statist. Prob.*  (1956) 1, pp. 197–206
+
+
+<!-- ## Outline -->
+
+<!-- - Overview -->
+<!--     - linear function classes -->
+<!-- - Reasons for multivariate forecasts -->
+<!--     - Direct goal: multiple outcomes of interest -->
+<!--     - Aid in univariate forecast -->
+<!--     - Aid across forecasts -->
+<!-- - Methods -->
+<!--     - Separate ERM -->
+<!--     - Joint ERM -->
+<!--         - Pros v cons -->
+<!-- - Canonical Procedure: Vector Autoregression   -->
+<!--     - History and applications -->
+<!--     - Deriving VAR from contemporaneous linear models -->
+<!--     - Data Example: GDP components forecast, ctd  -->
+<!-- - Multihorizon forecasts -->
+<!--     - Direct Method: "Local Projection" -->
+<!--     - Iterative Method (autoregressions) -->
+<!--         - Pros v cons -->
+<!--     - Application: multiperiod VAR forecasts -->
+<!--     - Impulse Response Functions -->
+<!-- - Additional practical issues -->
+<!--     - Stationarity concerns?  -->
+<!--         - Trends -->
+<!--         - Differencing -->
+<!--     - Seasonal Autoregressions? -->
+<!--     - Hierarchical Forecasts? -->
+<!-- - (For next class): Overfitting, and need to constrain class  -->
+<!--     - Say something about residual diagnostics? (Or don't) -->
+
+
+
+

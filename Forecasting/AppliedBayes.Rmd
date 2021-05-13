@@ -21,17 +21,17 @@ output:
 ## Review of Bayesian Approach
 
 - Bayesian approach to modeling data $\mathcal{Y}_{T+1}=\{y_t\}_{t=1}^{T+1}$
-    - Describe sequence by **likelihood**: family of distributions $\{p(\mathcal{Y}_{T+1},\theta):\ \theta\in\Theta\}$ 
+    - Describe sequence by **likelihood**: family of distributions $\{p(\mathcal{Y}_{T+1}|\theta):\ \theta\in\Theta\}$ 
     - Describe beliefs about $\theta$ with **prior**: distribution $\pi(\theta)$ on $\Theta$
 - Bayesian Inference
     - Given data $\mathcal{Y}_T$, update prior to obtain **posterior** $\pi(\theta|\mathcal{Y}_{T})$: *conditional* distribution of $\theta$ given $\mathcal{Y}_T$
     - Posterior formula given by **Bayes Rule**
-$$\pi(\theta|\mathcal{Y}_{T})=\frac{p(\mathcal{Y}_{T},\theta)\pi(\theta)}{\int_{\Theta}p(\mathcal{Y}_{T},\theta)\pi(\theta)d\theta}$$
+$$\pi(\theta|\mathcal{Y}_{T})=\frac{p(\mathcal{Y}_{T}|\theta)\pi(\theta)}{\int_{\Theta}p(\mathcal{Y}_{T}|\theta)\pi(\theta)d\theta}$$
 - Bayesian Forecasting
     - Use posterior and **conditional likelihood** $p(y_{T+1}|\mathcal{Y}_T,\theta)$ to produce **posterior predictive distribution**
     - $p(y_{T+1}|\mathcal{Y}_{T})=\int_{\Theta}p(y_{T+1}|\mathcal{Y}_T,\theta)\pi(\theta|\mathcal{Y}_{T})d\theta$
 - Bayesian Decision Theory
-    - Want rule $f(\mathcal{Y}_T)$ minimizing **prior predictive risk** $R_{\pi}(f)=\int_{\Theta}\int_{\times_{t=1}^{T+1}\mathrm{Y}}\ell(y_{T+1},f(\mathcal{Y}_T))p(\mathcal{Y}_{T+1},\theta)d\mathcal{Y}_{T+1}\pi(\theta)d\theta$
+    - Want rule $f(\mathcal{Y}_T)$ minimizing **prior predictive risk** $R_{\pi}(f)=\int_{\Theta}\int_{\times_{t=1}^{T+1}\mathrm{Y}}\ell(y_{T+1},f(\mathcal{Y}_T))p(\mathcal{Y}_{T+1}|\theta)d\mathcal{Y}_{T+1}\pi(\theta)d\theta$
     - Achieve by minimizing **posterior predictive risk** $f^*(\mathcal{Y}_T)=\underset{\widehat{y}}{\arg\min}\int_{\mathrm{Y}} \ell(y_{T+1},\widehat{y})p(y_{T+1}|\mathcal{Y}_{T})dy_{T+1}$
     
 ## Applying the Bayesian Approach
@@ -52,10 +52,10 @@ $$\pi(\theta|\mathcal{Y}_{T})=\frac{p(\mathcal{Y}_{T},\theta)\pi(\theta)}{\int_{
 
 ## Types of posterior calculations
 
-- Posterior $\pi(\theta|\mathcal{Y}_T)$ is **proportional to** $p(\mathcal{Y}_T,\theta)\pi(\theta)$, which is easy to calculate
-    - But constant of proportionality $\int_{\Theta}p(\mathcal{Y}_T,\theta)\pi(\theta)d\theta$ requires integration
+- Posterior $\pi(\theta|\mathcal{Y}_T)$ is **proportional to** $p(\mathcal{Y}_T|\theta)\pi(\theta)$, which is easy to calculate
+    - But constant of proportionality $\int_{\Theta}p(\mathcal{Y}_T|\theta)\pi(\theta)d\theta$ requires integration
 - Exact Integration
-    - Feasible if likelihood $p(\mathcal{Y}_{T+1},\theta)$ and prior $\pi(\theta)$ are **conjugate**: posterior in same family as prior
+    - Feasible if likelihood $p(\mathcal{Y}_{T+1}|\theta)$ and prior $\pi(\theta)$ are **conjugate**: posterior in same family as prior
     - Many useful cases: Bernoulli with Beta, Normal with Normal, etc
     - If you can find a pair which is "close enough" to model you want, simple and fast
 - Large T approximations
@@ -75,10 +75,10 @@ $$\pi(\theta|\mathcal{Y}_{T})=\frac{p(\mathcal{Y}_{T},\theta)\pi(\theta)}{\int_{
 - To extent that this is "most plausible single value", can use it for predictions
     - $p(y_{T+1}|\mathcal{Y}_{T},\widehat{\theta}^{MAP})$ is "most plausible" single prediction model
 - Key to MAP (and other large sample Bayesian approximations) is that likelihoods *factorize* into conditional likelihoods
-    - $p(\mathcal{Y}_{T},\theta)=\Pi_{t=1}^{T}p(y_{t}|\mathcal{Y}_{t-1})$
+    - $p(\mathcal{Y}_{T}|\theta)=\Pi_{t=1}^{T}p(y_{t}|\mathcal{Y}_{t-1},\theta)$
 - Key trick: take log of posterior to turn product into sum
-- $\log p(\theta|\mathcal{Y}_T)=\sum_{t=1}^{T}\log p(y_{t}|\mathcal{Y}_{t-1},\theta)+\log\pi(\theta)-\log\int_{\theta} p(\mathcal{Y}_T,\theta)\pi(\theta)d\theta$
-- Note that proportionality factor $\log\int_{\theta} p(\mathcal{Y}_T,\theta)\pi(\theta)d\theta$ not a function of $\theta$
+- $\log p(\theta|\mathcal{Y}_T)=\sum_{t=1}^{T}\log p(y_{t}|\mathcal{Y}_{t-1},\theta)+\log\pi(\theta)-\log\int_{\theta} p(\mathcal{Y}_T|\theta)\pi(\theta)d\theta$
+- Note that proportionality factor $\log\int_{\theta} p(\mathcal{Y}_T|\theta)\pi(\theta)d\theta$ not a function of $\theta$
 - So to find the MAP estimate, can ignore it and maximize the other part
 $$\widehat{\theta}^{MAP}=\underset{\theta\in\Theta}{\arg\max}\left\{\sum_{t=1}^{T}\log p(y_{t}|\mathcal{Y}_{t-1},\theta)+\log\pi(\theta)\right\}$$
 
@@ -115,12 +115,12 @@ $$\widehat{\beta}^{MAP}=\underset{\beta\in\Theta}{\arg\min}\left\{\sum_{t=1}^{T}
 
 - If T large and averages are well-behaved, can use fact that posterior is sum to approximate
 - Idea: average eventually close to mean, so a local Taylor expansion in $\theta$ around $\theta^*=\widehat{\theta}^{MAP}$ suffices
-- $\pi(\theta|\mathcal{Y}_T)=\exp(T(\frac{1}{T}\sum_{t=1}^{T}\log p(y_{t}|\mathcal{Y}_{t-1},\theta)+\frac{1}{T}\log\pi(\theta)-\frac{1}{T}\log\int_{\Theta} p(\mathcal{Y}_T,\theta)\pi(\theta)d\theta))$
+- $\pi(\theta|\mathcal{Y}_T)=\exp(T(\frac{1}{T}\sum_{t=1}^{T}\log p(y_{t}|\mathcal{Y}_{t-1},\theta)+\frac{1}{T}\log\pi(\theta)-\frac{1}{T}\log\int_{\Theta} p(\mathcal{Y}_T|\theta)\pi(\theta)d\theta))$
 - $\propto\exp(T(\frac{1}{T}\sum_{t=1}^{T}\frac{d}{d\theta}\log p(y_{t}|\mathcal{Y}_{t-1},\theta^*)(\theta-\theta^*)+\frac{1}{T}\sum_{t=1}^{T}\frac{1}{2}\frac{d^2}{d\theta^2}\log p(y_{t}|\mathcal{Y}_{t-1},\theta^*)(\theta-\theta^*)^2$
 - $+\frac{1}{T}\frac{d}{d\theta}\log\pi(\theta^*)(\theta-\theta^*)+\frac{1}{T}\frac{1}{2}\frac{d^2}{d\theta^2}\log\pi(\theta^*)(\theta-\theta^*)^2+\text{higher order terms}))$
     - Proportionality constant and 0th order term disappear since not functions of $\theta$
 - By optimality of MAP, first derivative term equals 0
-- $=\exp(T(\frac{1}{T}\sum_{t=1}^{T}\frac{1}{2}\frac{d^2}{d\theta^2}\log p(y_{t}|\mathcal{Y}_{t-1},\theta^*)(\theta-\theta^*)^2+\frac{1}{T}\frac{1}{2}\frac{d^2}{d\theta^2}\log\pi(\theta^*)(\theta-\theta^*)^2)$
+- $=\exp(T(\frac{1}{T}\sum_{t=1}^{T}\frac{1}{2}\frac{d^2}{d\theta^2}\log p(y_{t}|\mathcal{Y}_{t-1},\theta^*)(\theta-\theta^*)^2+\frac{1}{T}\frac{1}{2}\frac{d^2}{d\theta^2}\log\pi(\theta^*)(\theta-\theta^*)^2))$
 - Density which is exponent of a quadratic function has a name: it is a Normal distribution
 - **Laplace Approximation**: For large T, posterior $\approx$ normal, with mean around $\widehat{\theta}^{MAP}$, variance proportional to minus inverse of second derivative of log likelihood (+ prior) over T
 - Unless prior very large relative to $T$, prior term also disappears as T grows
@@ -153,7 +153,7 @@ $$\widehat{\beta}^{MAP}=\underset{\beta\in\Theta}{\arg\min}\left\{\sum_{t=1}^{T}
     - By central limit theorem, error decreases as $\frac{1}{\sqrt{J}}$: Quadruple number of draws to halve error, on average
 - Sample from $\pi(\theta|\mathcal{Y}_T)$ by class of methods called **Markov Chain Monte Carlo** (MCMC)
     - Idea: using random numbers, generate a sequence $\{\theta_j\}_{j=1}^J$ drawn from a specially designed process
-    - Sequence comes from conditional distribution $P(\theta_{j+1}|\theta_{j})$ which can be calculated using only $p(\mathcal{Y}_T,\theta)$, $\pi(\theta)$ without integration
+    - Sequence comes from conditional distribution $P(\theta_{j+1}|\theta_{j})$ which can be calculated using only $p(\mathcal{Y}_T|\theta)$, $\pi(\theta)$ without integration
     - Under some conditions, $P(\frac{1}{J}\sum_{j=1}^{J}m(\theta_j)\to\int m(\theta)\pi(\theta|\mathcal{Y}_T)d\theta)=1$ for any integrable function $m()$ $\Theta\to\mathbb{R}^d$
 - Huge variety of such methods exist, based on details of formula for $P(\theta_{j+1}|\theta_{j})$: see [illustrations](https://chi-feng.github.io/mcmc-demo/app.html)
     - Names like Metropolis-Hastings, Gibbs Sampler, MALA, Hamiltonian Monte Carlo (HMC), etc
@@ -165,9 +165,9 @@ $$\widehat{\beta}^{MAP}=\underset{\beta\in\Theta}{\arg\min}\left\{\sum_{t=1}^{T}
 - Ideally, would like a program that lets you enter likelihood, prior, and data, which would then automatically produce posterior and predictive distributions
 - Such a program is called a **Probabilistic Programming Language**
     - Many exist, based on different posterior approximation methods
-        - BUGS, Stan, Edward, Tensorflow Probability, etc
+        - BUGS, Stan, Pyro, Nimble, Turing, PyMC3, Tensorflow Probability, etc
 - **Stan** is a popular and well-supported choice, based on Hamiltonian Monte Carlo, with R access by library `rstan`
-    - HMC uses derivatives of $p(\mathcal{Y}_T,\theta)$, $\pi(\theta)$ to speed up sampling, so tends to be fairly fast for models with many parameters
+    - HMC uses derivatives of $p(\mathcal{Y}_T|\theta)$, $\pi(\theta)$ to speed up sampling, so tends to be fairly fast for models with many parameters
     - Downside is that it requires differentiable probability models
 - I will present some worked examples in Stan to show what Bayesian modeling and evaluation looks like
 - For details of Stan language, see documentation at [mc-stan.org](https://mc-stan.org)
@@ -189,14 +189,19 @@ $$\widehat{\beta}^{MAP}=\underset{\beta\in\Theta}{\arg\min}\left\{\sum_{t=1}^{T}
     - int (integer), real, vector, etc, along with upper or lower bounds if bounded
     - This ensures the language knows what possible values a variable can take
 - Let's see a Stan program to sample from the posterior of Beta-Bernoulli model from last class
-    - Likelihood is Bernoulli: $p(y_t,\theta)=\theta^{y_t}(1-\theta)^{(1-y_t)}$, prior is Beta(a,b): $\pi(\theta)\propto \theta^{a-1}(1-\theta)^{b-1}$
+    - Likelihood is Bernoulli: $p(y_t|\theta)=\theta^{y_t}(1-\theta)^{(1-y_t)}$, prior is Beta(a,b): $\pi(\theta)\propto \theta^{a-1}(1-\theta)^{b-1}$
     - In this case, posterior after $N$ 1s and $M$ 0s known to be Beta(a+N,b+M), so can check accuracy    
     
 ## Stan code for model
 
-```{r,message=FALSE,warning=FALSE}
+```{r, message=FALSE,warning=FALSE}
 library(rstan) #Access Stan from R
-stan_code_bernoulli <- " 
+options(mc.cores = parallel::detectCores()) #Use parallel computing when running MCMC
+rstan_options(auto_write = TRUE) #Do not recompile Stan code every time file is saved
+```
+```{stan, output.var="stan_model_bernoulli", class.source = 'fold-show'}
+// Model is in stan code chunk 
+// compiled as output.var="stan_model_bernoulli"
 data { 
   int T;                     // The sample size
   int<lower=0,upper=1> y[T]; // The observations (array of length T)
@@ -214,21 +219,13 @@ model {
 generated quantities { 
   int<lower=0,upper=1> y_tilde; // Samples from posterior predictive distribution
   y_tilde = bernoulli_rng(theta);  //Simulate draw from (Bernoulli) conditional likelihood 
-}"
+}
 ```
 
 
 ## Run Code on Simulated Data
 
-```{r,message=FALSE,warning=FALSE}
-options(mc.cores = parallel::detectCores()) #Use parallel computing when running MCMC
-rstan_options(auto_write = TRUE) #Do not recompile Stan code every time file is saved
-```
-```{r,results='hide',message=FALSE,warning=FALSE}
-# Compile this code as a model. Warning: compiling takes a long time
-stan_model_bernoulli<-stan_model(model_code = stan_code_bernoulli,model_name = "BernoulliModel") 
-```
-```{r,results='hide',message=FALSE,warning=FALSE}
+```{r,results='hide',message=FALSE,warning=FALSE,class.source = 'fold-show'}
 # Generate some data to feed to the model
 truetheta<-0.99   # Make 0s a rare event
 aprior<-0.5       # Expect few 1s
@@ -243,15 +240,21 @@ stan_data<-list(T=Tsample, y=ysample, prior_a=aprior, prior_b=bprior)
 fit_bernoulli<-sampling(object = stan_model_bernoulli,data = stan_data, chains = 4, iter = 2000, seed = 4567)
 #Run 4 chains of 2000 samples, and discard the first 1000 of each
 ```
-```{r,eval=FALSE}
+```{r,eval=FALSE,class.source = 'fold-show'}
 print(fit_bernoulli) # Print summary statistics for posterior statistics 
 stan_hist(fit_bernoulli) # Plot the approximated posterior density
 ```
 
+## Posterior Statistics and Model Fit
+
+```{r,warning=FALSE,message=FALSE}
+print(fit_bernoulli,digits_summary=3) # Print summary statistics for posterior statistics 
+```
+
+
 ## Approximate Posterior and Posterior Predictive Densities
 
-```{r,warning=FALSE,messsge=FALSE}
-print(fit_bernoulli,digits_summary=3) # Print summary statistics for posterior statistics 
+```{r,warning=FALSE,message=FALSE}
 quietgg(stan_hist(fit_bernoulli)) # Plot the approximated posterior density, suppressing warning messages
 #Calculate some statistics
 thetamean<-get_posterior_mean(fit_bernoulli,pars="theta") #Get posterior mean of theta
@@ -295,8 +298,8 @@ traceplot(fit_bernoulli,pars="theta")
     
 ## Stan Code
 
-```{r,,class.source='fold-show'}
-stan_code_logitAR <- " 
+```{stan, output.var="stan_model_logitAR", class.source = 'fold-show'}
+// Stan model "stan_model_logitAR"
 data { 
   int T;                     // The sample size
   int<lower=0,upper=1> y[T]; // The observations (array of length T)
@@ -327,31 +330,27 @@ generated quantities {
       mu += b[k] * y[t-k];
     y_tilde = bernoulli_rng(inv_logit(mu));  //Simulate from conditional likelihood
   }
-  }"
+  }
 ```
 
 
 ## Results: MCMC Fit vs Maximum Likelihood Fit
 
-```{r,results='hide',message=FALSE,warning=FALSE,echo=FALSE}
-# Compile this code as a model. Warning: compiling takes a long time
-stan_model_logitAR<-stan_model(model_code = stan_code_logitAR,model_name = "LogitARModel") 
-```
-```{r,results='hide',message=FALSE,warning=FALSE,echo=FALSE}
+```{r,results='hide',message=FALSE,warning=FALSE}
 library(fredr) #Access FRED, the Federal Reserve Economic Data
 fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
 #The NBER recession indicator has FRED ID "USREC"
 #1 in NBER declared recession, 0 in any other date
-USREC<-fredr(series_id = "USREC")
+USREC<-fredr(series_id = "USREC",vintage_dates = as.Date("2021-03-23"))
 usrec<-ts(USREC$value,frequency=12,start=c(1854,12)) #Convert to time series
 #Produce lagged values
-l1usrec<-window(lag(usrec,-1),start=c(1855,2),end=c(2019,1))
-l2usrec<-window(lag(usrec,-2),start=c(1855,2),end=c(2019,1))
-recession<-window(usrec,start=c(1855,2),end=c(2019,1))
+l1usrec<-window(lag(usrec,-1),start=c(1855,2),end=c(2021,2))
+l2usrec<-window(lag(usrec,-2),start=c(1855,2),end=c(2021,2))
+recession<-window(usrec,start=c(1855,2),end=c(2021,2))
 #Compute Logistic regression by ERM as before, equal to MLE
 recessionlogit<-glm(recession~l1usrec+l2usrec,family=binomial(link="logit"))
 ```
-```{r,results='hide',message=FALSE,warning=FALSE,echo=FALSE}
+```{r,results='hide',message=FALSE,warning=FALSE}
 ## Assemble data for Stan model
 recessiondata<-as.integer(recession) #Binary recession indicators
 Tmonths<-length(recessiondata) #Length of sample
@@ -378,6 +377,10 @@ print(fit_logitAR) #Bayesian Prediction
 #Pairs plot
 pairs(fit_logitAR,pars=c("a","b","y_tilde"))
 ```
+
+## Try it yourself
+
+- Explore different prior options for this recession model (using rstanarm rather than writing your own code) in a [Kaggle notebook](https://www.kaggle.com/davidchilders/bayesian-recession-forecast)
 
 ## Interpretation and Conclusion
 
@@ -414,7 +417,7 @@ pairs(fit_logitAR,pars=c("a","b","y_tilde"))
     - Practical introduction to Bayesian model building in Stan
 - Chris Sims. [Bayesian Methods in Applied Econometrics, or, Why Econometrics Should Always and Everywhere Be Bayesian](http://sims.princeton.edu/yftp/EmetSoc607/AppliedBayes.pdf) 2007
     - A rant
-- Stan Development Team. **[Stan User's Guide](https://mc-stan.org/docs/2_18/stan-users-guide/index.html)** 2018, v 2.18 
+- Stan Development Team. **[Stan User's Guide](https://mc-stan.org/docs/2_26/stan-users-guide/index.html)** 2021, v 2.26 
     - Comprehensive guide to Stan language and Bayesian models
 - Aad van der Vaart. **Asymptotic Statistics** Cambridge UP, 1998
     - Has useful (but overly technical) chapters on Bayesian large sample approximations

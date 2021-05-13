@@ -1,0 +1,291 @@
+---
+title: "Judgment"
+author: "73-423 Forecasting for Economics and Business"
+output:
+  html_document:
+    code_folding: show
+---
+
+## Outline
+
+
+- Incorporation of judgment in forecasting
+    - Roles of judgment in quantitative forecast methods
+    - Judgmental Adjustment
+    - Purely Judgmental Forecasts
+- Behavioral limitations
+- Processes for improving judgment    
+    
+<!-- - Review of ideal approaches -->
+<!--     - Bayesian method: Enters as prior -->
+<!--         - Hot take: also enters as likelihood or forecast rule set -->
+<!--     - Model Combination: Expert advice, adding as predictor -->
+<!--     - Statistical approach: problem of stationarity, Hendry and judgmental adjustment as way to account for structural breaks  -->
+<!-- - Tetlock stuff -->
+<!-- - Heuristics/Biases -->
+<!--     - Kahneman and Tversky -->
+<!--     - Failure of EUT in experimental subjects -->
+<!--         - Over/Underconfidence -->
+<!--         - Prospect theory: Framing dependence, (loss vs gain), probability reweighting -->
+<!--         - Sterotyping and "representativeness heuristic" -->
+<!--             - Linda the banker -->
+<!--         - Ambiguity aversion: (might be consistent with non-Bayesian approaches like Minimax) -->
+<!-- - "Superforecasters" -->
+<!-- - Using quantitative models -->
+
+## The Role of Judgment
+
+- By now we have seen a large class of formal forecasting methods
+- Decision theory defines principles by which to decide how to evaluate a forecast or forecasting method
+    - Choose a way to measure results using a **loss function**
+    - Choose a principle by which to assess forecasting methods: like (average or max) Risk or Regret
+    - Choose a model, rule class, or comparison set with which to apply principles
+    - Apply a method for constructing a forecast from the chosen set which is supported by the principles
+- Most of the approaches are quantitative, exact, and are often automatic once these decisions are made
+- But we still need to make these decisions, in a way reflecting our objectives, values, and beliefs
+    - This is the role for **judgment** in forecasting: choices that require human decision making
+- Judgmental forecasting examines how humans make these decisions, and suggests ways to do so in accordance with values, beliefs, and goals
+
+## Judgmental Forecasting - Approaches
+
+- A purely quantitative forecasting approach is one which can be specified exactly 
+    - Can write the function down, or implement it on a machine
+    - Human input goes into deciding which approach to use, but once decided, result is automatic
+- A purely judgmental forecast is one where $\widehat{y}$ is chosen directly
+    - Individual knowledge and motivations used to produce a number
+- A "judgmental adjustment" takes a quantitative approach and changes some aspect
+    - Forecast produced differs by amount decided subjectively
+- Performance and foundations of pure judgmental approach depend on thought process to produce it
+    - This could exactly replicate a quantitative approach, sharing its benefits and pitfalls
+    - More generally, properties depend on psychology of individual and group decision making
+- Reason one might want to use judgment would be to incorporate knowledge or perspectives which can't easily be expressed in formal way
+    - Maybe you have sources of data which are hard to incorporate explicitly
+    - Or you suspect that some features of implementation of quantitative method are inadequate for problem actually faced
+        - Many "exact" models are "exact" for the wrong problem
+
+## Where do choices enter into quantitative methods? - Goals
+
+- The starting point for a forecast should be a clearly defined goal
+- What do we want to know that we don't yet know?
+    - Choice of what to forecast is most consequential component of forecasting process
+- What are the consequnces of getting it right or wrong?
+- These questions should be answered based on the particular business context
+    - Is there some action we are going to take depending on what we think will happen?
+    - Can we quantify the effects of this action in terms of profit or other first order business priorities?
+- Express this goal mathematically as a loss function
+    - If the result happens to be $y_{t+h}$ and I guessed $\widehat{y}_{t+h}$, what are the consequences? 
+- In practice, methods often use "default" loss function (MSE, 0-1 loss, etc)
+    - Whether result is genuinely useful requires good alignment of actual consequences with loss chosen
+    - Be sure to at least evaluate using criterion relevant to goals
+
+## Choices in Quantitative Methods - Principles
+
+- Choice between forecasting principles usually harder than choice of loss
+    - Average vs Maximum, Risk vs Regret, all sensible ways of describing outcomes
+- Difficult because you have to compare across sets of multiple outcomes
+    - Need to know not only consequences of decisions, but how they depend on situation
+- Worry about maximum risk or regret when you can't afford chance of persistently bad performance
+    - This is especially the case if you are providing forecasting tool to someone else and don't know what they will do with it
+    - Example: inventory forecasts sent to each outlet in large company, for use by each local manager
+    - Example: automated web user responses set by prediction algorithm
+- Average case methods like Bayes allow specifying tradeoffs of what kinds of states performance is valued in
+    - Use both knowledge and values to determine these
+    
+## Choices - Model Class
+
+- Even with a well-defined goal, forecasting approaches require many choices in terms of model
+    - In statistical or online learning approach, need a class of predictors; in probability approach, need a probability model of the environment
+    - Even with model combination, need a set of models or methods to include
+- Class of predictors or models is consequential: by *no free lunch* principle, no one class is universally better
+    - Need some knowledge of features of environment to ensure model captures them
+- Visualizing and exploring data useful, as are explicit model selection methods like cross validation information criteria
+    - But can only help choose between set of models you have in mind already (or can find software to implement)
+- Process of turning expert knowledge of features of environment you face into model not easy to formalize
+    - Knowledge of, say, medical billing or collateralized loans or SMEs in Mozambique may be helpful for figuring out model features
+- Can try to account for unexpected possibilities by using complicated models, but overfitting becomes critical problem
+    - Also which type of complicated model requires choices: hundreds of kinds of neural network
+- Can try to get around this by using simple off-the-shelf models (ARIMA/ETS) in cases where they are good enough
+    - Provide a simple description of some ways series behaved in the past, which usually tells you something about the near future
+- Can't apply mindlessly: future pattern can completely change in ways that are predictable if paying attention
+    - "This event has never happened in my data set" $\neq$ "This event has never happened before and won't again"
+
+## Choosing A Prior
+
+- Bayesian inference often called subjective because prior encodes beliefs
+    - This is not really a distinction: so does any other feature of a model or method. Forecast class, selection method, etc, should all reflect beliefs
+- Priors can and should be chosen to reflect known characteristics of environment
+    - Some parameter values are obviouly implausible, and this can be encoded by prior
+- Consider autoregressive model $\log y_t=b_0+\sum_{j=1}^{J}b_j\log y_{t-j}+\epsilon_t$ and suppose $y_t$ is dollars of sales of a small company
+    - US GDP is $\approx 20$ trillion = $2\times 10^{13}$
+    - If prior on $b_0$ is $N(0,\sigma^2)$, $\sigma>7$ means about 3% chance of sales equal to entire economy
+    - Prior on $\sigma$ should probably put near 0 weight on values above 7
+- More generally, can draw parameters from prior and simulate from likelihood, making sure that samples reasonable  
+- Priors *are* useful place to incorporate numerical adjustments not seen in data directly
+    - But only if you can express this as a parameter of your model: If you can't, maybe you need a new parameter in your model? 
+- E.g., suppose you have a pretty good additive model for web traffic, but you figure out people stop visiting your website when a new epsisode of some TV show is airing
+    - A prior adjustment to an hour of day or day of week effect will change outcome at that time, but also at times when you don't want it to
+    - Adding TV schedules as a covariate is change in likelihood that will encode this knowledge
+
+## Judgmental Adjustment - Motivation
+
+- After figuring out your objectives and building model or method to suit your needs, may still not be satisfied
+    - Learn about something relevant for prediction but not in your model
+    - Examining past performance find that there is systematic pattern of mistakes
+- One approach to handling these issues is to update model to incorporate additional information or correct mistake
+    - Add a covariate or predictor, change a functional form, adjust a tuning parameter
+- Making such model changes "adaptively", in response to data, affects prediction properties
+    - Increases chance of overfitting, and much more than by number of parameters
+    - There are many changes you could and would have made had things been different
+- May also not be feasible to incorporate info or change in systematic way
+    - If you are tracking corporate performance and see newspaper report showing that company lost a huge lawsuit, where do you put that?
+    - Supposing something like this only happens once in your data, adding it as predictor same as just changing today's or future forecasts
+- Model output looking wrong doesn't always mean you have a way to fix it easily
+    - Fix may require going from simple, easy to use, computationally fast model to something that you just can't code up or run
+    
+## Judgmental Adjustment - Approaches
+
+- A long established method for "fixing" a forecast that needs nonsystematic changes is an **add factor**
+    - Take the quantitative mthod output, and change it by a bit to reflect non-systematic patterns
+    - Difference from pure judgement is only in view that quantitative forecast is good starting point
+- Can also include add factors in model or method parameters, changing them by some amount after fitting
+    - Useful when parameters have interpretation and natural units, because you can use common sense about these parameter size to make sure change is reasonable
+    - If making sequence of forecasts, this can provide way to jointly adjust both current and future forecasts
+- *Intercept Corrections* are used by professional forecasters to account for large and persistent changes
+    - Especially useful if using linear model, like VAR, as shifts not accounted for by other parameters
+    - Working with $\Delta y_t$ (so a permanent shift only affects forecast one period) or explicitly adding shifts to model is an alternative
+- When adjustment is tied to specific qualitative information, use checks to make sure adjustment size reasonable
+    - Even if this never happened before, maybe you know possible scale or can compare to similar events
+
+## Cases For Judgmental Forecasting
+
+- When you have very little data, the choices that go into building a forecast matter a lot more
+- Most extreme case of this is **Cold Start Problem**: prediction for outcome that hasn't happened yet
+    - Want to know sales for new product not yet introduced, or new hire, or new customer, etc
+- Even more extreme, may have **one shot** prediction task: event hasn't happened, and will only happen once
+    - Who will win the 2020 election? What is chance Argentina will default on this bond issue? 
+- In these cases, can't use data on past performance to construct own forecast
+- Can still apply formal modeling frameworks and loss criteria, but not much advice on what to do
+    - Statistical learning approach guarantees performance only when available data is abundant
+    - Online learning approach acts along a full sequence, but guarantees usually on average over the sequence
+- Bayesian approach is unchanged in principle even when performed with 0 data
+    - But prior dominates forecast, so needs to be chosen carefully, reflecting any informal information
+    - Cannot rely on Bernstein von Mises phenomenon which makes prior mostly irrelevant with large data
+- In low data situations, even with a formal model, any forecast determined almost completely by judgment   
+
+## Judgmental Forecasting - Pitfalls
+
+- Behavioral psychology literature has studied how people make predictions, in laboratory and real life settings
+- Patterns and quirks have been noted in decision making which seem to correspond to simple rules - **heuristics**
+- Evaluated in simple contexts, performance shows deviations that appear suboptimal relative to benchmarks - **biases**
+- Kahneman and Tversky examined simple problems in which Bayesian updating and expected risk minimization provide clear recommendations for correct decisions
+    - In these situations, documented a range of patterns which cannot be justified by **any** prior or loss function
+    - Certain patterns appear systematically across individuals and situations, reflecting generalizable characteristics of human decisions
+- This literature suggests that self-reported beliefs do not follow laws of probability including Bayesian updating
+    - Also that decisions do not reflect principle of risk minimization
+- Many choices made seem to be **mistakes**: decisions reflecting cognitive limitations 
+    - Kahneman refers to process rapidly generating these initial, biased decisions as **System 1**
+    - Given time and mental effort for deep consideration and deliberation, **System 2** thinking, most individuals would change their decisions
+- Not just that people make mistakes, but that they make similar mistakes repeatedly
+    - Even when informed of biases, need active thinking to avoid them
+
+## Biases in Judgment
+
+- A non-comprehensive list of well-documented decision-making biases includes
+- **Overconfidence**: Decisionmakers tend to *underestimate* degree of uncertainty in outcomes
+- **Probability Weighting**: For low probability events, reported chance either set to 0 or much too large 
+- **Sterotypes**/**Base Rate Neglect**: Asked to express conditional probabilities of event $P(B|A)$, may report high value when $P(A|B)$ large, even if $P(B)$ known to be tiny
+    - Bayes rule requires $P(B|A)\propto P(A|B) P(B)$, but ignore $P(B)$ even when it is known to be rare
+    - Can even result in guesses implying $P(A \cup B)>P(A)$, impossible for any genuine probability
+- **Saliency bias**: Perceived probability affected by order or emphasis with which information is presented
+    - More recently or prominently displayed outcomes are considered more likely
+- **Reference Dependence**: In a decision between action A with payoffs $(A_1,A_2)$ in state 1 and 2, respectively, and $B$ with constant payoff, choice  of A vs B depends on whether decision is framed as chance of loss or of gain
+    - This difference cannot be expressed by a loss function
+- In general, decision making often neglects important components of the problem, and responds strongly to "superficial" aspects which correspond to mere relabelings of the same problem
+
+## Biases and Alternative Approaches
+
+- Evidence is strong that Bayesian approach does not come naturally to people
+- Maybe shouldn't be a surprise given that it isn't even easy for computers
+    - Although differences not well understood, cognition also limited by memory and speed  
+- One sytematic bias noted early on in literature is in response to decisions where probability not explicitly given
+    - Choose between bet with an explicit probability distribution, like a coin flip, and bet with no explicit distribution
+    - **Ambiguity Aversion**: Decision makers likely to favor choice with explicit probability
+- This is consistent with a min max risk criterion, since choice with no distribution *could* be worse than with
+    - Could justify this as reflecting principles, though explanations based on cognitive limitations also possible
+- Regardless of source of decision making biases, should be aware of limitations of intuitive judgment
+- Ability to address limitations of formal models and incorporate qualitative information should be traded off against chance of systematic biases in decisions 
+    - Need to consider possibility that own choices make guess systematically worse
+
+## Improving Judgmental Forecasts
+
+- Aside from switching to quantitative models, can process of judgment be formalized and improved?
+- Tetlock et al, sponsored by IARPA, ran forecasting tournaments for one-shot binary predictions of geopolitical events
+    - Encouraged research and active effort by participants and studied in detail behaviors associated with good performance
+- Found that with time and effort, many though not most participants could consistently achieve high performance 
+- Several features of their process seemed to play role in encouraging good performance
+- **Calibration to a reference class**: May have similar but not identical events to compare to
+    - Among similar events, what was distribution of outcomes? Start with this guess, then adjust
+    - Bias research suggests that predictions exhibit **anchoring** to salient numbers, so initial guess should be genuinely reasonable
+- **Fermi Problems**: Break into subcomponents, each contributing to outcome, for which one can gather info
+    - Ex: If asked "How many piano salesmen are there in Chicago", break up into: population of Chicago, percent of people who own a piano, how frequently might one be bought, how centralized the market might be, what might be employment in each establishment...
+- **Frequent, small updates**: Seek out additional info and change in response to information by sensible amount
+- **Eclecticism**: Strong ideology tends to reduce performance by forcing predictions to match perceived theory
+    - Even if broadly right, lots of other things affect outcomes, and may go in opposite direction of big trend for individual events
+    - Studies of nominal experts and pundits found little evidence that quantitative predictions outperformed those of informed laypeople
+    
+## Judgment in Groups and Teams
+
+- If you are not working alone, or can rely on external advice, can obtain the judgment of a group
+- This has benefits in ability to obtain extra information and ideas, which can be combined to improve forecasts
+    - Model combination using several experts can outperform any individual
+    - Tetlock et al find that if you have several good predictors, can help to **extremize** their forecasts
+        - If 5 people **independently** guess 60%, if each had different information to find this, better to guess number *higher than* 60%
+    - Even if many are biased, can adjust for this quantitatively: use each as one predictor in, e.g., affine model combination    
+- This also has costs in that additional sources of bias can arise in interpersonal settings
+- Those making predictions may have reason to misreport to others
+    - They may have concerns for reputation or standing, and so, e.g. prefer to be wrong at same time as others
+    - They may simply have different goals than you have and want to influence you, as in financial advisors who "talk their book"
+- If multiple forecasters communicate as a team, info is shared directly
+    - Adds information for each forecaster, but possibly also reinforces errors
+    - Working together intially, can be driven to consensus which concentrates on highly biased prediction: **groupthink**
+    - [Hyndman suggests](https://otexts.com/fpp2/delphimethod.html) iterating, starting by recording independent forecasts, then discussing, then getting new forecasts before aggregating
+
+## Steps for Effective Forecasts, Quantitative or Not
+
+- **Decide on a goal**: and express it quantitatively
+- **Gather data**: Past outcomes, analogous events, possible external predictors
+- **Build a (class of) models**: figure out what features might be relevant and how they might affect outcomes
+    - This can be mathematical, or informal, as in the Fermi approach
+- **Simplify**: based on goals and assumptions, choose procedure that should achieve those goals given available info
+    - This need not be complicated or incorporate every aspect of problem considered
+    - Instead it should be a process which is justifiable given what you know, which should be simple
+    - E.g., can just use naive predictor for a series that mostly stays in place, even if you know a lot more about it
+- **Validate**: Get honest feedback about performance and faults to update procedure
+    - Can use quantitative measures with external validation data
+    - And/or external feedback from informed but impartial third party
+- **Document process and performance**: maintain careful record of procedures and evaluate ex post performance relative to goals
+    - Documented process (including code if automated) needed for critical reevaluation to improve future performance
+  
+## Conclusions 
+
+- There is a substantial role for human decision-making even in automated forecast procedures
+    - Decide on goals, principles, models, priors using knowledge of situation
+- Cases with limited or hard-to-incorporate data call for direct application of judgment
+    - Can **adjust** quantitative forecasts or parameters to reflect information external to model
+    - In extreme case, may derive number directly using personal judgment
+- Human prediction and decision making shows pervasive biases, especially without careful systematic reevaluation
+    - Subjective judgmental forecasts should be subject to scrutiny, evaluaton, and modification to improve performance
+- By following disciplined process and performing honest evaluation, can help to ensure that knowledge and judgment contribute to achieving goals
+
+
+
+## References
+
+- Daniel Kahneman (2011) *Thinking, Fast and Slow* Farrar, Straus and Giroux: New York.
+    - Overview of psychology of decision making
+- Philip Tetlock and Dan Gardner (2015) *Superforcasting: The Art and Science of Prediction* Crown Publishers: New York.
+    - Findings from experiments in forecasting competitions
+
+    
+    
+    

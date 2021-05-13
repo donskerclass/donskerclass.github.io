@@ -12,7 +12,6 @@ output:
 - Structural Risk Minimization Principle
     - Cross Validation
     - Penalized Estimation    
-- Penalization vs testing/model evaluation
     
 <!-- - Review of Generalization Problem and ERM -->
 <!-- - Structural Risk Minimization Principle -->
@@ -39,7 +38,7 @@ output:
     - Data can tell you whether first term is small: minimized by ERM
     - Theory required to ensure second term also small
 - Can we do better by being more explicit about generalization error?
-    - Sometimes not much: "Fundamental Theorem of Machine Learning" (Mohri et al 2012)
+    - Sometimes not much: "Fundamental Theorem of Machine Learning" (Mohri et al 2018)
 - Under same conditions that ERM has strong performance bound, no method can do "substantially better"
     - In particular, if $\mathcal{F}$ has "low complexity", excess risk, which is already small, cannot be made much smaller
 - Does this mean we may as well always go with ERM?
@@ -115,11 +114,12 @@ $$\widehat{c}^{CV}=\underset{c\in\mathcal{C}}{\arg\min}\widehat{R}^{CV}(\widehat
     - Normalized form for square loss is $(T-h)\log(\frac{1}{T-h}\sum_{t=1}^{T-h}(y_{t+h}-f(.))^2)$
     - Cross entropy loss for binary prediction already normalized    
 - A **penalized log likelihood** adds a penalty $\mathcal{J}$ to normalized risk
-- Criterion value of class $c$ is the minimum value of the penalized log likelihood $\underset{f\in\mathcal{F}_c}{\min}(-2\log(p(\mathcal{Y}_T,f)+\mathcal{J}(\mathcal{F}_c))$
+- Criterion value of class $c$ is the minimum value of the penalized log likelihood $\underset{f\in\mathcal{F}_c}{\min}(-2\log(p(\mathcal{Y}_T,f))+\mathcal{J}(\mathcal{F}_c))$
 - Common penalties based on **number of parameters** p
-    - Akaike Information Criterion, **AIC**: $\mathcal{J}(\mathcal{F}_c))=2p$
-    - Bayesian Information Criterion, **BIC**: $\mathcal{J}(\mathcal{F}_c))=2p\log(T-h)$ (also called Schwarz Criterion, **SC**)
-- Choose a rule which minimizes the penalized log likelihood $\widehat{f}^{\mathcal{J}}=\underset{f\in\mathcal{F}_c,c\in\mathcal{C}}{\arg\min}(-2\log(p(\mathcal{Y}_T,f)+\mathcal{J}(\mathcal{F}_c))$
+    - Akaike Information Criterion, **AIC**: $\mathcal{J}(\mathcal{F}_c)=2p$
+        - Also **AICc**: $\mathcal{J}(\mathcal{F}_c)=2p+\frac{2p(p+1)}{T-p-1}$
+    - Bayesian Information Criterion, **BIC**: $\mathcal{J}(\mathcal{F}_c)=2p\log(T-h)$ (also called Schwarz Criterion, **SC**)
+- Choose a rule which minimizes the penalized log likelihood $\widehat{f}^{\mathcal{J}}=\underset{f\in\mathcal{F}_c,c\in\mathcal{C}}{\arg\min}(-2\log(p(\mathcal{Y}_T,f))+\mathcal{J}(\mathcal{F}_c))$
 
 ## Evaluation and implementation
 
@@ -127,21 +127,26 @@ $$\widehat{c}^{CV}=\underset{c\in\mathcal{C}}{\arg\min}\widehat{R}^{CV}(\widehat
 - BIC has slightly larger penalty: downgrades more complex models more
     - Under some very strong conditions, AIC "close to" true risk, at least when T is large
     - BIC instead designed to pick "true model" when T is large
-- For forecasting usually care about formaer rather than latter goal
-    - For this reason, Hyndman & Athanasopolous text recommends AIC
+- For forecasting usually care about former rather than latter goal
+    - For this reason, Hyndman & Athanasopolous text recommends AIC/AICc
 - But be cautious: result requires large samples, and in small samples AIC can be bad measure of risk
     - For this reason, Diebold text recommends BIC, as slightly larger penalty accounts for chance of overfitting from misestimation of risk
+    - AICc, closer to AIC but in between, is compromise
 - Both estimates usually provide worse measure of risk than cross validation
     - Sometimes faster: $\approx T$ times fewer optimizations
         - Exception is linear models, where known formula simplifies CV calculations
 - Automatically reported with `Arima`, `VAR`, `ets`, etc, or ex post by `CV`   
-    - AIC also part of `auto.arima`, to choose between orders of AR
+    - AICc also part of `auto.arima`, to choose between orders of AR
     - `VARselect` computes AIC/BIC for VAR over loss $\log\det(\sum_{t=1}^{T-h}(y_{t+h}-\widehat{y}_{t})(y_{t+h}-\widehat{y}_{t})^\prime)$  
 
 
 <!-- - Criterion value of class $c$ is the value of the **penalized empirical risk** $$\underset{f\in\mathcal{F}_c}{\min}(\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\mathcal{Y}_{t}))+\mathcal{J}(\mathcal{F}_c))$$ -->
 <!-- - Choose $c\in\mathcal{C}$ to minimize penalized empirical risk, producing **penalized empirical risk minimizer** -->
 <!-- $$\widehat{f}^{\mathcal{J}}=\underset{f\in\mathcal{F}_c,c\in\mathcal{C}}{\arg\min}(\frac{1}{T-h}\sum_{t=1}^{T-h}\ell(y_{t+h},f(\mathcal{Y}_{t}))+\mathcal{J}(\mathcal{F}_c))$$ -->
+
+## Exercise
+
+- Try out Information Criterion based evaluation approaches on Industrial Production data in a [Kaggle Notebook](https://www.kaggle.com/davidchilders/industrial-production-forecasting).
 
 ## Parameter size based penalties
 
@@ -193,6 +198,7 @@ $$\widehat{c}^{CV}=\underset{c\in\mathcal{C}}{\arg\min}\widehat{R}^{CV}(\widehat
 - In practice, use LASSO with many weakly related predictors, of which only some might matter
 - Use ridge with many, possibly related predictors, each of which contributes a little bit to the forecast
     - Often believable for lags, so common to use in (V)AR estimates
+- Elastic net is in between: some correlated predictors, some not    
     
 ## Function based penalties
 
@@ -204,7 +210,7 @@ $$\widehat{c}^{CV}=\underset{c\in\mathcal{C}}{\arg\min}\widehat{R}^{CV}(\widehat
 - But if class $\mathcal{F}$ isn't dependent on a (finite) set of parameters, eg $\mathcal{F}=\{\text{all functions of Z}\}$, can be very different
 - Most prominent example: mean squared second derivative penalty $\Vert f\Vert=\int f^{\prime\prime}(z)^2dz$ 
     - Penalizes "wiggliness" regardless of particular shape: minimal for straight line 
-- Amazing fact (cf Wahba 1990): penalized minimizer over class of all functions has known, computable form
+- Amazing fact (Wahba 1991): penalized minimizer over class of all functions has known, computable form
     - Called a "Smoothing Spline": piecewise cubic polynomial between data points
     - Equivalent to ridge penalty over (T-dimensional) class of piecewise cubic polynomials
 - Implemented as `smooth.spline` as well as in specialized functions in libraries `gam` or `mgcv`   
@@ -218,25 +224,37 @@ library(glmnet) #Lasso and Ridge
 library(vars) #Vector Autoregressions
 library(fredr) #Access FRED Data
 
-##Obtain and transform NIPA Data (cf Lecture 08)
+##Obtain and transform NIPA Data (cf Lecture 07)
 
 fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
 
 #US GDP components 
 GDP<-fredr(series_id = "GDP",
-           observation_start = as.Date("1947-01-01")) #Gross Domestic Product
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-03-07"),
+           vintage_dates = as.Date("2021-03-07")) #Gross Domestic Product
 
 #US GDP components from NIPA tables (cf http://www.bea.gov/national/pdf/nipaguid.pdf)
 PCEC<-fredr(series_id = "PCEC",
-            observation_start = as.Date("1947-01-01")) #Personal consumption expenditures
+            observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-03-07"),
+           vintage_dates = as.Date("2021-03-07")) #Personal consumption expenditures
 FPI<-fredr(series_id = "FPI",
-           observation_start = as.Date("1947-01-01")) #Fixed Private Investment
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-03-07"),
+           vintage_dates = as.Date("2021-03-07")) #Fixed Private Investment
 CBI<-fredr(series_id = "CBI",
-           observation_start = as.Date("1947-01-01")) #Change in Private Inventories
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-03-07"),
+           vintage_dates = as.Date("2021-03-07")) #Change in Private Inventories
 NETEXP<-fredr(series_id = "NETEXP",
-              observation_start = as.Date("1947-01-01")) #Net Exports of Goods and Services
+              observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-03-07"),
+           vintage_dates = as.Date("2021-03-07")) #Net Exports of Goods and Services
 GCE<-fredr(series_id = "GCE",
-           observation_start = as.Date("1947-01-01")) #Government Consumption Expenditures and Gross Investment
+           observation_start = as.Date("1947-01-01"),
+           observation_end=as.Date("2021-03-07"),
+           vintage_dates = as.Date("2021-03-07")) #Government Consumption Expenditures and Gross Investment
 
 #Format the series as quarterly time series objects, starting at the first date
 gdp<-ts(GDP$value,frequency = 4,start=c(1947,1),names="Gross Domestic Product") 
@@ -252,34 +270,36 @@ NIPAdata<-ts(data.frame(diff(log(gdp)),diff(log(pcec)),diff(log(invest)),diff(lo
 
 # Construct lags
 
-l1NIPA<-window(stats::lag(NIPAdata,-1),start=c(1949,2),end=c(2018,3))
-l2NIPA<-window(stats::lag(NIPAdata,-2),start=c(1949,2),end=c(2018,3))
-l3NIPA<-window(stats::lag(NIPAdata,-3),start=c(1949,2),end=c(2018,3))
-l4NIPA<-window(stats::lag(NIPAdata,-4),start=c(1949,2),end=c(2018,3))
-l5NIPA<-window(stats::lag(NIPAdata,-5),start=c(1949,2),end=c(2018,3))
-l6NIPA<-window(stats::lag(NIPAdata,-6),start=c(1949,2),end=c(2018,3))
-l7NIPA<-window(stats::lag(NIPAdata,-7),start=c(1949,2),end=c(2018,3))
-l8NIPA<-window(stats::lag(NIPAdata,-8),start=c(1949,2),end=c(2018,3))
+l1NIPA<-window(stats::lag(NIPAdata,-1),start=c(1949,2),end=c(2020,4))
+l2NIPA<-window(stats::lag(NIPAdata,-2),start=c(1949,2),end=c(2020,4))
+l3NIPA<-window(stats::lag(NIPAdata,-3),start=c(1949,2),end=c(2020,4))
+l4NIPA<-window(stats::lag(NIPAdata,-4),start=c(1949,2),end=c(2020,4))
+l5NIPA<-window(stats::lag(NIPAdata,-5),start=c(1949,2),end=c(2020,4))
+l6NIPA<-window(stats::lag(NIPAdata,-6),start=c(1949,2),end=c(2020,4))
+l7NIPA<-window(stats::lag(NIPAdata,-7),start=c(1949,2),end=c(2020,4))
+l8NIPA<-window(stats::lag(NIPAdata,-8),start=c(1949,2),end=c(2020,4))
 
 #convert to matrices
 xvarsdf<-data.frame(l1NIPA,l2NIPA,l3NIPA,l4NIPA,l5NIPA,l6NIPA,l7NIPA,l8NIPA)
 xvars<-as.matrix(xvarsdf)
-NIPAwindow<-matrix(window(NIPAdata,start=c(1949,2),end=c(2018,3)),length(l1NIPA[,1]),4)
+NIPAwindow<-matrix(window(NIPAdata,start=c(1949,2),end=c(2020,4)),length(l1NIPA[,1]),4)
 
 #Spline models, yeah?
 library(gam) #loads smoothing spline package
+library(mgcv) #A slightly different smoothing spline package
 lagDlogGDP<-xvars[,1]
 DlogGDP<-NIPAwindow[,1]
 #Smoothing spline Regression of GDP on lagged GDP
 # Default behavior fits penalty parameter by generalized Cross Validation
 ```
 
-```{r,class.source='fold-show'}
+```{r,class.source = 'fold-show'}
 # Predict GDP growth using smoothing spline in lagged GDP growth
 gdp.spl<-smooth.spline(lagDlogGDP,DlogGDP)
 splinepredictions<-predict(gdp.spl)
 ```
-- $\lambda=$ `r gdp.spl$lambda` chosen by (non-time series) cross validation gives almost exactly linear fit
+- $\lambda=$ `r gdp.spl$lambda` chosen by (non-time series) cross validation gives nonlinear fit
+
 ```{r,message=FALSE,warning=FALSE}
 #Build Plot
 gdpdata<-data.frame(xvars[,1],NIPAwindow[,1],splinepredictions$x,splinepredictions$y)
@@ -287,21 +307,22 @@ colnames(gdpdata)<-c("LDlGDP","DlGDP","xspline","yspline")
 
 ggplot(gdpdata,aes(x=LDlGDP,y=DlGDP))+geom_point()+
   geom_line(aes(x=xspline,y=yspline),color="red",size=1)+
-  ggtitle("Smoothing Spline Fit of This vs Last Quarter's GDP Growth",
-          subtitle="Almost exactly linear due to large optimal penalty for nonlinearity")+
+  geom_smooth(method=lm,se=FALSE,color="blue")+
+  ggtitle("Smoothing Spline and Linear Fits of This vs Last Quarter's GDP Growth",
+          subtitle="Spline bends to fit far off points")+
   xlab("Change in Log GDP, t-1")+ylab("Change in Log GDP, t")
 
 # An alternate approach which uses "gam" command to fit spline
 # Advantage is that it's built in to ggplot
 # Disadvantage is that it uses only default options, so not customizable
-# In this case, results are exactly the same
+# Default values here selct much higher smoothing, and give close to linear fit
 
-# ggplot(gdpdata,aes(x=LDlGDP,y=DlGDP))+geom_point()+
-#   ggtitle("Spline and OLS Fit of This vs  Last Quarter's GDP Growth",
-#           subtitle="There are two lines which exactly overlap")+
-#   xlab("Change in Log GDP, t-1")+ylab("Change in Log GDP, t")+
-#   geom_smooth(method=gam,se=FALSE,color="blue")+
-#   geom_smooth(method=lm,se=FALSE,color="red")
+ # ggplot(gdpdata,aes(x=LDlGDP,y=DlGDP))+geom_point()+
+ #   ggtitle("Spline and OLS Fit of This vs  Last Quarter's GDP Growth",
+ #           subtitle="There are two lines which exactly overlap")+
+ #   xlab("Change in Log GDP, t-1")+ylab("Change in Log GDP, t")+
+ #   geom_smooth(method=gam,se=FALSE,color="blue")+
+ #   geom_smooth(method=lm,se=FALSE,color="red")
 ```
 
 ## Exotic penalties
@@ -378,10 +399,11 @@ CVlambda<-lassovarCV$lambda.min
 #Baroque construction to take last period and format it for predict command
 #Somehow need 2 rows in prediction value or it throws a fit 
 #Presumably because matrix coerced to vector and then it thinks it can't multiply anymore
-newX<-t(as.matrix(data.frame(as.vector(t(NIPAwindow[270:277,])), as.vector(t(NIPAwindow[271:278,])))))
+maxT<-length(NIPAwindow[,1]) #index of last period
+newX<-t(as.matrix(data.frame(as.vector(t(NIPAwindow[(maxT-8):(maxT-1),])), as.vector(t(NIPAwindow[(maxT-7):maxT,])))))
 
-#Predict 2018Q3 series
-cvlassopredictions<-window(ts(predict(lassovarCV,newx = newX)[,,1],start=c(2018,3),frequency=4),start=c(2018,4))
+#Predict 2021Q1 series
+cvlassopredictions<-window(ts(predict(lassovarCV,newx = newX)[,,1],start=c(2020,4),frequency=4),start=c(2021,1))
 
 #Fit L2 Penalized VAR in all variables up to 8 lags
 ridgevar<-glmnet(xvars,NIPAwindow,alpha=0,family="mgaussian")
@@ -404,8 +426,8 @@ ridgevarCV<-cv.glmnet(xvars,NIPAwindow,alpha=0,family="mgaussian")
 #Lambda giving minimum 10-fold Cross Validation Error
 CVlambda2<-ridgevarCV$lambda.min
 
-#Predict 2018Q3 series
-cvridgepredictions<-window(ts(predict(ridgevarCV,newx = newX)[,,1],start=c(2018,3),frequency=4),start=c(2018,4))
+#Predict 2021Q1 series
+cvridgepredictions<-window(ts(predict(ridgevarCV,newx = newX)[,,1],start=c(2020,4),frequency=4),start=c(2021,1))
 
 # #Plot Data Series
 # autoplot(window(NIPAdata,start=c(2012,4)))+
@@ -422,11 +444,11 @@ cvridgepredictions<-window(ts(predict(ridgevarCV,newx = newX)[,,1],start=c(2018,
 - Estimate by AIC, BIC, LASSO, and Ridge
 - AIC selects `r AICVAR$p` lags, BIC selects `r BICVAR$p` lag, reflecting smaller penalty for AIC
 - 10-fold cross validation selects $\lambda=$ `r CVlambda` for LASSO, $\lambda=$ `r CVlambda2` for ridge
-- LASSO keeps 32 nonzero parameters, while ridge chooses non-zero value for all 132 
-    - Compare 8 for BIC, 24 for AIC, but different choices from LASSO
+- LASSO keeps just 4 nonzero parameters, while ridge chooses non-zero value for all 132 
+    - Compare `r BICVAR$p*16+4` for BIC, `r AICVAR$p*16+4` for AIC, both ordered
 
 ```{r}
-#Collect 2018Q4 Forecasts into a data frame
+#Collect 2021Q1 Forecasts into a data frame
 var1table<-data.frame(
   t(cvridgepredictions),
   t(cvlassopredictions),
@@ -437,7 +459,7 @@ rownames(var1table)<-c("GDP","Consumption","Investment","Government")
 #Make Table of Estimated Coefficients
 kable(var1table,
   col.names=c("Ridge","LASSO","AIC","BIC"),
-  caption="2018Q4 Forecasts from Different Methods") %>%
+  caption="2021Q1 Forecasts from Different Methods") %>%
   kable_styling(bootstrap_options = "striped", font_size = 16)
 ```
 
@@ -526,33 +548,33 @@ mutate_all(function(x) {
   kable_styling(bootstrap_options = "striped", font_size=10)
 ```
 
-## Evaluating Autoregressive Forecasts
+<!-- ## Evaluating Autoregressive Forecasts -->
 
-- Forecast residuals from *optimal* forecast $\widehat{e}_{t+1}=y_{t+1}-\widehat{y}_{t+1}$ are white noise in autoregressive model
-- This is in fact true when forecast rule is Bayes predictor in square loss for any stationary distribution
-    - Holds for VARs, regression, etc
-- So if you are using a rule which is approximately the Bayes rule, residuals should be close to white noise
-    - ACF of $\widehat{e}_{t+1}$ should be close to 0 everywhere
-    - Use `checkresiduals` to inspect and compare various measures of distance
-- Usually little reason to believe chosen family contains Bayes forecast rule
-    - May not be exactly linear, or may depend on information further back than number of lags used 
-    - Or even if it did that approximation is close enough that all properties of Bayes forecast hold for approximate rule
-- These two issues are in conflict
-    - Can always increase complexity of hypothesis class to try to get closer to Bayes forecaster
-    - But doing so can worsen overfitting, making rule actually chosen further away
-- Residual checks measure closeness of fit, but are unrelated to degree of overfitting
-    - Generally **not** a reliable tool for finding a good forecast, as opposed to checking ex post
-    - Prefer measures which account for all types of error
-    
-## Application to GDP Series in BIC VAR Prediction
+<!-- - Forecast residuals from *optimal* forecast $\widehat{e}_{t+1}=y_{t+1}-\widehat{y}_{t+1}$ are white noise in autoregressive model -->
+<!-- - This is in fact true when forecast rule is Bayes predictor in square loss for any stationary distribution -->
+<!--     - Holds for VARs, regression, etc -->
+<!-- - So if you are using a rule which is approximately the Bayes rule, residuals should be close to white noise -->
+<!--     - ACF of $\widehat{e}_{t+1}$ should be close to 0 everywhere -->
+<!--     - Use `checkresiduals` to inspect and compare various measures of distance -->
+<!-- - Usually little reason to believe chosen family contains Bayes forecast rule -->
+<!--     - May not be exactly linear, or may depend on information further back than number of lags used  -->
+<!--     - Or even if it did that approximation is close enough that all properties of Bayes forecast hold for approximate rule -->
+<!-- - These two issues are in conflict -->
+<!--     - Can always increase complexity of hypothesis class to try to get closer to Bayes forecaster -->
+<!--     - But doing so can worsen overfitting, making rule actually chosen further away -->
+<!-- - Residual checks measure closeness of fit, but are unrelated to degree of overfitting -->
+<!--     - Generally **not** a reliable tool for finding a good forecast, as opposed to checking ex post -->
+<!--     - Prefer measures which account for all types of error -->
 
-```{r,class.source='fold-show'}
-checkresiduals(BICVAR$varresult$diff.log.gdp..) #GDP Growth forecast residual diagnostic
-```
-- Patterns in residual plot and ACF, and formal test of white noise, suggest VAR(1) is not super close to white noise
-    - Suggests patterns in data may differ somewhat from VAR(1) model: in-sample fit could be improved
-    - To decide whether this or another forecast should be used, should compare loss measures 
-    
+<!-- ## Application to GDP Series in BIC VAR Prediction -->
+
+<!-- ```{r} -->
+<!-- checkresiduals(BICVAR$varresult$diff.log.gdp..) #GDP Growth forecast residual diagnostic -->
+<!-- ``` -->
+<!-- - Patterns in residual plot and ACF, and formal test of white noise, suggest VAR(1) is not super close to white noise -->
+<!--     - Suggests patterns in data may differ somewhat from VAR(1) model: in-sample fit could be improved -->
+<!--     - To decide whether this or another forecast should be used, should compare loss measures  -->
+
     
 ## Conclusions
 
@@ -569,7 +591,7 @@ checkresiduals(BICVAR$varresult$diff.log.gdp..) #GDP Growth forecast residual di
 
 ## References
 
-- Mehryar Mohri, Afshin Rostamizadeh, and Ameet Talwalkar. "Foundations of Machine Learning" MIT Press 2012
+- Mehryar Mohri, Afshin Rostamizadeh, and Ameet Talwalkar. "Foundations of Machine Learning" 2e MIT Press 2018
 - Grace Wahba "Spline Models for Observational Data" (1991)
     - Overview of smoothing splines and penalization, 
     - Explains how and why one can work with all differentiable functions

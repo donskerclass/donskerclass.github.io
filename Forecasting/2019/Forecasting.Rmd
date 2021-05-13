@@ -1,0 +1,42 @@
+---
+title: "Forecasting for Economics and Business - 2019 edition"
+author: "David Childers"
+output: html_document
+---
+
+## Course Description
+
+Governments forecast economic indicators (e.g., GDP, job growth, etc.); businesses forecast sales; portfolio managers forecast asset return; the list goes on. Accurate forecasts are critical to robust organizational decision-making. This course (CMU course number 73-423) will introduce students to modern methods for forecasting in economic and business applications. Topics covered include Bayesian, statistical, and online learning approaches to forecast construction and assessment, univariate and multivariate time series models and algorithms, and principled combination of multiple methods and data sources along with subject matter expertise to improve performance. Methods will be motivated by applications in macroeconomics, technology, marketing, and finance, with cases drawn from forecasting processes in a variety of business and government organizations. Students will implement forecasting methods in R, including in a real data forecasting competition. The primary external text for the course is [Forecasting: Principles and Practice](https://otexts.com/fpp2/), by Rob Hyndman and George Athanasopoulos, with substantial content aggregated from other sources.
+
+## Course Materials
+
+The following files, derived from the lecture slides for the course and containing both text and R code, are provided as-is, as a resource for students and researchers interested in the topics. They are currently in draft form and are likely to contain errors both big and small. If you have questions, comments, suggestions, or criticisms of the material, please [contact me](mailto:dchilder@andrew.cmu.edu). Additional course materials, including syllabi, problem sets, practice problems, and project assignments, may be available upon request.
+
+
+1. [Introduction](Intro.html)
+2. [Loading and Visualizing Time Series Data in R](https://www.kaggle.com/davidchilders/loading-and-visualizing-time-series-data-in-r) (Kaggle link)
+3. [Methods and Motivation](Methods.html)
+4. [Evaluating Forecasting Methods](Evaluation.html)
+5. [The Statistical Approach](StatisticalApproach.html)
+6. [Empirical Risk Minimization](ERM.html)
+7. [Applying Empirical Risk Minimization](ApplyingERM.html)
+8. [Multivariate Forecasts](MultivariateForecasts.html)
+9. [Regularization](Regularization.html)
+10. [Uncertainty Quantification](Uncertainty.html)
+11. [Bayes](Bayes.html)
+12. [Applying Bayesian Methods](AppliedBayes.html)
+13. [Additive Component Models](AdditiveModels.html)
+14. [Autoregression Models](Autoregression.html)
+15. [ARIMA](ARIMA.html)
+16. [State Space Models](StateSpace.html)
+17. [Online Learning and Regret Minimization](OnlineLearning.html)
+18. [Online Learning - Algorithms](OnlineAlgorithms.html)
+19. [Model Combination](ModelCombination.html)
+20. [Factor Models](FactorModels.html)
+21. [Machine Learning](MachineLearning.html)
+22. [Neural Networks](NeuralNetworks.html)
+    - [Mortgage Loan Approval Prediction in R Keras](https://www.kaggle.com/davidchilders/mortgage-loan-approval-prediction-in-r-keras/) (Kaggle link)
+    - [Prediction of a Macro Time Series](https://www.kaggle.com/davidchilders/time-series-prediction-in-r-keras/) (Kaggle link)
+23. [Judgment](Judgment.html)
+ 
+

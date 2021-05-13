@@ -1,0 +1,547 @@
+---
+title: "Uncertainty Quantification"
+author: "73-423 Forecasting for Economics and Business"
+output:
+  html_document:
+    code_folding: hide
+---
+
+
+## Outline
+
+- Uncertainty Quantification
+    - Goals and Examples
+- Direct approach: interval and distribution forecasts
+    - Quantile Regression
+    - Distribution Regression
+    - Extremal forecasts and catastrophic risk
+- Uncertainty *of* forecast rules
+    - Measuring Residual and Estimation Error
+    
+    
+## Uncertainty
+
+- Until now, goal of forecasts has been to provide best guess of what *will* happen
+    - Want to know about $y_{T+h}$: Future sales, profits, economic outcomes etc
+    - Forecast is a single value $\widehat{y}_{T+h}$ which should be "close to" unknown $y_{T+h}$
+- For many decisions, important to have a sense of what *might* happen
+    - Still care about $y_{T+h}$, but recognize that it might take different values in different scenarios
+    - Want to produce not a single guess, but a range, describing possible outcomes
+- The range of possible outcomes describes out **uncertainty** in our predictions
+- In statistical approach, uncertainty in possible outcomes $\mathcal{Y}_{T+h}:=\{y_t\}_{t=1}^{T+h}$ is described by a *probability distribution* $p(\mathcal{Y}_{T+h})$
+    - Assigns weights to different possible histories, reflecting which are more or less likely to be seen
+    - Uncertainty regarding $y_{T+h}$ described by (features of) distribution of $y_{T+h}$ given the data we have seen
+- To aid in our decision, may want forecasts which tell us more about the distribution of $y_{T+h}$ than a single best guess
+    - Task of producing predictions regarding the range or distribution of outcomes is called **uncertainty quantification** 
+- Key problem is that $p$ is usually *unknown*
+    - May want to produce guesses that account for our lack of knowledge in some way
+
+
+## Example: risk-sensitive decisions
+
+- Need to decide on whether or how much to invest in an asset, initiate a policy, etc
+- Outcome of decision may depend (in part) on future situation
+    - What sales, business conditions, etc will look like determines profitability
+- Distribution of possible values outcome may affect distribution of profits
+- May not be able to describe different future scenarios by a single number, like the mean
+- May be predicted to have high sales on average next year, but distribution aound it matters 
+    - If distribution narrow around mean, can proceed as if value essentially known
+    - If distribution wide around mean, need to consider chance of very high or very low sales
+    - Could also be skewed: small chance of huge upside, but in most cases, sales are mediocre
+        - If so, big capacity investment is risky, as in most situations it won't get used
+- If distribution can vary and it affects decision, may want to forecast full distribution 
+     - Or at least relevant features
+  
+## Distribution Prediction
+
+- Most general target for uncertainty prediction is the full conditional distribution $p(y_{T+h}|\mathcal{Y}_T)$
+- Many equivalent ways to represent a distribution can be used
+- Cumulative Distribution Function **CDF** $F(z)=p(y_{T+h}\leq z|\mathcal{Y}_T)$ for any $z$
+    - Tells us chance that outcome exceeds a fixed boundary
+    - Useful if we care about risk of going below (or above) some threshold
+        - Investment will be unprofitable if revenues do not exceed $z_1$ dollars, or Our company will go bankrupt if sales are less than $z_2$ dollars
+- Quantile Function  $Q({\tau})=\inf\{z:\ p(y_{T+h}\leq z|\mathcal{Y}_T)\geq\tau\}$ 
+    - It is inverse of CDF: $Q(F(z))=z$, $F(Q(\tau))=\tau$
+    - Tells us value such that chance of outcome being less than this value is (no less than) $\tau$
+- Often, for simplicity, prefer to report a summary based on only some of the information here
+- Most common by far is a (forecast) **confidence interval** at confidence level $\alpha\in[0,1]$
+    - Pair of numbers $[a,b]$ such that $P(y_{T+h}\in[a,b]|\mathcal{Y}_T)\geq 1-\alpha$
+    - Loosely interpretable as "range of values which one would not be too surprised to see"
+    - Bands plotted around forecast by default in `forecast` function are approximate confidence intervals
+- Ideal symmetric confidence interval is $[Q(\frac{\alpha}{2}),Q(1-\frac{\alpha}{2})]$    
+
+<!-- - Density $f(c)=\frac{d}{dz}F(c)$, if derivative exists -->
+<!--     - Tells us relative weight to be assigned to each outcome -->
+
+## Direct Approach to Distribution Prediction
+
+- Forecasting a distribution not much different than forecasting any other (possibly multivariate) quantity
+- Difference in evaluation: observe $y_{T+h}$, but not its distribution, so can't evaluate by applying loss function to values
+- With many probability forecasts, at best can check approximate **calibration**
+    - If an event is forecast to happen with probability $p$, should see that event in fraction $p$ of realizations 
+- Nevertheless, features of the distribution, such as quantiles $Q(\tau)$ or values of the CDF $F(z)$ may be **elicitable**
+- A feature $j(p)$ of a distribution $p()$ is *elicitable* if there is some loss function $\ell(,)$ such that the risk $E_p[\ell(y,f)]$ for that loss function with respect to distribution $p$ of a prediction rule $f$ is (uniquely) minimized by $f=j(p)$
+- Examples of elicitable features and the corresponding loss functions we have seen include 
+    - The mean $E_p[y]$ (by square loss), The median $Q_p(0.5)$ (by absolute loss) The probability of a binary outcome $p(y=1)$ (by cross-entropy or quadratic loss)
+- If a feature is elicitable, then a procedure which produces a risk-minimizing prediction rule with respect to that loss function will (approximately) find that feature
+- We have examples of such procedures: Empirical (or Structural) Risk Minimization!
+- Since we care about total risk, important to use class $\mathcal{F}$ of rules flexible enough to provide good approximation to $j(p)$ while balancing excess risk due to overfitting
+
+<!-- - So, to "forecast" an elicitable feature of a distribution, use a procedure which produces risk as possible  -->
+  
+## Confidence Intervals by Quantile Regression
+
+- Any quantile $Q(\tau)$ is elicitable using the **check function** loss $\rho_{\tau}(y,\widehat{y})=(y-\widehat{y})(\tau-1\{y-\widehat{y}<0\})$
+- $\rho_{0.5}(y,\widehat{y})=0.5|y-\widehat{y}|$ recovers absolute loss: other values have asymmetric slopes
+- Risk of forecast rule $f(\mathcal{Y}_T)$ is $E_p[\rho_{\tau}(y_{T+h},f(\mathcal{Y}_T))]=(\tau-1)\int_{-\infty}^{f(\mathcal{Y}_T)}(y-f(\mathcal{Y}_T))dp(y|\mathcal{Y}_T)+\tau\int_{f(\mathcal{Y}_T)}^{\infty}(y-f(\mathcal{Y}_T))dp(y|\mathcal{Y}_T)$
+    - FOC from minimization wrt $f(\mathcal{Y}_T)$ give $F(f(\mathcal{Y}_T)|\mathcal{Y}_T)=\tau$
+    - So long as distribution is continuous at these points, minimizer is $\tau$ quantile of conditional distribution
+- Empirical Risk Minimization over check loss is called **Quantile Regression**
+    - Implemented as `rq()` in library `quantreg`, eg `rq(y~z1+z2,tau=0.2)`  
+- $1-\alpha$ confidence interval takes form $[Q(\frac{\alpha}{2}),Q(1-\frac{\alpha}{2})]$, following procedure produces approximate confidence intervals
+    - Choose a class of predictors $\mathcal{F}$ which you hope contains a good approximation to conditional quantile functions
+    - Run quantile regression over this class at quantiles $\frac{\alpha}{2}$ and $1-\frac{\alpha}{2}$
+    - Report the predictions $[\widehat{f}_{\frac{\alpha}{2}},\widehat{f}_{1-\frac{\alpha}{2}}]$ as your interval
+- Under the usual ERM conditions (stationarity, weak dependence, low complexity), this will produce in large samples rules providing best approximation in class $\mathcal{F}$ to conditional quantiles    
+- With correct specification, interval will contain $y_{T+h}$ in fraction approximately $1-\alpha$ of realizations
+
+
+## CDF Forecasting by Distibution Regression
+
+- The conditional CDF at value z is equal to $p(y_{T+h}\leq z|\mathcal{Y}_T)=E_p[1\{y_{T+h}\leq z\}|\mathcal{Y}_T]$ and so is just the probability of a binary event
+- It can therefore be elicited by any loss function that elicits probabilities
+    - Eg cross-entropy loss where outcome is an indiator of event
+    - Can use as predictor logistic transform $\frac{\exp(f)}{1+\exp(f)}$ of functions $f\in\mathcal{F}$
+- CDF forecasting equivalent to predicting chance of different levels of outcomes     
+- Procedure:
+    - Take historical data $\{y_t\}_{t=1}^{T}$ and construct binary indicators $\{{y}_t(z)=1\{y_t\leq z\}\}_{t=1}^{T}$
+    - Choose hypothesis class of predictors $\mathcal{F}$ which you hope contains a good approximation to conditional CDF
+    - Run logistic regression over $\mathcal{F}$ with outcome variables $\{{y}_t(z)\}_{t=1}^{T}$
+    - Report $\widehat{F}(z)=\frac{\exp(\widehat{f}_z)}{1+\exp(\widehat{f}_z)}$ as predicted conditional CDF
+- Repeat for any set of values $z$ to produce estimates of the CDF at all points of interest
+- Other function classes can be used to better match shape, or different loss functions (eg quadratic)
+
+
+## Cautions for Direct Forecasts
+
+- Applying risk minimization procedures to learn about elicited quantities has some drawbacks
+    - Loss functions may not be unique: while optimal prediction is the same, may result in different kinds of errors being tolerated
+- When estimating multiple features of a distribution, like an interval, lessons from multivariate forecasts apply
+    - By applying ERM at each value, we are effectively optimizing an additive loss function over separable class
+- Our forecasts at different values may not always have desirable shared properties
+    - Quantile functions and CDFs always monotone, but our estimates might not be
+    - Can have, in some places, prediction intervals where lower bound is greater than upper bound
+- Prediction intervals $[\widehat{a},\widehat{b}]$ created in this way may not have **coverage**: $\forall p\in\mathcal{P}$ $p(y_{T+h}\in[\widehat{a},\widehat{b}]|\mathcal{Y}_T)\geq 1-\alpha$ 
+    - May care more about guarantee that outcome will rarely be outside interval than approximating locations of quantiles
+- Problems do not disappear even as $T\to\infty$ if prediction class $\mathcal{F}$ does not contain the Bayes Risk minimizing function
+    - One gets the "best approximation" to the quantile function or CDF in class, but closeness may not be in useful sense
+    - Can add flexibility, by using nonlinearities, etc, but added complexity may worsen finite T quality 
+- Might prefer loss functions or prediction classes that impose properties (eg, always being a true CDF)
+
+## Extremal Forecasts and Catastrophic Risk
+
+- For some predictions, we may care about the **tails** of the outcome
+    - Values of $y_{T+h}$ that are extremely small or large
+- Decisions can be strongly affected by outcomes that have low probability, but large values
+    - If investment return are positive on average, but occasionally so negative that you lose all your savings, may be a bad investment
+- Difficulty in forecasting extreme events is that they are by definition, rare
+    - The 1 percent quantile of distribution is seen only 1% of the time, and lower values even less
+- Effectively have a small sample when estimating extreme quantiles
+    - ERM approximation may be extremely bad for these points
+- In any finite sample, there must be a finite minimum or maximum outcome observed
+    - Historical distribution has **no** events outside of this range 
+    - This does not mean nothing outside this range ever will happen
+- Quantile or distribution regression predictions mostly reliable within range of relatively often observed events
+
+## Handling Extremal Forecasts
+
+- For quantiles of size $\approx\frac{1}{T}$, may be better to rely on model-based extrapolations
+    - If distribution stationary and weak dependent, can upper bound chance using sample size, though may be much lower
+    - If stationarity fails, all bets are off
+- Best approach may be to try to gather more data
+    - In US, financial crises not seen at all 1945-2007. But over all countries, over past 200 years, have hundreds of observed crises
+    - If working for a company that still exists, **your** company (probably) has never gone out of business, but other companies do so all the time
+- May provide a lower bound if you **know** outcome can't fall below a minimum
+    - Bankruptcy law protects investors from losses beyond a certain point
+    - A limited liability corporation can at worst go out of business: investors can't lose more than they put in
+
+## Example: S&P500 Distribution Forecasts
+
+- Efficient market hypothesis says stock returns should on average be unpredictable $E[\Delta P_{T+h}|\mathcal{Y}_T]=E[\Delta P_{T+h}]$
+    - Otherwise could make excess returns by forecasting gains
+- But distribution may vary systematically: risk around the mean may have patterns, as visible in graph
+
+
+```{r,message=FALSE,warning=FALSE}
+library(fpp2) #Forecasting
+library(quantreg) #Quantile Regression
+library(fredr) #Access FRED Data
+library(zoo) #Irregular time series tools
+library(knitr) #Tables
+library(kableExtra) #Fancy Tables
+
+fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
+
+#Warning: Available FRED S&P Data is on rolling 10 Year Window
+# if you rerun this code in the future using FRED, it WILL fail, because earliest data point moves forward
+# This has to be some kind of business agreement thing
+# Use saved data frame instead of online source to replicate results 
+
+## Obtain and transform SP500 Data
+#Original fredr approach
+#SPreturns<-fredr(series_id = "SP500",units="pch",observation_end=as.Date("2019-2-20")) #Percent Daily Change in S&P500 Index
+
+#Saved File Obtained From FRED on 3/30/2019
+#Load from File: Change to your folder
+load("~/Dropbox/Forecasting/Website Version/Forecasting/Data/SPreturns.RData")
+
+#Format as "zoo" object: irregularly spaced time series
+#Spacing not regular because SP500 traded only on non-holiday weekdays
+spz<-zoo(x=SPreturns$value,order.by=SPreturns$date)  
+
+autoplot(spz)+
+  ggtitle("S&P 500 Daily Percent Returns Since 2009")+
+  xlab("Date")+ylab("Percent Return")
+```
+
+## Quantile and Distribution Regression Results
+
+- Use linear and quadratic functions of returns for past 2 trading weeks (10 days) to predict return distribution
+
+```{r,warning=FALSE,message=FALSE}
+spr<-window(spz,start="2009-4-13",end="2019-2-20") #Restrict to shared dates
+#Construct lagged series and nonlinear transforms
+spl1<-window(stats::lag(spz,-1),start="2009-4-13",end="2019-2-20")
+spl2<-window(stats::lag(spz,-2),start="2009-4-13",end="2019-2-20")
+spl3<-window(stats::lag(spz,-3),start="2009-4-13",end="2019-2-20")
+spl4<-window(stats::lag(spz,-4),start="2009-4-13",end="2019-2-20")
+spl5<-window(stats::lag(spz,-5),start="2009-4-13",end="2019-2-20")
+spl6<-window(stats::lag(spz,-6),start="2009-4-13",end="2019-2-20")
+spl7<-window(stats::lag(spz,-7),start="2009-4-13",end="2019-2-20")
+spl8<-window(stats::lag(spz,-8),start="2009-4-13",end="2019-2-20")
+spl9<-window(stats::lag(spz,-9),start="2009-4-13",end="2019-2-20")
+spl10<-window(stats::lag(spz,-10),start="2009-4-13",end="2019-2-20")
+qspl1<-window(stats::lag(spz,-1)^2,start="2009-4-13",end="2019-2-20")
+qspl2<-window(stats::lag(spz,-2)^2,start="2009-4-13",end="2019-2-20")
+qspl3<-window(stats::lag(spz,-3)^2,start="2009-4-13",end="2019-2-20")
+qspl4<-window(stats::lag(spz,-4)^2,start="2009-4-13",end="2019-2-20")
+qspl5<-window(stats::lag(spz,-5)^2,start="2009-4-13",end="2019-2-20")
+qspl6<-window(stats::lag(spz,-6)^2,start="2009-4-13",end="2019-2-20")
+qspl7<-window(stats::lag(spz,-7)^2,start="2009-4-13",end="2019-2-20")
+qspl8<-window(stats::lag(spz,-8)^2,start="2009-4-13",end="2019-2-20")
+qspl9<-window(stats::lag(spz,-9)^2,start="2009-4-13",end="2019-2-20")
+qspl10<-window(stats::lag(spz,-10)^2,start="2009-4-13",end="2019-2-20")
+
+#Concatenate into data frame
+SPInfo<-data.frame(spr,spl1,spl2,spl3,spl4,spl5,spl6,spl7,spl8,spl9,spl10,
+                   qspl1,qspl2,qspl3,qspl4,qspl5,qspl6,qspl7,qspl8,qspl9,qspl10)
+
+#Create regression formula containing all terms
+lnam <- paste0("spl", 1:10)
+qlnam <- paste0("qspl", 1:10)
+fmla <- as.formula(paste(paste("spr ~ ", paste(lnam, collapse= "+")),paste("+",paste(qlnam, collapse= "+"))))
+
+spquantile<-rq(fmla,tau=c(0.01,0.05,0.1,0.25,0.5,0.75,0.9,0.95,0.99),data=SPInfo)
+
+today<-length(spr) #Last observation
+
+todayslags<-data.frame(spr[today],spl1[today],spl2[today],spl3[today],spl4[today],spl5[today],spl6[today],spl7[today],spl8[today],spl9[today],
+                       spr[today]^2,qspl1[today],qspl2[today],qspl3[today],qspl4[today],qspl5[today],qspl6[today],qspl7[today],qspl8[today],qspl9[today])
+#Rename everything
+names(todayslags)<-c("spl1","spl2","spl3","spl4","spl5","spl6","spl7","spl8","spl9","spl10",
+                     "qspl1","qspl2","qspl3","qspl4","qspl5","qspl6","qspl7","qspl8","qspl9","qspl10")
+
+#Replace NAs from President's day Holiday with 0s
+todayslags$spl2<-0
+todayslags$spl3<-0
+todayslags$qspl2<-0
+todayslags$qspl3<-0
+
+qpredictions<-predict(spquantile,newdata=todayslags)
+rownames(qpredictions)<-c("2019-2-21") #Forecasts made using data on 20th, for date of 21st
+
+## Following is a failed attempt to convert output to a forecast object
+## Issue seems to be with use of irregular time series
+# spmedian<-zoo(qpredictions[4],"2019-2-21")
+# spupper<-qpredictions[5:7]
+# names(spupper)=c("50%","80%","90%")
+# splower<-qpredictions[1:3]
+# names(splower)=c("90%","80%","50%")
+# output<-list(mean=spmedian,x=spr,upper=spupper,
+#              lower=splower,level=c(50,80,90),method="Quantile Regression")
+# qfcst<-structure(output,class='forecast')
+
+# #Display Forecasts as a table
+# kable(qpredictions,
+#   caption="Quantile Regression Return Forecasts") %>%
+#   kable_styling(bootstrap_options = "striped")
+
+
+
+## Distribution Regression
+
+library(dplyr) #Manipulate data frame
+
+#Use values -2,-1,-0.5,-0.2,0,0.2,0.5,1,2
+#Adjust formula
+fmla <- as.formula(paste(paste("spr1 ~ ", paste(lnam, collapse= "+")),paste("+",paste(qlnam, collapse= "+"))))
+
+SPInfo<-mutate(SPInfo,spr1=ifelse(spr<=-2,1,0))
+spdr1<-glm(fmla,family=binomial(link="logit"), data=SPInfo)
+#Predictions should be o type "response" to get probabilities
+pred1<-predict(spdr1,newdata=todayslags,type="response")
+
+SPInfo<-mutate(SPInfo,spr1=ifelse(spr<=-1,1,0))
+spdr2<-glm(fmla,family=binomial(link="logit"), data=SPInfo)
+pred2<-predict(spdr2,newdata=todayslags,type="response")
+
+SPInfo<-mutate(SPInfo,spr1=ifelse(spr<=-0.5,1,0))
+spdr3<-glm(fmla,family=binomial(link="logit"), data=SPInfo)
+pred3<-predict(spdr3,newdata=todayslags,type="response")
+
+SPInfo<-mutate(SPInfo,spr1=ifelse(spr<=-0.2,1,0))
+spdr4<-glm(fmla,family=binomial(link="logit"), data=SPInfo)
+pred4<-predict(spdr4,newdata=todayslags,type="response")
+
+SPInfo<-mutate(SPInfo,spr1=ifelse(spr<=0,1,0))
+spdr5<-glm(fmla,family=binomial(link="logit"), data=SPInfo)
+pred5<-predict(spdr5,newdata=todayslags,type="response")
+
+SPInfo<-mutate(SPInfo,spr1=ifelse(spr<=0.2,1,0))
+spdr6<-glm(fmla,family=binomial(link="logit"), data=SPInfo)
+pred6<-predict(spdr6,newdata=todayslags,type="response")
+
+SPInfo<-mutate(SPInfo,spr1=ifelse(spr<=0.5,1,0))
+spdr7<-glm(fmla,family=binomial(link="logit"), data=SPInfo)
+pred7<-predict(spdr7,newdata=todayslags,type="response")
+
+SPInfo<-mutate(SPInfo,spr1=ifelse(spr<=1,1,0))
+spdr8<-glm(fmla,family=binomial(link="logit"), data=SPInfo)
+pred8<-predict(spdr8,newdata=todayslags,type="response")
+
+SPInfo<-mutate(SPInfo,spr1=ifelse(spr<=2,1,0))
+spdr9<-glm(fmla,family=binomial(link="logit"), data=SPInfo)
+pred9<-predict(spdr9,newdata=todayslags,type="response")
+
+predvec<-c(pred1,pred2,pred3,pred4,pred5,pred6,pred7,pred8,pred9)
+spreturnvals<-c(-2,-1,-0.5,-0.2,0,0.2,0.5,1,2)
+dtype<-c("DistributionRegression","DistributionRegression","DistributionRegression","DistributionRegression",
+        "DistributionRegression","DistributionRegression","DistributionRegression","DistributionRegression",
+        "DistributionRegression")
+
+
+distfcst<-data.frame(spreturnvals,predvec,dtype)
+colnames(distfcst)<-c("Returns","Probabilities","Type")
+
+#MAke data.frame of quantile regression forecasts
+tauvec<-c(0.01,0.05,0.1,0.25,0.5,0.75,0.9,0.95,0.99)
+rtype<-c("QuantileRegression","QuantileRegression","QuantileRegression","QuantileRegression",
+         "QuantileRegression","QuantileRegression","QuantileRegression","QuantileRegression",
+         "QuantileRegression")
+qregfcst<-data.frame(t(as.matrix(qpredictions)),tauvec,rtype)
+colnames(qregfcst)<-c("Returns","Probabilities","Type")
+
+#MArge quantile and distribution forecasts for plotting
+fcsts<-full_join(distfcst,qregfcst)
+
+#Plot Both forecasts on same plot
+ggplot(fcsts,aes(x=Returns,y=Probabilities,color=Type))+geom_point()+geom_line()+
+  ggtitle("Distribution and Quantile Regression Forecasts of S&P500 Returns for 2-21-2019",
+          subtitle="Quantile regression fixes Y values and estimates X, Distribution regression the reverse")+
+  xlab("Percent Return")+ylab("Conditional Cumulative Probability")
+
+```
+
+
+## Forecast Error Based Approach
+
+- Rather than directly predicting a conditional distribution of $y_{T+h}$, one may instead start with a point forecast $\widehat{y}_{T+h}$ and predict the (conditional) distribution of forecast errors $\widehat{e}_{T+h}=y_{T+h}-\widehat{y}_{T+h}$ around it
+- Exactly equivalent in principle as $y_{T+h}=\widehat{y}_{T+h}+\widehat{e}_{T+h}$ but interpretable as measure of uncertainty around the forecast
+- In some cases, if $\widehat{y}_{T+h}$ is a "good" forecast, it may be particularly easy to learn about the distribution
+- If loss function is **square loss**, the Bayes forecast is the conditional mean, $f^{*}(\mathcal{Y}_T)=E_p[y_{T+h}|\mathcal{Y}_T]$
+- Under this condition, the forecast residuals $e_{T+h}=y_{T+h}-f^*(\mathcal{Y}_{T+h})$ are **white noise**
+    - Autocovariance Function of residuals $E[e_te_{t-h}]=0$ for any $h\neq 0$
+    - Intuition: for optimal forecast, past forecast errors should be unrelated to future ones because if they were related, then given that past errors are already known, they could be incorporated into the forecast and improve the results
+- Suppose class of forecast rules $\mathcal{F}$ is **correctly specified**, meaning it contains the forecast rule $f^{*}(\mathcal{Y}_T)$,
+and is **low complexity**, so the **estimation error** $\widehat{f}-f^{*}$ is sufficiently small to ignore 
+    - Then $\widehat{e}_{T+h}\approx e_{T+h}$, and $\widehat{e}_{T+h}$ should have distribution close to that of $e_{T+h}$
+    - In particular, it should approximately be white noise, and uncorrelated with functions of past data, including the forecast rule $\widehat{f}$
+- These conditions are *very* strong: can and should check if they are approximately valid
+    - Use `checkresiduals` to look at ACF of residuals and test whether it appears to be approximately 0
+
+
+## Prediction Intervals from Forecast Error
+
+- Forecast error decomposes as sum of **residual error** $e_{t+h}$, which cannot be improved, and estimation error $\widehat{f}-f^{*}$
+- Estimating distribution can, under white noise condition, be split into separate estimation of each part
+- If residuals not just uncorrelated but independent, distribution of $e_{T+h}$ approximable by sample distribution of $\widehat{e}_{t+h}$
+- Distribution of estimation error requires more work
+    - For simple, parameterized models, there often exists a formula which is approximately valid in large samples
+    - Under stationarity and weak dependence conditions, ERM forecast generally has approximate **normal distribution**
+    - Variance of normal distribution is $\frac{\sigma^2_{\widehat{f}}}{T}$, where $\sigma^2_{\widehat{f}}$ is estimable from data
+    - See Hyndman book for formulas for most common classes
+- To get full error distribution: 
+    1. Draw independent samples from forecast error distribution and residual error distribution and add them
+    2. Repeat until you have a large sample of estimate errors
+    3. Use empirical distribution of sum to construct quantiles or other distribution features
+    
+## Normal Residuals Case
+
+- If residuals are independent over time and normally distributed, method is even simpler
+- Sum of two uncorrelated normal distributions is also normal, with variance equal to sum of the variances of each
+    1. Calculate variance of sample residuals $\widehat{\sigma}^2_e=\frac{1}{n-p}\sum_{t=1}^{T-h}\widehat{e}_{t+h}^2$
+    2. Calculate $\frac{\widehat{\sigma}^2_{\widehat{f}}}{T}$ using formula for predictor $\widehat{f}$
+    3. Prediction error standard deviation is $\widehat{SE}=\sqrt{\widehat{\sigma}^2_e+\frac{\widehat{\sigma}^2_{\widehat{f}}}{T}}$
+    4. Level $1-\alpha$ prediction interval is $\widehat{y}_{T+h}\pm z_{1-\alpha/2}\widehat{SE}$
+- Here $z_{1-\alpha/2}$ is the $1-\alpha/2$ quantile of a normal distribution, eg 1.96 for $\alpha=0.05$, 1.64 for $\alpha=0.1$
+- Normal distribution assumption can be validated by comparing residual distribution to a normal distribution, also displayed in command `checkresiduals`
+- Unlike for estimation error, where CLT provides justification, no reason to think residuals are normal without checking
+- This is used for prediction interval plots by default, so if you want to trust those, really really ought to check residuals
+
+    
+## Non-independent residuals
+
+- 0 correlation result for residuals of optimal model does not imply independence
+    - It just says that the mean is not related to past values, not any other feature of the distribution
+- In particular, variance of residuals may be predictable using past data
+    - Residuals of this form are called **heteroskedastic** and take the form $\sigma^2_e(\mathcal{Y}_t)$
+- If this is the case, need to find forecast rule to predict distribution
+- Popular simple model is **ARCH**, or *Autoregressive Conditional Heteroskedasticity* Model
+    - Predict $\widehat{e}^2_{t+1}$ by regressing on $a_0+a_1\widehat{e}^2_{t}+a_2\widehat{e}^2_{t-1}+\ldots+a_{p+1}\widehat{e}^2_{t-p}$
+- Idea is that $\sigma^2_e(\mathcal{Y}_t)=E_p[e_{t+h}^2|\mathcal{Y}_t]$ can be elicited as minimizer of square loss
+    - Add predictors to this equation to ensure equation is properly specified
+- Add estimation error variance and estimate of $\sigma^2_e(\mathcal{Y}_t)$ to get conditional prediction variance
+- Variance-based intervals assume conditional normality
+    - Can be evaluated by checking normality of $\frac{\widehat{e}_t}{\sigma_e(\mathcal{Y}_t)}$ distribution
+- Without normality, can go back to quantile or distribution regression
+
+<!-- ## Estimation Error -->
+
+<!-- - Estimation error $\widehat{f}-f^*$ and its distribution may be useful on their own -->
+<!-- - Tells you how much your forecast would vary given different realizations of past data -->
+
+## Cautions for Indirect Forecasts
+
+- Correct specification condition is very strong in most cases
+    - Requires specifying a rule based on past data which cannot be improved by adding covariates like additional lags or nonlinearities
+    - Even when possible, such a rule may not be the point forecast rule which produces optimal forecasts
+    - Adding lots of predictors to make the fit may increase estimation error and overfitting
+- Independent errors assumption violated for many series
+    - Particularly for financial returns which move between periods of high and low variance
+    - Can attempt to model the variance, but this becomes another conditional distribution estimation problem
+- Normality of residuals is needed for variance based intervals to provide approximate coverage
+    - Easy to discard by replacing with empirical distribution (or normalized empirical distribution with ARCH effects), 
+    - But then can't use default software outputs
+- In general case where we can't be sure of correct and precisely estimated specification, centering interval forecasts on $\widehat{f}$ not a good idea if goal is managing risk
+    - Estimation error and residual error might still be interesting for assessing forecast procedure
+    
+## Application: GDP Growth Forecasting, Again
+
+```{r,message=FALSE,warning=FALSE}
+library(vars) #Run Vector Autoregression
+library(tseries) #Perform tests, including Jarque Bera Test for Normality
+
+#US GDP components 
+GDP<-fredr(series_id = "GDP",
+           observation_start = as.Date("1947-01-01")) #Gross Domestic Product
+
+#US GDP components from NIPA tables (cf http://www.bea.gov/national/pdf/nipaguid.pdf)
+PCEC<-fredr(series_id = "PCEC",
+            observation_start = as.Date("1947-01-01")) #Personal consumption expenditures
+FPI<-fredr(series_id = "FPI",
+           observation_start = as.Date("1947-01-01")) #Fixed Private Investment
+CBI<-fredr(series_id = "CBI",
+           observation_start = as.Date("1947-01-01")) #Change in Private Inventories
+NETEXP<-fredr(series_id = "NETEXP",
+              observation_start = as.Date("1947-01-01")) #Net Exports of Goods and Services
+GCE<-fredr(series_id = "GCE",
+           observation_start = as.Date("1947-01-01")) #Government Consumption Expenditures and Gross Investment
+
+#Format the series as quarterly time series objects, starting at the first date
+gdp<-ts(GDP$value,frequency = 4,start=c(1947,1),names="Gross Domestic Product") 
+pcec<-ts(PCEC$value,frequency = 4,start=c(1947,1),names="Consumption")
+fpi<-ts(FPI$value,frequency = 4,start=c(1947,1),names="Fixed Investment")
+cbi<-ts(CBI$value,frequency = 4,start=c(1947,1),names="Inventory Growth")
+invest<-fpi+cbi #Private Investment
+netexp<-ts(NETEXP$value,frequency = 4,start=c(1947,1),names="Net Exports")
+gce<-ts(GCE$value,frequency = 4,start=c(1947,1),names="Government Spending")
+
+#Convert to log differences to ensure stationarity and collect in frame
+NIPAdata<-ts(data.frame(diff(log(gdp)),diff(log(pcec)),diff(log(invest)),diff(log(gce))),frequency = 4,start=c(1947,2))
+
+# Construct lags
+
+l1NIPA<-window(stats::lag(NIPAdata,-1),start=c(1949,2),end=c(2018,3))
+l2NIPA<-window(stats::lag(NIPAdata,-2),start=c(1949,2),end=c(2018,3))
+l3NIPA<-window(stats::lag(NIPAdata,-3),start=c(1949,2),end=c(2018,3))
+l4NIPA<-window(stats::lag(NIPAdata,-4),start=c(1949,2),end=c(2018,3))
+l5NIPA<-window(stats::lag(NIPAdata,-5),start=c(1949,2),end=c(2018,3))
+l6NIPA<-window(stats::lag(NIPAdata,-6),start=c(1949,2),end=c(2018,3))
+l7NIPA<-window(stats::lag(NIPAdata,-7),start=c(1949,2),end=c(2018,3))
+l8NIPA<-window(stats::lag(NIPAdata,-8),start=c(1949,2),end=c(2018,3))
+
+#convert to matrices
+xvarsdf<-data.frame(l1NIPA,l2NIPA,l3NIPA,l4NIPA,l5NIPA,l6NIPA,l7NIPA,l8NIPA)
+xvars<-as.matrix(xvarsdf)
+NIPAwindow<-matrix(window(NIPAdata,start=c(1949,2),end=c(2018,3)),length(l1NIPA[,1]),4)
+
+
+#Calculate information criteria
+IC<-VARselect(NIPAdata,lag.max=8)
+
+# Fit Optimal VARs by AIC, BIC
+AICVAR<-VAR(NIPAdata,p=IC$selection[1])
+BICVAR<-VAR(NIPAdata,p=IC$selection[3])
+
+#Construct 1 period ahead foecasts
+AICpred<-forecast(AICVAR,h=4)$forecast
+BICpred<-forecast(BICVAR,h=4)$forecast
+
+
+GDPline<-window(ts(NIPAdata[,1],frequency = 4,start=c(1947,2),names="Gross Domestic Product"),start=c(2009,2))
+autoplot(GDPline,showgap=FALSE)+
+  autolayer(BICpred$diff.log.gdp.,series="VAR(1)",alpha=0.4)+
+  autolayer(AICpred$diff.log.gdp.,series="VAR(5)",alpha=0.4)+
+  ggtitle("VAR(1) and VAR(5) GDP Forecasts with 80 and 95% Normal-Distribution Based Intervals")+
+  xlab("Date")+ylab("log GDP growth")
+
+```
+
+## Residual Diagnostics for VAR(1) Forecast
+
+```{r,class.source='fold-show'}
+checkresiduals(BICVAR$varresult$diff.log.gdp..) #GDP Growth forecast residual diagnostic
+```
+
+## Residual Diagnostics for VAR(5) Forecast
+
+```{r,class.source='fold-show'}
+checkresiduals(AICVAR$varresult$diff.log.gdp..) #GDP Growth forecast residual diagnostic
+```
+```{r,,class.source='fold-show'}
+jbt<-jarque.bera.test(AICVAR$varresult$diff.log.gdp..$residuals) #Test normality
+archt<-arch.test(AICVAR) #Test heteroskedasticity
+```
+
+## Interpretation
+
+- Patterns in residual plot and ACF, and formal test of white noise, suggest VAR(1) is not super close to white noise
+    - Suggests patterns in data may differ somewhat from VAR(1) model: in-sample fit could be improved
+    - Prediction Intervals around VAR(1) may not even approximately have 80% or 95% coverage
+- White noise test cannot reject for residuals of VAR(5)
+    - Suggests uncorrelatedness with sample error not terrible assumption
+- Normal distribution doesn't look so close: asymmetry, etc in plot, so intervals may have wrong shape
+- Heteroskedasticity may also be a problem: variance seems to have declined over time
+    - Formal tests soundly reject normality and no ARCH effects
+- So prediction intervals also likely to not have appropriate coverage
+    - Could try to model ARCH effects, standardize residuals, and use empirical distribution to construct
+    - Or just run quantile regressions...
+    
+##  Conclusions
+
+- Forecasting distribution of future outcomes useful for managing risk
+- Features of distribution can be elicited with the appropriate loss function
+    - Allows use of ERM to learn quantiles and probabilities
+- If working with correctly specified and precisely estimated models, can also construct intervals from sum of residual and estimation errors, the distribution of each of which can be found
+    - But when is that going to happen?
+

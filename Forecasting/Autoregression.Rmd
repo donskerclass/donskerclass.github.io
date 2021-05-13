@@ -6,7 +6,6 @@ output:
     code_folding: hide
 ---
 
-
 ## Outline
 
 <!-- - Review -->
@@ -81,13 +80,13 @@ output:
 ## Autoregression Model
 
 - For all $t=k+1\ldots T$, the AR(p) model is
-$$y_t=b_0+\sum_{j=1}^{p}b_jy_{t-j}+\epsilon_t$$
+$$y_t=\beta_0+\sum_{j=1}^{p}\beta_jy_{t-j}+\epsilon_t$$
 - Where for all t, $h\neq0$, $E[\epsilon_t]=0$, $E[\epsilon_t\epsilon_{t+h}]=0$   
 - To construct likelihood, need to also assume distribution for $\epsilon_t$
     - Most common is $\epsilon_t\overset{iid}{\sim}N(0,\sigma^2)$, $Pr(\epsilon<m)=\Phi(\frac{m}{\sigma})=\int_{-\infty}^{\frac{m}{\sigma}}\frac{1}{\sqrt{2\pi}}\exp(\frac{-x^2}{2})dx$
-- Likelihood is $\Pi_{t=k+1}^{T}\frac{1}{\sigma}\phi(\frac{y_t-b_0-\sum_{j=1}^{k}b_jy_{t-j}}{\sigma})$, where $\phi(x)=\frac{1}{\sqrt{2\pi}}\exp(\frac{-x^2}{2})$ is the standard normal pdf
-- Log Likelihood is $-\frac{T}{2}\log2\pi\sigma^2+\frac{1}{2\sigma^2}\sum_{t=k+1}^{T}(y_t-b_0-\sum_{j=1}^{p}b_jy_{t-j})^2$
-- Parameters $\theta=(\{b_j\}_{j=0}^{p},\sigma^2)\in \Theta\subseteq \mathbb{R}^{p+1}\times\mathbb{R}_{+}$
+- Likelihood is $\Pi_{t=k+1}^{T}\frac{1}{\sigma}\phi(\frac{y_t-\beta_0-\sum_{j=1}^{k}\beta_jy_{t-j}}{\sigma})$, where $\phi(x)=\frac{1}{\sqrt{2\pi}}\exp(\frac{-x^2}{2})$ is the standard normal pdf
+- Log Likelihood is $-\frac{T}{2}\log2\pi\sigma^2+\frac{1}{2\sigma^2}\sum_{t=k+1}^{T}(y_t-\beta_0-\sum_{j=1}^{p}\beta_jy_{t-j})^2$
+- Parameters $\theta=(\{\beta_j\}_{j=0}^{p},\sigma^2)\in \Theta\subseteq \mathbb{R}^{p+1}\times\mathbb{R}_{+}$
 - Interpretation: value today depends linearly on last $k$ periods, up to unpredictable noise
 
 ## Properties of Autoregression Models
@@ -98,7 +97,7 @@ $$y_t=b_0+\sum_{j=1}^{p}b_jy_{t-j}+\epsilon_t$$
     - Given $\mathcal{Y}_{T}$, variance and all other features of conditional distribution (eg skewness, quantiles) are those of $\epsilon_t$, fixed over time
         - Useful for mean forecasting, less so for other features
 - Specific ACF implied by coefficients derivable by solving system of equations
-    - Eg for AR(1), $Cov(y_t,y_{t-h})=b_1^h$
+    - Eg for AR(1), $Cov(y_t,y_{t-h})=\beta_1^h$
     - Since solved iteratively, exponential decay eventually true for any finite set of lags
 - To visually detect patterns, helpful to use **Partial Autocorrelation Function** **PACF** (`pacf` in R)
     - For each order $p=1\ldots p_{max}$, plots 1st order autocorrelation $Cor(e^p_t,e^p_{t-1})$ of residuals from AR(p) forecast of $y_t$
@@ -108,32 +107,32 @@ $$y_t=b_0+\sum_{j=1}^{p}b_jy_{t-j}+\epsilon_t$$
 ## Lag Polynomials
 
 - Building block of autoregressive model is *lag operator* $L$: $L(z_t)=z_{t-1}$ for any $t$
-    - If $\vec{z}$ is a vector, with entries ordered by $t$, $L\vec{z}$ is shifted down by 1
-    - First entry of $L\vec{z}$ corresponding to period 0 is missing (usually NA or . in R)
+    - If $\overrightarrow{z}$ is a vector, with entries ordered by $t$, $L\overrightarrow{z}$ is shifted down by 1
+    - First entry of $L\overrightarrow{z}$ corresponding to period 0 is missing (usually NA or . in R)
 - Lags of multiple periods created by applying lag operator multiple times
     - Denote $L^j(z_t)=L(L(\ldots L(z_t)))=z_{t-j}$ for all $t$
 - Composing lags of different order allows expressing relations over time between variables
 - Equivalent notation for AR(k) model is in terms of **lag polynomial**
-    - $(1-b_1L-b_2L^2-b_3L^3-\ldots-b_pL^p)y_t=b_0+\epsilon_t$
+    - $(1-\beta_1L-\beta_2L^2-\beta_3L^3-\ldots-\beta_pL^p)y_t=\beta_0+\epsilon_t$
     - Righthand side is pure white noise, left is a transformation applied to data
-- Properties of data can be derived using the properties of the lag polynomial $B(L)=1-\sum_{j=1}^{p}b_jL^j$
+- Properties of data can be derived using the properties of the lag polynomial $B(L)=1-\sum_{j=1}^{p}\beta_jL^j$
 - $B(x)$ for an $AR(p)$ can be factorized into components $B(x)=\Pi_{j=1}^{p}(1-r_jx)$
     - Where each coefficient $r_j$ satisfies $B(\frac{1}{r_j})=0$, so $\frac{1}{r_j}$ is a **root** of the lag polynomial
     - AR(k) acts like k repeated AR(1) transformations
 
-<!-- - Consider AR(1) $(1-b_1L)y_t=\epsilon_t$ -->
-<!--     - By iterated substitution, $y_t=\sum_{j=0}^{T}b_1^jL^j\epsilon_t+y_{0}$ -->
+<!-- - Consider AR(1) $(1-\beta_1L)y_t=\epsilon_t$ -->
+<!--     - By iterated substitution, $y_t=\sum_{j=0}^{T}\beta_1^jL^j\epsilon_t+y_{0}$ -->
 <!--     - This is exactly geometric series -->
 
 ## Stationarity Conditions
 
-- For AR(1): $B(L)=(1-b_1L)$, long run behavior depends on size of $b_1$
-- $|b_1|<1$: **Stationary**: on average, series returns to its mean over time
+- For AR(1): $B(L)=(1-\beta_1L)$, long run behavior depends on size of $\beta_1$
+- $|\beta_1|<1$: **Stationary**: on average, series returns to its mean over time
     - Describes series which have a "natural" level returned to over time
-- $b_1=1$: **Random Walk**: on average, after a change, series does not revert to previous value
+- $\beta_1=1$: **Random Walk**: on average, after a change, series does not revert to previous value
     - Series is nonstationary: initial condition determines mean, and variance grows over time
     - Series like financial asset prices, where growth is unpredictable
-- $|b_1|>1$: **Explosive**: on average, after a change, series goes even further away from intitial condition
+- $|\beta_1|>1$: **Explosive**: on average, after a change, series goes even further away from intitial condition
     - Describes series, like asset prices during a bubble, which evolve erratically
 - These conditions can be generalized to AR(p) case where additional lags are included
     - Check each roots $r_j$ of lag polynomial $B(x)=\Pi_{j=1}^{p}(1-r_jx)$ individually
@@ -164,14 +163,14 @@ $$y_t=b_0+\sum_{j=1}^{p}b_jy_{t-j}+\epsilon_t$$
 - Need to account for drift, deterministic trends in null hypothesis
 - Let $e_t$ be a stationary I(0) series (not necessarily white noise): unit root series can behave as
     - $\Delta y_t=e_t$: (No constant) Series has only unit root, no deterministic growth
-    - $\Delta y_t=b_0+e_t$: (Drift) Series grows by $b_0$ each period along with unit root
-    - $\Delta y_t=b_0+ct+e_t$: (Linear Trend) Series grows by $b_0+ct$ each period, along with unit root
+    - $\Delta y_t=\beta_0+e_t$: (Drift) Series grows by $\beta_0$ each period along with unit root
+    - $\Delta y_t=\beta_0+ct+e_t$: (Linear Trend) Series grows by $\beta_0+ct$ each period, along with unit root
 - Test by *Phillips Perron* (`PP.test`) or *Augmented Dickey-Fuller* (`adf.test` in `tseries`) tests
 - Note that if unsure, can always use differences anyway
     - If unit root, differencing restores stationarity 
     - If not a unit root, still stationary, prediction valid but may lose predictive power
 - Can also test starting from null of stationarity (`kpss.test` in `tseries`)
-- Test approach is implemented in auto.arima
+- Test approach is implemented in `auto.arima`
     - First uses KPSS test (with null of stationarity) to determine differencing, then AICc to choose lag order $p$
     
 ## The Stakes: The "Unit Root Wars"
@@ -195,16 +194,16 @@ $$y_t=b_0+\sum_{j=1}^{p}b_jy_{t-j}+\epsilon_t$$
 
 - Consider GNP forecasting application: follow Litterman (1986) in using following series
     - GNP Growth, Inflation, Unemployment, M1 Money Stock, Private Fixed Investment, Commercial Paper Interest Rates, and Inventory Growth
-    - Use quarterly data 1971-2018, instead of original 1948-1979
+    - Use quarterly data 1971-2020Q1, instead of original 1948-1979
 - Statistical approach tests each for stationarity, differences if found to be nonstationary, then estimates AR model
 - As different tests have slightly different properties, one may reject stationarity, another may support it
     - May rely on single test, recognizing chance of error,  or be overly cautious and difference if unsure
-    - Run PP test with null of unit root with constant and trend, KPSS with null of stationarity plus linear trend, and (by auto.arima) KPSS with null of stationarity with no trend
+    - Run PP test with null of unit root with constant and trend, KPSS with null of stationarity plus linear trend, and (by auto.arima), KPSS with null of stationarity with no trend
 - Use AICc after differencing according to KPSS results to get ideal AR order for each
     - Corresponds to auto.arima (with certain options for more complicated models turned off)
 - Here, inflation (GNP deflator) measured to be nonstationary by KPSS test, stationary by PP test at 5% threshold
     - Macroeconomic theorists likewise fight about whether inflation stationary
-- Inventory growth and Unemployment unit root results depend on whether trend included
+- Inventory growth unit root results depend on whether trend included
     - Can be hard to distinguish unit root from slight trend      
 
 
@@ -226,12 +225,14 @@ library(gridExtra)  #Graph Display
 
 # library(devtools) #Library to allow downloading packages from Github
 # install_github("kthohr/BMR")
+# library(BMR) #Bayesian Macroeconometrics in R
 
 # Note that if running this code on Kaggle, internet access must be enabled to download and install the package
 # If installed locally, there may be difficulties due to differences in your local environment (in particular, versions of C++)
 # For this reason, relying local installation is not recommended unless you have a spare afternoon to dig through help files
 
-library(BMR) #Bayesian Macroeconometrics in R
+#An alternative, similar library, is BVAR: it is on CRAN
+library(BVAR) #Bayesian Vector Autoregressions
 
 ##Obtain and transform NIPA Data (cf Lecture 08)
 
@@ -241,28 +242,33 @@ fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
 
 RGNP<-fredr(series_id = "GNPC96",
            observation_start = as.Date("1971-04-01"),
-           observation_end = as.Date("2018-07-01"),
+           observation_end = as.Date("2020-01-01"),
+           vintage_dates = as.Date("2021-03-29"),
            units="cch") #Real Gross National Product, log change
 
 INFLA<-fredr(series_id = "GNPDEF",
            observation_start = as.Date("1971-04-01"),
-           observation_end = as.Date("2018-07-01"),
+           observation_end = as.Date("2020-01-01"),
+           vintage_dates = as.Date("2021-03-29"),
            units="cch") #GNP Deflator, log change
 
 UNEMP<-fredr(series_id = "UNRATE",
            observation_start = as.Date("1971-04-01"),
-           observation_end = as.Date("2018-07-01"),
+           observation_end = as.Date("2020-01-01"),
+           vintage_dates = as.Date("2021-03-29"),
            frequency="q") #Unemployment Rate, quarterly
 
 M1<-fredr(series_id = "M1SL",
            observation_start = as.Date("1971-04-01"),
-           observation_end = as.Date("2018-07-01"),
+           observation_end = as.Date("2020-01-01"),
+           vintage_dates = as.Date("2021-03-29"),
            frequency="q",
            units="log") #Log M1 Money Stock, quarterly
 
 INVEST<-fredr(series_id = "GPDI",
            observation_start = as.Date("1971-04-01"),
-           observation_end = as.Date("2018-07-01"),
+           observation_end = as.Date("2020-01-01"),
+           vintage_dates = as.Date("2021-03-29"),
            units="log") #Log Gross Domestic Private Investment
 
 # The 4-6 month commercial paper rate series used in Litterman (1986) has been discontinued: 
@@ -272,18 +278,21 @@ INVEST<-fredr(series_id = "GPDI",
 CPRATE1<-fredr(series_id = "WCP3M",
            observation_start = as.Date("1971-04-01"),
            observation_end = as.Date("1996-10-01"),
+           vintage_dates = as.Date("2021-03-29"),
            frequency="q") #3 Month commercial paper rate, quarterly, 1971-1997
 
 CPRATE2<-fredr(series_id = "CPN3M",
            observation_start = as.Date("1997-01-01"),
-           observation_end = as.Date("2018-07-01"),
+           observation_end = as.Date("2020-01-01"),
+           vintage_dates = as.Date("2021-03-29"),
            frequency="q") #3 Month AA nonfinancial commercial paper rate, quarterly, 1997-2018
 
 CPRATE<-full_join(CPRATE1,CPRATE2) #Merge 2 series to create continuous 3 month commercial paper rate series from 1971-2018
 
 CBI<-fredr(series_id = "CBI",
            observation_start = as.Date("1971-04-01"),
-           observation_end = as.Date("2018-07-01")) #Change in Private Inventories
+           observation_end = as.Date("2020-01-01"),
+           vintage_dates = as.Date("2021-03-29")) #Change in Private Inventories
 
 #Format the series as quarterly time series objects, starting at the first date
 rgnp<-ts(RGNP$value,frequency = 4,start=c(1971,2),names="Real Gross National Product") 
@@ -316,10 +325,10 @@ for (i in 1:nseries){
   KPSStests[i]<-kpss.test(macrodata[,i],null="Trend")$p.value
   ARIstatmodels[[i]]<-auto.arima(macrodata[,i],max.q=0,seasonal=FALSE) #Apply auto.arima set to (nonseasonal) ARI only
   Integrationorder[i]<-ARIstatmodels[[i]]$arma[6] #Integration order chosen (uses KPSS Test)
-  ARorder[i]<-ARIstatmodels[[i]]$arma[1] #AR order chosen (uses AICc)
+  ARorder[i]<-ARIstatmodels[[i]]$arma[1] #AR order chosen (uses AIC)
 }
 ```
-```{r,echo=FALSE,warning=FALSE,message=FALSE}
+```{r,warning=FALSE,message=FALSE}
 Series<-c("Real GNP Growth","Inflation","Unemployment","Money Stock","Private Investment","Commercial Paper Rate","Change in Inventories")
 stationaritytests<-data.frame(Series,as.numeric(PPtests),as.numeric(KPSStests),as.numeric(Integrationorder),as.numeric(ARorder))
 
@@ -355,12 +364,12 @@ grid.arrange(grobs=rgnpplots,nrow=2,ncol=2)
 
 ## Priors for Autoregression Models
 
-- Common choice for a prior distribution over $b$ is the $N(\mu_b,\Sigma_{b})$ prior
-    - $\mu_b$ is prior mean of coefficients, biasing estimates towards a given value, $\Sigma_b$ is prior variance and covariance over coefficient values
-        - $(\Sigma_{b})_{(i,j)}$ is covariance between $(i,j)$ coefficients, 
-- As in Bayesian regression model, if $\mu_b=0$, $(\Sigma_{b})_{(i,j)}=0$ for $i\neq j$, $\sigma^2_b$ for $i=j$, MAP estimate is ridge regression
+- Common choice for a prior distribution over $\beta$ is the $N(b,\Sigma_b)$ prior
+    - $b$ is prior mean of coefficients, biasing estimates towards a given value, $\Sigma_b$ is prior variance and covariance over coefficient values
+        - $(\Sigma_b)_{(i,j)}$ is covariance between $(i,j)$ coefficients, 
+- As in Bayesian regression model, if $b=0$, $(\Sigma_b)_{(i,j)}=0$ for $i\neq j$, $\xi\sigma^2$ for $i=j$, MAP estimate is ridge regression
     - Full posterior is also Normal, with mean given by MAP estimate
-    - $\sigma^2_b$ determines size of penalty
+    - $\xi\sigma^2$ determines size of penalty
 - Having constant prior covariance across regressors makes sense if all are on the same scale
     - For autoregression, this is guaranteed because lags are same variable, shifted in time
 - For case where other covariates added, common to **normalize** first: divide regressor by its standard deviation
@@ -370,43 +379,49 @@ grid.arrange(grobs=rgnpplots,nrow=2,ncol=2)
 ## Variance Priors
 
 - Usually, variance $\sigma^2$ is also unknown, so need a prior for it
-- **Inverse Gamma** distribution $f(\sigma^2,\alpha,\beta)\propto(\frac{1}{\sigma^2})^{\alpha+1}\exp(\frac{-\beta}{\sigma^2})$ common choice
+- **Inverse Gamma** distribution $f(\sigma^2|\psi,d)\propto(\frac{1}{\sigma^2})^{\frac{d}{2}+1}\exp(\frac{-\psi}{2\sigma^2})$ common choice
     - Leads to closed form posterior if coefficients known
     - If both unknown, conditional posteriors have closed form, leading to fast MCMC algorithm (Gibbs sampler) 
-- Normal priors on $b$, inverse Gamma on $\sigma^2$ allow for fast simple computation and some choice
-    - Set mean of prior on $b$ to describe expected persistence
-    - Variances of $b$ prior, like penalty in ridge, describe how much data needed to lead to deviations from the mean
+- Normal priors on $\beta$, inverse Gamma on $\sigma^2$ allow for fast simple computation and some choice
+    - Set mean of prior on $\beta$ to describe expected persistence
+    - Variances of $\beta$ prior, like penalty in ridge, describe how much data needed to lead to deviations from the mean
     - Scale and shape parameters for $\sigma^2$ determine variance predictions: less important for point forecasts
 - Inference can be implemented by adding carefully chosen "bonus observations" to data before running OLS estimates
     - Prior information equivalent to having seen additional data
+- `stan_sarima` in `bayesforecast` implements easy ARIMA in Stan
+    - $\beta_j\overset{iid}{\sim}N(0,0.5)$ default *strongly* presumes stationarity
+    - $\beta_0\sim t(0,1,7)$ and Variance prior default is half-t (just positive part) 
+    - t distribution has thick tail, no closed form posterior: allows potentially large scale
+
 
 ## Minnesota Priors
 
 - As many economic series near to unit root, may be sensible to incorporate this knowledge in prior
-- For Normal priors, this can be done by choosing $\mu_{b_1}=1$ (and all other means to 0)
+- For Normal priors, this can be done by choosing $b_1=1$ (and all other means to 0)
 - Promotes nonstationarity but does not impose it: no need to test, per se
     - But! Long run predictions depend a lot on exactly vs approximately one, and prior puts all weight on "approximately"
     - Fine for short-to-medium term predictions, long term predictions may need to carefully think through implications
 - Minnesota prior also simplifies choice of prior variances
-- For constant term $b_0$, choose large prior variance $H_3\sigma_\epsilon^2$, as scale varies and depends on units of series
+- For constant term $\beta_0$, choose large prior variance $var$, as scale varies and depends on units of series
 - For higher order lags, coefficients usually smaller, so want smaller variances around 0 mean to reflect this
-    - Choose function $h(j)$ to set rate of decrease, such as $h(j)=j^d$, usually for d=2
-    - Choose absolute scale $H_1$ for coefficients as a whole to reflect how close to prior mean to set them
-    - Prior variance of $\beta_j$, $j\geq 1$ set to $\frac{H_1}{h(j)}$, and covariances set to 0 to give independent priors over coefficients
-- Prior allows including lots of lag coefficients, using just 3 prior parameter choices $H_1,H_3$ and decay function $h(j)$
+    - Choose $\alpha$ to set rate of decrease proportional to $s^\alpha$ at lag s
+    - Choose $\lambda$ as scale for coefficients as a whole to reflect how close to prior mean to set them
+    - Prior variance of $\beta_s$, $s\geq 1$ set to $\frac{\lambda^2}{s^\alpha}$, and covariances set to 0 to give independent priors over coefficients
+- Prior allows including lots of lag coefficients, using just 3 prior parameter choices $var,\lambda$ and decay rate $\alpha$
     - Since prior variance for high lag coefficients small, forced to be close to 0 unless data strongly suggests otherwise
     - Avoids problems of overfitting without performing strict variable selection
+- Use when series is a stock: if already differenced, maybe center at 0    
     
 ## The Multivariate Case: Vector Autoregression Model
 
 - Vector autoregression case almost identical to 1 variable case, but with more coefficients
 - With $m$ variables, $y_t=(y_{1,t},\ldots,y_{m,t})\in\mathbb{R}^m$
 - For all $t=p+1\ldots T$, $i=1\ldots m$, the VAR(p) model is
-$y_{i,t}=b_{i,0}+\sum_{k=1}^{m}\sum_{j=1}^{p}b_{i,jk}y_{k,t-j}+\epsilon_{k,t}$
-- Where for all t, k, j, $h\neq0$, $E[\epsilon_{k,t}]=0$, $E[\epsilon_{k,t}\epsilon_{j,t+h}]=0$ 
-- Collecting coefficients in matrices, can write as $y_t=B_0+\sum_{j=1}^{p}B_jy_{t-j}+\epsilon_t$
-- Typical to assume $\epsilon_t\overset{iid}{\sim} N(0,\Sigma_\epsilon)$, where $\Sigma_\epsilon\in\mathbb{R}^{m\times m}$ gives present covariance
-- (log) Likelihood again takes (multivariate) normal form: weighted least squares
+$y_{i,t}=\beta_{0,i}+\sum_{s=1}^{p}\sum_{j=1}^{m}\beta_{s,ij}y_{j,t-s}+\epsilon_{i,t}$
+- Where for all t, i, j, $h\neq0$, $E[\epsilon_{i,t}]=0$, $E[\epsilon_{i,t}\epsilon_{j,t+h}]=0$ 
+- Collecting coefficients in matrices, can write as $y_t=A_0+\sum_{s=1}^{p}A_sy_{t-s}+\epsilon_t$
+- Typical to assume $\epsilon_t\overset{iid}{\sim} N(0,\Sigma)$, where $\Sigma\in\mathbb{R}^{m\times m}$ gives present covariance
+- (log) Likelihood again takes (multivariate) normal form: penalized least squares
 - Stationarity conditions analogous to m=1 case: roots (of particular polynomial) inside unit circle
     - `roots` in library `vars` can display
     
@@ -419,19 +434,21 @@ $y_{i,t}=b_{i,0}+\sum_{k=1}^{m}\sum_{j=1}^{p}b_{i,jk}y_{k,t-j}+\epsilon_{k,t}$
     
 ## Multivariate VAR Priors
 
-- Can construct multivariate version of normal-gamma priors for VARS which is also conjugate
-- Multivariate normal $N(\mu_B,\Sigma_B)$ prior on $B_j$, $j=1\ldots p$ with covariances $\Sigma_B$
+- Can construct multivariate version of normal-gamma priors for VARs which are also conjugate
+- Multivariate normal $N(\mathbf{b},\Sigma_b)$ prior on $A_s$, $s=1\ldots p$ with covariances $\Sigma_b$
     - With $m$ variables, $p$ lags, have $m(p+1)$ coefficients, so $(mp+m)^2$ prior parameters to choose just here
-- **Inverse Wishart** distribution $W(\Psi,\nu)$ on $\Sigma_\epsilon$ multivariate version of Gamma distribution
-    - $\Psi\in\mathcal{R}^{m\times m}$ is prior guess of $\Sigma_\epsilon$, $\nu\in\mathbb{R}$ sets concentration 
+- **Inverse Wishart** distribution $W^{-1}(\Psi,d)$ on $\Sigma$ multivariate version of inverse Gamma distribution
+    - $\Psi\in\mathcal{R}^{m\times m}$ is prior guess of $\Sigma$, $d\in\mathbb{R}$ sets concentration 
 - Minnesota priors due to Doan, Litterman, Sims (1984), at FRB Minneapolis can help simplify choices
 - Goal is to express typical properties of macroeconomic series for business cycle forecasting 
-- Prior mean for $b_{i,1i}=1$, all other coefs 0 (equivalently, $B_1=I_m$ identity matrix) 
+- Prior mean for $\beta_{1,ii}=1$, all other coefs 0 (equivalently, $A_1=I_m$ identity matrix) 
     - Each series centered on random walk in just itself, with lags and cross-equation effects 0
-- Variances $\sigma^2_{\epsilon,i}$ $i=1\ldots m$ $\Sigma_e$ estimated by sample variance of residuals from 1 dimensional AR(p)         
-- All prior covariances across coefficients set to 0: independent normal guesses for each    
-    - Variances are $\Sigma_{b_{i,jk}}=$ $H_1/h(j)$ for own lags $H_2\sigma^2_{\epsilon,i}/(h(j)\sigma^2_{\epsilon,k})$ for $i,jk$ coefficient, $H_3\sigma^2_{\epsilon,i}$ for constant
-    - Parameters $H_1,H_2,H_3$ set tightness of prior around own lags, cross-variable effects, and constants, respectively
+- $\Psi$ centered on diagonal with $\psi_{j}$ $j=1\ldots m$ sample variance of residuals from 1 dimensional AR(p) 
+    - Empirical Bayes way to make sure scale is right order of magnitude
+- Prior covariances $\Sigma_b$ at lag $s$ are set to $Cov(\beta_{s,ij},\beta_{s,hj}|\Sigma)=$ $\frac{\lambda^2}{s^\alpha}\frac{\Sigma_{ih}}{\psi_j/(d-n-1)}$ and 0 across lags $s$ or input variables, and $var$ for constant
+    - $\lambda$ sets tightness around mean, $\alpha$ penalization of long lags
+- Hierarchical approach (Giannone et al 2015) puts priors on and estimates $\psi$, $\lambda$, $\alpha$ 
+- Can also put priors on initial conditions for tighter or looser enforcement of independent unit roots mean
   
     <!-- - Each $b_{0,i}$ has own large variance, covariances 0 -->
     <!-- - Own lags $b_{i,ji}$ have prior variance $\frac{\sigma_1}{h(j)}$ -->
@@ -444,20 +461,76 @@ $y_{i,t}=b_{i,0}+\sum_{k=1}^{m}\sum_{j=1}^{p}b_{i,jk}y_{k,t-j}+\epsilon_{k,t}$
 
 - Minnesota priors developed for macro forecasting applications at the Federal Reserve
     - Alternative to large, complicated and somewhat untrustworthy explicitly economic models used at the time
-    - Allows many variables to enter in unrestricted way, but minimizes oerfitting sue to priors
+    - Allows many variables to enter in unrestricted way, but minimizes overfitting due to priors
 - Litterman went on to be chief economist at Goldman Sachs, and method spread to private sector
 - Example from Litterman (1986): BVAR with Minnesota priors over 7 variables from before 
 - 6 lags in each variable, with a constant
-- Choose prior parameters $H_1=1$, $H_2=0.2$, $H_3=1$, $h(j)=j^{-2}$
-    - Noting that scale is proportional to variance estimates, says expect constant to deviate by 1 standard deviation of series
-    - Own first lag deviates from 1 by about standard deiation of series, later lags have variance decaying harmonically
-    - Cross-equation effects expected to vary 20% as much as own-lag effects from 0
-- Implement using `bvarm` function in [BMR library](https://www.kthohr.com/bmr.html) for Bayesian VARs and related models used in macroeconomics  
+- Fix prior parameter $\alpha=2$ and set $\psi$ scale by empirical Bayes as variance of AR residuals
+- Set prior variance of $\beta_0$ be $1e7$: essentially unrestricted scale
+- Estimate $\lambda$ "hierarchically": put a prior on it  
+    - $\sim$ Gamma with mean 0.2, sd 0.4: posterior $mean\approx0.23$, $sd\approx 0.03$ 
+- Implement using `bv_minnesota` function in `BVAR` library 
 - Forecasts and corresponding intervals appear reasonable despite that some series (M1, Investment) are clearly trending
 
 ## Forecasts from ARI (Blue) and BVAR (Red)
 
 ```{r}
+#Label observations with dates
+rownames(macrodata)<-M1$date
+
+#Set priors: use hierarchical approach, with default scales, to account for uncertainty
+#Note that defaults are for series in levels, while some here are growth rates
+mn <- bv_minnesota(lambda = bv_lambda(mode = 0.2, sd = 0.4, min = 0.0001, max = 5),
+                   alpha = bv_alpha(mode = 2), 
+                   var = 1e07)
+
+#Ghost samples to set priors on initial conditions: 
+# SOC shifts towards independent unit roots
+# SUR shifts toward shared unit root
+# Hierarchical approach allows strength to be determined by data
+#soc <- bv_soc(mode = 1, sd = 1, min = 1e-04, max = 50)
+#sur <- bv_sur(mode = 1, sd = 1, min = 1e-04, max = 50)
+
+priors <- bv_priors(hyper = c("lambda"), #Choose lambda by hierarchical method, leave others fixed at preset
+                    mn = mn) #Set Minnesota prior as defined above
+
+#Add options soc = soc, sur = sur to set initial observations priors
+# For this data, hierarchical estimation sets fairly smal values for these, and resulting forecasts are about the same 
+# except with slightly narrower intervals for far future forecasts
+
+#Set up MCMC parameters: use default initialization except that scaling is adjusted automatically in burnin
+#If this is not enough, may need to adjust manually: check diagnostics
+mh <- bv_metropolis(adjust_acc = TRUE, acc_lower = 0.25, acc_upper = 0.45)
+# Usually automatic adjustment will work okay so long as burnin and n_draws both long enough
+```
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+set.seed(42) #Fix random numbers for reproducibility
+#Do the actual fitting.
+run <- bvar(macrodata, 
+            lags = 6, 
+            n_draw = 25000, n_burn = 10000, #Run 25000 draws, discard first 10000 to get 15000 samples
+            n_thin = 1, #Don't discard intermediate draws
+            priors = priors, #Use above priors
+            mh = mh, #Use MCMC sampler settings defined above
+            verbose = FALSE) #Report sampler progress?
+```
+```{r}
+#Sample from posterior predictive distribution 
+predict(run) <- predict(run, horizon = 20, conf_bands = c(0.05, 0.16))
+
+## Can plot using following commands, but I will use ggplot for compatibility with forecast libraries
+#plot(predict(run),area=TRUE,t_back = 190)
+
+## With library(BVARverse) also have plotting option
+#bv_ggplot(predict(run),t_back = 190)
+```
+```{r, eval=FALSE}
+#Alternative approach: BMR library
+# Available at https://www.kthohr.com/bmr.html
+#Uses slightly different formulation of and notation for Minnesota prior
+#There are some useful options available in this library, 
+# but it is not on CRAN and is not compatible with Kaggle's backend, so not run by default
+
 #Convert to a data frame
 bvarmacrodata <- data.matrix(macrodata) 
 
@@ -477,12 +550,20 @@ bvar_obj$prior(coef_prior=coef_prior,var_type=1,decay_type=1,HP_1=1,HP_2=0.2,HP_
 bvar_obj$gibbs(10000)
 
 #Construct BVAR Forecasts
-bvarfcst<-forecast(bvar_obj,periods=20,shocks=TRUE,plot=FALSE,varnames=colnames(macrodata),percentiles=c(.05,.50,.95),
+bvarfcst<-BMR::forecast(bvar_obj,periods=20,shocks=TRUE,plot=FALSE,varnames=colnames(macrodata),percentiles=c(.05,.50,.95),
     use_mean=FALSE,back_data=0,save=FALSE,height=13,width=11)
 
 #Warning: command is incredibly slow if plot=TRUE is on, fast otherwise
 # Appears to be issue with plotting code in BMR package, which slows down plotting to visualize
 # With too many lags and series, have to wait through hundreds of forced pauses
+
+for (i in 1:nseries){
+  BVAR<-ts(bvarfcst$forecast_mean[,i],start=c(2020,2),frequency=4,names=Series[i]) #Mean
+  lcband<-ts(bvarfcst$plot_vals[,1,i],start=c(2020,2),frequency=4,names=Series[i]) #5% Lower confidence band
+  ucband<-ts(bvarfcst$plot_vals[,3,i],start=c(2020,2),frequency=4,names=Series[i]) #95% Upper confidence band
+  fdate<-time(lcband) #Extract date so geom_ribbon()knows what x value is
+  bands<-data.frame(fdate,lcband,ucband) #Collect in data frame
+}
 ```
 ```{r}
 #Construct Forecasts of Each Series by Univariate AR models, with 95% confidence intervals
@@ -494,15 +575,23 @@ for (i in 1:nseries) {
 # ADD VAR and ARI forecasts to plot
 
 forecastseriesplots<-list()
-for (i in 1:nseries){
-BVAR<-ts(bvarfcst$forecast_mean[,i],start=c(2018,4),frequency=4,names=Series[i]) #Mean
-lcband<-ts(bvarfcst$plot_vals[,1,i],start=c(2018,4),frequency=4,names=Series[i]) #5% Lower confidence band
-ucband<-ts(bvarfcst$plot_vals[,3,i],start=c(2018,4),frequency=4,names=Series[i]) #95% Upper confidence band
-fdate<-time(lcband) #Extract date so geom_ribbon()knows what x value is
-bands<-data.frame(fdate,lcband,ucband) #Collect in data frame
+
 #Plot ARI model forecast along with BVAR forecasts, plus respective 95% intervals
+#Commented out alternative prior method
+for (i in 1:nseries){
+  BVAR<-ts(run$fcast$quants[3,,i],start=c(2020,2),frequency=4,names=Series[i]) #Mean
+  lcband<-ts(run$fcast$quants[1,,i],start=c(2020,2),frequency=4,names=Series[i]) #5% Lower confidence band
+  ucband<-ts(run$fcast$quants[5,,i],start=c(2020,2),frequency=4,names=Series[i]) #95% Upper confidence band
+  fdate<-time(lcband) #Extract date so geom_ribbon() knows what x value is
+  bands<-data.frame(fdate,lcband,ucband) #Collect in data frame
+  #BMR_BVAR<-ts(bvarfcst$forecast_mean[,i],start=c(2020,2),frequency=4,names=Series[i]) #Mean
+  #BMR_lcband<-ts(bvarfcst$plot_vals[,1,i],start=c(2020,2),frequency=4,names=Series[i]) #5% Lower confidence band
+  #BMR_ucband<-ts(bvarfcst$plot_vals[,3,i],start=c(2020,2),frequency=4,names=Series[i]) #95% Upper confidence band
+  #BMR_bands<-data.frame(fdate,BMR_lcband,BMR_ucband) #Collect in data frame
 forecastseriesplots[[i]]<-autoplot(ARIfcsts[[i]])+autolayer(BVAR)+
   geom_ribbon(aes(x=fdate,ymin=lcband,ymax=ucband),data=bands,alpha=0.2,colour="red")+
+  #autolayer(BMR_BVAR)+
+  #geom_ribbon(aes(x=fdate,ymin=BMR_lcband,ymax=BMR_ucband),data=BMR_bands,alpha=0.2,colour="green")+
   labs(x="Date",y=colnames(macrodata)[i],title=Series[i])
 }
 
@@ -515,10 +604,11 @@ grid.arrange(grobs=forecastseriesplots,nrow=4,ncol=2)
     - Note: Bayesian predictive intervals are not confidence intervals and vice versa
     - Predictive intervals give best average-case prediction of distribution given data over the model
     - Confidence intervals construct region containing data 95% of the time, if model specification true
+    - BVAR intervals wider for persistent series: account for, e.g., uncertainty over whether to difference
 - BVAR uses longer lags and prior centered at unit root to account for persistent dynamics
     - Prior over higher lags reduces variability of estimates, reduces overfitting by regularization
 - Test-based approach attempts to detect unit roots and difference them out, then find best stationary AR model
-    - Model selection by AIC acts against overfitting, but leaves remaining coefficients unrestricted
+    - Model selection by AICc acts against overfitting, but leaves remaining coefficients unrestricted
 
 ## Conclusions
 
@@ -537,9 +627,15 @@ grid.arrange(grobs=forecastseriesplots,nrow=4,ncol=2)
 ## References
 
 - Thomas Doan, Robert Litterman  & Christopher Sims "Forecasting and conditional projection using realistic prior distributions" Econometric Reviews Vol 3. No 1 (1984)
-    - Introduced the Minnesota prior 
+    - Introduced the Minnesota prior
+- Domenico Giannone, Michael Lenza, & Giorgio Primiceri "Prior Selection for Vector Autoregressions" Review of Economics and Statistics, Vol 97 No 2 (May 2015) 436–451
+    - How to pick parameters of Minnesota prior
+    - Basis for notation and defaults in **BVAR** R library
+- Michael Lenza & Giorgio Primiceri "[How to Estimate a VAR after March 2020](https://faculty.wcas.northwestern.edu/~gep575/PriorSelectionCovid2-3.pdf)" (2020)
+    - Notes that 2020 outliers make normal likelihood & prior perform badly
+    - Suggests restoring stationarity by dividing $y_t/c_t$ for $c_t$ scale of outlier 
 - Robert B. Litterman, "Forecasting with Bayesian Vector Autoregressions: Five Years of Experience" Journal of Business & Economic Statistics, Vol. 4, No. 1 (Jan., 1986), pp. 25-38
 - Keith O'Hara, "Bayesian Macroeconometrics in R" (2015) (https://www.kthohr.com/bmr.html)
-    - Library for Bayesian VARs and related models
+    - Alternate library for Bayesian VARs and related models
 
 

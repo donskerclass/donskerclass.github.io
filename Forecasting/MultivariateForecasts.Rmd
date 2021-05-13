@@ -12,12 +12,23 @@ output:
 - Multi-period forecasts
 - Vector Autoregression (VAR) methods
 
+```{r,message=FALSE,warning=FALSE}
+#Libraries
+library(fpp2) #Forecasting and Plotting tools
+library(vars) #Vector Autoregressions
+library(fredr) #Access FRED Data
+library(knitr) #Use knitr to make tables
+library(kableExtra) #Extra options for tables
+library(gridExtra) #Graph Display
+library(tidyverse) #Data manipulation
+```
+
 ## Multivariate Forecasts
 
 - Previous problems we have seen in class involve forecasting a single number $y_{T+h}$
 - Often need to forecast more than a single object
-    - Need to know multiple aspects of future situationto make policy or decisions
-        - Ideal monetery policy depends on future state of both inflation and unemployment
+    - Need to know multiple aspects of future situation to make policy or decisions
+        - Ideal monetary policy depends on future state of both inflation and unemployment
     - May need to make multiple related decisions
         - Business may care about performance of each of its many establishments
 - Even when forecasting a single target, can help to use multiple variables
@@ -54,7 +65,7 @@ output:
 ## Forecasting Rules for Multivariate Forecasts
 
 - Simplest way to build a class of multivariate forecast rules is to combine univariate classes
-    - $\mathcal{F}=\times_{i=1}^{m}\mathbf{F}_i$, where $\mathcal{F}_i=\{f:\mathbf{Z}\to\mathbb{R}\}$ is a univariate class like the linear classes from before, is called **separable**
+    - $\mathcal{F}=\times_{i=1}^{m}\mathcal{F}_i$, where $\mathcal{F}_i=\{f:\mathbf{Z}\to\mathbb{R}\}$ is a univariate class like the linear classes from before, is called **separable**
 - When loss is additive AND rule class $\mathcal{F}$ **separable**, ERM reduces to solving all the problems separately
     - Weights don't matter since problems do not interact 
     - Often a reasonable choice when there is no direct relationship between the problems
@@ -92,38 +103,38 @@ $$\mathcal{F}=\{\forall i=1\ldots m,\ f_{i}(\mathcal{Y}_{t})=\beta_{i,0}+\sum_{k
 - Input is a `ts` object containing $m$ time series and choice of order $p$
     - Options to include linear trend (`type=trend`) and seasonal dummies at frequency f  (`season=f`) in each equation 
 ```{r, message=FALSE,warning=FALSE}
-#Libraries
-library(fpp2) #Forecasting and Plotting tools
-library(vars) #Vector Autoregressions
-library(fredr) #Access FRED Data
-library(knitr) #Use knitr to make tables
-library(kableExtra) #Extra options for tables
 
-##Obtain and transform NIPA Data (cf Lecture 08)
+##Obtain and transform NIPA Data (cf Lecture 06)
 
 fredr_set_key("8782f247febb41f291821950cf9118b6") #Key I obtained for this class
 
 #US GDP components 
 GDP<-fredr(series_id = "GDP",
            observation_start = as.Date("1947-01-01"),
-           observation_end=as.Date("2019-02-12")) #Gross Domestic Product
+           observation_end=as.Date("2021-03-02"),
+           vintage_dates = as.Date("2021-03-02")) #Gross Domestic Product
 
 #US GDP components from NIPA tables (cf http://www.bea.gov/national/pdf/nipaguid.pdf)
 PCEC<-fredr(series_id = "PCEC",
             observation_start = as.Date("1947-01-01"),
-            observation_end=as.Date("2019-02-12")) #Personal consumption expenditures
+           observation_end=as.Date("2021-03-02"),
+           vintage_dates = as.Date("2021-03-02")) #Personal consumption expenditures
 FPI<-fredr(series_id = "FPI",
            observation_start = as.Date("1947-01-01"),
-           observation_end=as.Date("2019-02-12")) #Fixed Private Investment
+           observation_end=as.Date("2021-03-02"),
+           vintage_dates = as.Date("2021-03-02")) #Fixed Private Investment
 CBI<-fredr(series_id = "CBI",
            observation_start = as.Date("1947-01-01"),
-           observation_end=as.Date("2019-02-12")) #Change in Private Inventories
+           observation_end=as.Date("2021-03-02"),
+           vintage_dates = as.Date("2021-03-02")) #Change in Private Inventories
 NETEXP<-fredr(series_id = "NETEXP",
               observation_start = as.Date("1947-01-01"),
-              observation_end=as.Date("2019-02-12")) #Net Exports of Goods and Services
+           observation_end=as.Date("2021-03-02"),
+           vintage_dates = as.Date("2021-03-02")) #Net Exports of Goods and Services
 GCE<-fredr(series_id = "GCE",
            observation_start = as.Date("1947-01-01"),
-           observation_end=as.Date("2019-02-12")) #Government Consumption Expenditures and Gross Investment
+           observation_end=as.Date("2021-03-02"),
+           vintage_dates = as.Date("2021-03-02")) #Government Consumption Expenditures and Gross Investment
 
 #Format the series as quarterly time series objects, starting at the first date
 gdp<-ts(GDP$value,frequency = 4,start=c(1947,1),names="Gross Domestic Product") 
@@ -135,15 +146,15 @@ netexp<-ts(NETEXP$value,frequency = 4,start=c(1947,1),names="Net Exports")
 gce<-ts(GCE$value,frequency = 4,start=c(1947,1),names="Government Spending")
 
 #Convert to log differences to ensure stationarity and collect in frame
-NIPAdata<-ts(data.frame(diff(log(gdp)),diff(log(pcec)),diff(log(invest)),diff(log(gce))),frequency = 4,start=c(1947,1),end=c(2018,3))
+NIPAdata<-ts(data.frame(diff(log(gdp)),diff(log(pcec)),diff(log(invest)),diff(log(gce))),frequency = 4,start=c(1947,2))
 ```
 - Suppose we want to forecast GDP growth and subcomponents **C**onsumption+**I**nvestment+**G**overnment jointly
 - Estimate a VAR(1) model using log differences of NIPA nominal measurements
-```{r}
+```{r, class.source = 'fold-show'}
 NIPAVAR<-VAR(NIPAdata,p=1) #VAR(1) in Y=log.diff.gdp, C=log.diff.pcec, I=log.diff.invest, G=log.diff.gce
 NIPAfcst<-forecast(NIPAVAR) #Produce forecasts of all series
 ```
-```{r,echo=FALSE}
+```{r}
 #Collect Coefficients into a Data Frame
 var1table<-data.frame(
   GDP<-NIPAVAR$varresult$diff.log.gdp..$coefficients,
@@ -168,6 +179,10 @@ kable(var1table,
 autoplot(NIPAfcst)+
   labs(title = "VAR(1) Forecasts of GDP and and NIPA Component Growth")
 ```
+
+## Exercise: Money and Income
+
+- Check out [Kaggle notebook](https://www.kaggle.com/davidchilders/multivariate-forecasts) to try a VAR forecast for yourself
 
 ## Multi-period Forecasts
 
@@ -254,7 +269,7 @@ $$=(\widehat{\beta}_0+\widehat{\beta}_1\widehat{\beta}_0+\widehat{\beta}_1^2\wid
     - Let $y_t=ax_t+u_t$ where $u_t$ is independent of $x_t$ and over time  
     - Suppose $x_t$ depends on itself and $z_{t-1}$, eg $x_t=\rho x_{t-1}+\gamma z_{t-1}+e_t$ with $e_t$ independent over time
     - Then $y_t=(a\rho) x_{t-1}+(a\gamma) z_{t-1}+(u_{t}+ae_t)$: Lagged relationship depends on strength of persistence and on current relationship
-- More elaborate versions of this example inspired Sims use of VAR models in macroeconomics
+- More elaborate versions of this example inspired Sims' use of VAR models in macroeconomics
     - Existing macro theory c.1980 had a lot to say about contemporaneous relationships, very little about dynamics
     - Implied relationship over time a mix of both: predictive relationships for one variable can extend to others linked indirectly
     - For accurate predictions, many variables can be relevant
@@ -293,7 +308,7 @@ $$y_{t+1}=\beta_0+\sum_{j=1}^{p}\beta_{j}y_{t-j}+e_{t+1}\text{ for all t}$$
     
 ## Application to GDP Series in VAR(1) Example
 
-```{r, class.source='fold-show'}
+```{r, class.source = 'fold-show'}
 checkresiduals(NIPAVAR$varresult$diff.log.gdp..) #GDP Growth forecast residual diagnostic
 ```
 - Patterns in residual plot and ACF, and formal test of white noise, suggest VAR(1) is not super close to white noise
