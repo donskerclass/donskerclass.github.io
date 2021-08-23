@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
-    <lastBuildDate>Mon, 15 Jan 2018 00:00:00 -0500</lastBuildDate>
+    <lastBuildDate>Mon, 23 Aug 2021 00:00:00 -0400</lastBuildDate>
     
 	<atom:link href="/publication_types/4/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Efficient Online Estimation of Causal Effects by Deciding What to Observe</title>
+      <link>/publication/onlinemomentselection/</link>
+      <pubDate>Mon, 23 Aug 2021 00:00:00 -0400</pubDate>
+      
+      <guid>/publication/onlinemomentselection/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>Solution of Rational Expectations Models with Function Valued States</title>
