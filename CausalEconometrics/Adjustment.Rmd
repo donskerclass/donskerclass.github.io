@@ -1,0 +1,425 @@
+---
+title: "Adjustment"
+author: "David Childers"
+output:
+  html_document:
+    code_folding: hide
+bibliography: classrefs.bib
+---
+
+## Problem Setup
+
+- Suppose we want to know effect of treatment $X$ on outcome $Y$ but are not in experimental setting
+    - $Y^x\perp X$ is rare unless explicitly imposed
+- Target estimand remains average of functions of potential outcomes $E[f(Y^x)]$
+    - w.l.o.g. can replace $f(Y)$ by $Y$, so focus on $\gamma_x:=E[Y^x]$ to simplify notation
+    - We will (mostly) consider discrete $X$ today 
+- The main reason we can't find this in general is confounding: some of the relationship between $X,Y$ is due to mutual relationship with other variables $Z$
+- In some cases, we observe the confounders!
+- If problem is that units with different levels of $X$ not comparable because they also differ in $Z$, we can make them comparable by *adjustment*: conditioning on $Z$ to restore comparability
+    - Strategy is called control, conditioning, adjustment, etc
+
+```{r,fig.height=3,message=FALSE,warning=FALSE}
+library(dagitty) #Library to create and analyze causal graphs
+library(ggplot2) #Plotting
+library(npcausal) #Obtain from https://github.com/ehkennedy/npcausal ince not on CRAN 
+suppressWarnings(suppressMessages(library(ggdag))) #library to plot causal graphs
+yxzdag<-dagify(Y~X+Z,X~Z) #create graph with arrow from X to Y
+#Set position of nodes so they lie on a straight line
+  coords<-list(x=c(X = 0, Y = 2, Z=1),y=c(X = 0, Y = 0, Z=1))
+  coords_df<-coords2df(coords)
+  coordinates(yxzdag)<-coords2list(coords_df)
+ggdag(yxzdag)+theme_dag_blank()+labs(title="Z confounds relationship of X to Y") #Plot causal graph
+```
+ 
+
+## Identification: Assumptions
+
+- Formal statement of assumptions needed for identification by adjustment
+- Conditional random assignment/ignorability
+    - $Y^x\perp X|Z$
+- Overlap
+    - $P(X=x|Z=z)>0$ $\forall z$ in support of $Z$
+- (Causal) Consistency
+    - $Y_i=Y_i(x)1\{X_i=x\}$
+- These can be derived from full structural model, but for today take as given
+- We are continuing to assume treatment is well defined, observations are independent, and there is no interaction among units (i.e. SUTVA)
+
+<!-- - Stable Unit Treatment Value Assumption (SUTVA) -->
+<!--     - $\{Y_i(x)\}_{x\in\text{supp }{X}}$ i.i.d. -->
+    
+
+## Identification: Derivation
+
+- Adjustment Formula:
+$$E[Y^x]=\int E[Y|X=x,Z=z]dP(z)$$
+- Proof: 
+    - $E[Y^x] =\int E[Y^x|Z=z]dP(z)$ (L.I.E.)
+    - $=\int E[Y^x|X=x,Z=z]dP(z)$  (ignorability, overlap)
+    - $=\int E[Y|X=x,Z=z]dP(x)$ (consistency)
+- Role of overlap 
+    - $E[Y^x|X=x,Z=z]$ exists only if $x$ is in support of $P(X|Z=z)$, otherwise conditional density not defined
+        - Must hold true for all $z$ in support of $Z$
+    - For such values, $E[Y^x|X=x,Z=z]=E[Y^x|Z=z]$ by ignorability
+- Result: if we can identify *conditional* means and integrate out $Z$, ignorability and overlap let us identify causal effects   
+
+## When might we have ignorability?
+
+- Rarely reasonable *unless* assignment process known exactly
+- Do you observe exactly the same information used in the decision process?
+- Sometimes yes
+    - (Stratified) random experiments
+    - Rule based assignment procedure (e.g. @narita2021algorithm)
+    - Complete screening off of some variables (e.g. @jiang2014liar, online mortgage lender only had access to info in a fully observed file)
+- Less commonly, do you have a complete model of determinants of outcome?
+    - Outcome determined by fully understood physical process
+        - Extremely rare in econ applications, maybe plausible in some physical/chemical/biological settings
+- In other cases, you need to argue that result is at least plausible
+    - Typically by appeal to claim that situation is "approximately" like one of above
+    - "Natural" experiments have some aspect of randomness to isolate
+        - E.g., weather (usually) not determined by human choices, *but* obviously differs by geography, season, etc, which may associate with many socioeconomic attributes
+    - Approximate knowledge of rules: ask around; decision process may have surprising degree of structure
+    
+## The bad old days    
+    
+- Typical econ paper using adjustment before ~1995 (and maybe still in certain other fields) used following reasoning process
+    - I thought about all the things that might affect it (that I could also get data on) and put them all in my regression
+    - Controlling for a lot of things makes an estimate causal
+    - At least if your seminar audience can't think of anything else you forgot
+- Not true that added variables always reduce confounding bias, nor that large number of predictors means nothing else is left
+- Typically, papers using this kind of argument will be desk-rejected from most econ journals
+    - Even if you use a "fancy" estimator like something you heard about across the street in Gates Hall
+- Probably taboo against conditional ignorability assumptions has led to credulity about other estimators we will study, even when they are also flawed, and lack of attention to detail when using adjustment
+    - Compare medicine, in which non-experimental studies often marked as "low quality," arguably resulting in failure to make distinctions within observational studies and so licensing much worse practices
+- More next class about how to reason about conditional ignorability    
+    - Today: estimation when you have it
+
+
+## Estimators for $E[Y^x]$
+
+- Regression adjustment
+    - Estimate $\mu(x,z):=E[Y|X=x,Z=z]$ by regression estimator $\widehat{\mu}(x,z)$
+    - Average $\widehat{\gamma}_x^{reg}:=\frac{1}{n}\sum_{i=1}^{n}\widehat{\mu}(x,Z_i)$
+- Inverse Propensity Weighting (IPW)
+    - Estimate $\pi(x|z):=P(X=x|Z=z)$ by conditional probability estimator $\widehat{\pi}(x|z)$ 
+    - Average $\widehat{\gamma}_x^{IPW}:=\frac{1}{n}\sum_{i=1}^{n}\frac{Y_i1\{X_i=x\}}{\hat{\pi}(x|Z_i)}$
+- Augmented Inverse Propensity Weighting (AIPW)
+    - Estimate $\pi(x|z):=P(X=x|Z=z)$ *and* $\mu(x,z):=E[Y|X=x,Z=z]$ by $\widehat{\pi}(x|z)$ and $\widehat{\mu}(x,z)$
+    - Average $\widehat{\gamma}_x^{AIPW}:=\frac{1}{n}\sum_{i=1}^{n}(\widehat{\mu}(x,Z_i)+\frac{(Y_i-\widehat{\mu}(x,Z_i))1\{X_i=x\}}{\hat{\pi}(x|Z_i)})$
+- Convert any of these into ATE estimate by subtracting, e.g. $\hat{\gamma}_1-\hat{\gamma}_0$
+- I will restrict attention to these today, as archetypes, but many other procedures exist
+
+## Inverse Propensity Lemma
+
+- $E[\frac{Y1\{X=x\}}{P(x|Z)}]=E[E[Y|X=x,Z=z]]$
+- Proof: 
+    - $E[\frac{Y1\{X=x\}}{P(x|Z)}]=E[E[\frac{Y1\{X=x\}}{P(x|Z)}|X,Z]]$ (L.I.E.)
+    - $=E[E[Y|X,Z]\frac{1\{X=x\}}{P(x|Z)}]$
+    - $=E[E[E[Y|X,Z]\frac{1\{X=x\}}{P(x|Z)}|Z]]$ (L.I.E)
+    - $=E[E[Y|x,Z]\frac{P(x|Z)}{P(x|Z)}]$
+    - $=E[E[Y|x,Z]]$
+- Where line 4 follows since $E[E[Y|X,Z]1\{X=x\}|Z]=\int E[Y|\tilde{x},Z]1\{\tilde{x}=x\}dP(\tilde{x}|Z)=E[Y|x,Z]P(x|Z)$    
+- Corollary: Under ignorability, overlap, and consistency, IPW formula identifies $E[Y^x]$
+- Interpretation: "re-weighting" approximates Radon-Nikodym transform between observational density and density under $do(X=x)$
+- Extends to continuous $X$ using densities
+    - Let $w=\frac{\delta_x}{f(X|Z)}$. $E[wY]=\int Y \frac{f(Y,X,Z)\delta_x}{f(X|Z)}dYdXdZ$
+    - $=\int Y \frac{f(Y|X,Z)f(X|Z)f(Z)\delta_x}{f(X|Z)}dYdXdZ=\int Y f(Y|X=x,Z)f(Z)dYdZ$
+    - $=E_Z[E_Y[Y|X=x,Z]]$
+
+## Double robustness of AIPW
+
+- AIPW is consistent under correct specification of one of $\pi$ or $\mu$
+    - Can think of it as bias-corrected version of IPW or regression adjustment 
+- Let $\tilde{\pi}$ be arbitrary
+    - $E[\mu(x,Z)+\frac{(Y-\mu(x,Z))1\{X=x\}}{\tilde\pi(x|Z)}]=$
+    - $=E[\mu(x,Z)]+E[E[\frac{(Y-\mu(x,Z))1\{X=x\}}{\tilde\pi(x|Z)}|X,Z]]$ (L.I.E.)
+    - $=E[Y^x]+E[\frac{(\mu(x,Z)-\mu(x,Z))\pi(x,Z)}{\tilde\pi(x|Z)}]$ (ID+IP lemma steps)
+    - $=E[Y^x]$
+- Let $\tilde{\mu}$ be arbitrary
+    - $E[\tilde{\mu}(x,Z)+\frac{(Y-\tilde{\mu}(x,Z))1\{X=x\}}{\pi(x|Z)}]$
+    - $=E[\tilde{\mu}(x,Z)]+E[\frac{Y1\{X=x\}}{\pi(x|Z)}]-E[\frac{\tilde{\mu}(x,Z)1\{X=x\}}{\pi(x|Z)}]$
+    - $=E[\tilde{\mu}(x,Z)]+E[Y^x]-E[\frac{\tilde{\mu}(x,Z)\pi(x|Z)}{\pi(x|Z)}]$ (IP lemma steps)
+    - $=E[Y^x]$
+- Result: need at most one of $\widehat{\pi},\widehat{\mu}$ to be consistent for consistency of AIPW
+- AIPW also has smaller variance than IPW, even when $\pi$ correctly specified, and other desirable estimation properties
+
+
+## Choice of Estimators for $\pi$, $\mu$
+
+- Parametric models most common by far
+    - OLS for $\mu$, rarely $\pi$ ("Linear Probability Model")
+    - Common to choose probit/logit for $\pi(x|z)$
+    - Sometimes OLS for $\pi(z)^{-1}$
+- Parametric models are $\sqrt{n}$ consistent if correctly specified, otherwise inconsistent
+- Perform inference by delta method under some regularity conditions
+    - IPW often has high variance, especially if overlap is "near" violated
+    - Strengthen to "strong overlap" for well-behaved asymptotically normal inference
+    - $\pi(x|z)>\eta>0$ $\forall x\in\text{Support }X$
+- Nonparametric methods can estimate conditional expectations under weaker assumptions at slower rates
+    - Best possible MSE for $\alpha-$ times differentiable function of $d$ dimensions: $O(n^\frac{-\alpha}{2\alpha+d})$
+    - Achieved by (correctly chosen and tuned) kernels, sieves, etc
+    - Many other function-class + estimator pairs with known rate results
+- Plugging nonparametric $\hat{\mu}$ or $\hat{\pi}$ into regression or IPW method gives error rate same as estimator
+    - Retain some bias due to lack of knowledge of functional form
+    - Inference usually requires different rate tradeoffs than estimation
+
+
+## Handling nuisance error: Regularity or Sample Splitting
+
+- Classical estimation approach estimates $\widehat{\mu},\widehat{\pi}$ and empirical distribution for averaging from same data
+    - Creates correlation between samples and estimators
+- To prove asymptotic normality accounting for error in nuisance, need *uniform* CLT over class $\pi$ and/or $\mu$
+    - By multivariate CLT, if $\vec{f}$ is a vector of $k$ functions in $\mathcal{F}$ 
+    - $\frac{1}{\sqrt{n}}\sum_{i=1}^{n}(\vec{f}(x_i)-E[\vec{f}(x_i)])\overset{d}{\to}G_k\sim N(0,\Sigma)$ with $\Sigma(f_s,f_t)=E[f_s(x_i)f_t(x_i)]-E[f_s(x_i)]E[f_t(x_i)]$
+    - An infinite class $\mathcal{F}$ of functions is *Donsker* if $\frac{1}{\sqrt{n}}\sum_{i=1}^{n}(f(x_i)-E[f(x_i)])\overset{d}{\to}\mathcal{G}$  in $\ell^\infty(\mathcal{F})$, where $\mathcal{G}$ is a stochastic process whose finite dimensional marginals are distributed as $G_k$
+- Most well-behaved parametric classes of functions are Donsker, and many but not all nonparametric classes 
+    - See @vanderVaart1996weak for gory details
+    - Most troublesome if your $\mu$ or $\pi$ estimator not defined by a function class at all: e.g. Lasso
+- You can (and we will) avoid figuring out whether this is true for your functions by *sample splitting*
+    - Split data randomly into independent samples of size $n_1=n_2=\frac{n}{2}$
+    - On $n_2$ estimate $\widehat{\pi}^{n_2}(x,z), \widehat{\mu}^{n_2}(x,z)$
+    - Estimate $\widehat{\gamma}^{n_1}_x=\frac{1}{n_1}\sum_{i=1}^{n_1}\widehat{\mu}^{n_2}(x,Z_i)+\frac{(Y_i-\widehat{\mu}^{n_2}(x,Z_i))1\{X_i=x\}}{\widehat{\pi}^{n_2}(x|Z_i)}$
+- Halves effective sample size, but can get it back by *cross-fitting*
+    - Reverse samples and average $\widehat{\gamma}^{cross}=\frac{\widehat{\gamma}^{n_1}}{2}+\frac{\widehat{\gamma}^{n_2}}{2}$ 
+- Benefits of this mild for regression and IPW, substantial for AIPW, so focus on AIPW
+
+
+## AIPW limit distribution
+
+- In "oracle" AIPW with true $\pi,\mu$ known, limit distribution given by CLT
+    - $\sqrt{n}(\widehat{\gamma}^{exact}_x-\gamma_x)\overset{d}{\to}N(0,V^{*})$ 
+    - $V^*=Var(\mu(x,Z_i))+E[\frac{(Y-\mu(x,Z_i))^2}{\pi(x|Z)}]$
+- With following conditions, cross-fit AIPW with estimated $\widehat{\mu},\widehat{\pi}$ is close enough that limit is the same
+    - Strong overlap: $\pi(z)>\eta$ for all $z$ in support of $Z$ 
+    - (Uniform) consistency $\underset{z}{\sup}\left|\widehat{\mu}^{n_2}(x,z)-\mu(x,z)\right|\overset{p}{\to}0$, $\underset{z}{\sup}\left|\widehat{\pi}^{n_2}(x,z)-\pi(x,z)\right|\overset{p}{\to}0$
+    - Fast MSE rates: $E[(\widehat{\mu}^{n_2}(x,z)-\mu(x,z))^2]E[(\widehat{\pi}^{n_2}(x,z)-\pi(x,z))^2]=o(\frac{1}{n})$
+- Under these conditions, $\sqrt{n_1}(\widehat{\gamma}^{n_1}_x-\gamma_x)=\sqrt{n_1}(\widehat{\gamma}^{exact}_x-\gamma_x)+\sqrt{n_1}(\widehat{\gamma}^{n_1}_x-\widehat{\gamma}^{exact}_x)\overset{d}{\to}N(0,V^*)+o_p(1)$
+    - Cross-fit version converges at rate $\sqrt{n}$
+    
+## Interpreting conditions
+
+- Strong overlap requires non-trivial chance of observing any $x$ for any $z$
+- Consistency holds and MSE condition satisfied with error $o(\frac{1}{n^2})$ for typical ($\sqrt{n}-$consistent) parametric estimators
+- Requirement to only have $o(\frac{1}{n})$ opens door to $n^{1/4}$ consistent estimators
+- Includes some nonparametric methods with reasonably fast rates
+    - Kernels with $\frac{\alpha}{2\alpha+d}<\frac{1}{4}$: generally requires high order kernels
+    - Lasso with appropriate sparsity, random forests under some smoothness
+    - Other ML methods, or combinations thereof
+- Benefit is ability to plug in any method with sufficiently accurate approximations
+
+## Proof that $\sqrt{n_1}(\widehat{\gamma}^{n_1}_x-\widehat{\gamma}^{exact})=o_p(1)$ 
+
+- $\frac{1}{n_1}\sum_{i=1}^{n_1}\left(\widehat{\mu}^{n_2}(x,Z_i)+\frac{(Y_i-\widehat{\mu}^{n_2}(x,Z_i))1\{X_i=x\}}{\widehat{\pi}^{n_2}(x|Z_i)}-\mu(x,Z_i)-\frac{(Y_i-\mu(x,Z_i))1\{X_i=x\}}{\pi(x|Z_i)}\right)$  
+- $=\frac{1}{n_1}\sum_{i=1}^{n_1}\left(\left(\widehat{\mu}^{n_2}(x,Z_i)-\mu(x,Z_i)\right)(1-\frac{1\{X_i=x\}}{\pi(x|Z_i)})\right)+$ $\frac{1}{n_1}\sum_{i=1}^{n_1}\left(1\{X_i=x\}\left(Y_i-\mu(x,Z_i)\right)\left(\frac{1}{\widehat{\pi}^{n_2}(x|Z_i)}-\frac{1}{\pi(x|Z_i)}\right)\right)-$ 
+- $\frac{1}{n_1}\sum_{i=1}^{n_1}\left(1\{X_i=x\}\left(\widehat{\mu}^{n_2}(x,Z_i)-\mu(x,Z_i)\right)\left(\frac{1}{\widehat{\pi}^{n_2}(x|Z_i)}-\frac{1}{\pi(x|Z_i)}\right)\right)$ $=(1)+(2)+(3)$
+- $(3)\leq\left(\frac{1}{n_1}\sum_{i=1}^{n_1}1\{X_i=x\}\left(\widehat{\mu}^{n_2}(x,Z_i)-\mu(x,Z_i)\right)^2\right)^{1/2}\left(\frac{1}{n_1}\sum_{i=1}^{n_1}1\{X_i=x\}\left(\frac{1}{\widehat{\pi}^{n_2}(x|Z_i)}-\frac{1}{\pi(x|Z_i)}\right)^2\right)^{1/2}$
+    - $\leq (CE[(\widehat{\mu}^{n_2}(x,z)-\mu(x,z))^2]E[(\widehat{\pi}^{n_2}(x,z)-\pi(x,z))^2])^{1/2}+\text{higher order terms}$
+    - Uses Cauchy Schwartz and fact that $\frac{1}{n_1}\sum_i(\frac{1}{\hat{\pi}}-\frac{1}{\pi})=\frac{1}{n_1}\sum_i\frac{\hat{\pi}-\pi}{\hat{\pi}\pi}\leq\frac{1}{\eta^2}\frac{1}{n_1}\sum_i(\hat{\pi}-\pi)$ w.p.a. 1
+    - $=o_p(1\sqrt{n})$ by Fast MSE rates   
+- By Chebyshev, (1) bounded with high prob by $E[\frac{1}{n_1}\sum_{i=1}^{n_1}\left(\left(\widehat{\mu}^{n_2}(x,Z_i)-\mu(x,Z_i)\right)(1-\frac{1\{X_i=x\}}{\pi(x|Z_i)})\right)^2]$
+    - $=E[E[\frac{1}{n_1}\sum_{i=1}^{n_1}\left(\left(\widehat{\mu}^{n_2}(x,Z_i)-\mu(x,Z_i)\right)(1-\frac{1\{X_i=x\}}{\pi(x|Z_i)})\right)^2|n_2]]$ (L.I.E.)
+    - $=E[Var[\frac{1}{n_1}\sum_{i=1}^{n_1}\left(\left(\widehat{\mu}^{n_2}(x,Z_i)-\mu(x,Z_i)\right)(1-\frac{1\{X_i=x\}}{\pi(x|Z_i)})\right)|n_2]]$ (since $E[(1-\frac{1\{X_i=x\}}{\pi(x|Z_i)})|Z_i]=0$)
+    - $=\frac{1}{n_1}E[Var[\left(\widehat{\mu}^{n_2}(x,Z_i)-\mu(x,Z_i)\right)(1-\frac{1\{X_i=x\}}{\pi(x|Z_i)})|n_2]]$ (since conditionally iid)
+    - $=\frac{1}{n_1}E[E[\left(\widehat{\mu}^{n_2}(x,Z_i)-\mu(x,Z_i)\right)^2(\frac{1\{X_i=x\}}{\pi(x|Z_i)}-1)|n_2]]$ (some algebra)
+    - $=\frac{1}{\eta n_1}E[E[\left(\widehat{\mu}^{n_2}(x,Z_i)-\mu(x,Z_i)\right)^2|n_2]]=o_p(\frac{1}{n})$ (strong overlap, consistency)
+- $(2)$ attains same rate as $(1)$ by similar arguments and strong overlap
+
+
+## Communicating results
+
+- Good idea to report $\widehat{\mu}$ and $\widehat{\pi}$ estimates along with final treatment estimate
+    - In parametric case, have tables of regression coefficients and propensity coefficients
+- In nonparametric case, summary statistics and plots
+    - Histogram/kernel density of $\widehat{\pi}(x,Z_i)$ 
+- For re-weighting methods, may report measures of balance, like IPW-weighted means of covariates in different treatment groups
+    - Balancing methods try to minimize this differences explicitly
+    - Not clear that balance is goal in and of itself in weighting methods, though it is reasonable criterion when conditionally randomizing and minimizing it may have other useful outcomes
+- Use causal language if you are adjusting for the purpose of accounting for confounding
+    - If you want to just describe group differences, not clear what purpose conditioning serves
+    - If ignorability not exactly plausible, admit you are at least trying to approximate it
+    - Words like "associates" get interpreted as causal anyway. "Predicts" should be reserved for other situations entirely (@kleinberg2015prediction) 
+    
+## Software
+
+- Regression by any method you want 
+- Command `teffects` in Stata for parametric IPW/AIPW 
+- R library `npcausal` (@kennedy2021npcausal) for AIPW with cross-fitting
+    - Also handles continuous treatment
+```{r,message=FALSE, class.source = 'fold-show'}
+set.seed(42) #Reproducible numbers
+n <- 100;
+z <- matrix(runif(n*5),nrow=n)
+b <- as.vector(c(1,1,-1,1,-1))
+g1 <- rnorm(5); g2 <- rnorm(5);
+pi<-exp(z%*%b)/(1+exp(z%*%b))
+x <- rbinom(n,1,pi)
+y <- rnorm(n,mean=x+z%*%g1+sin(z%*%g2))
+#ATE by cross-fit AIPW, with weighted average of ML algorithms
+ate.res <- ate(y,x,z, sl.lib=c("SL.mean","SL.gam","SL.ranger","SL.glm"))
+```    
+```{r, class.source = 'fold-show'}
+# Compare pure regression and IPW estimates from same data
+#Regression
+(EY0reg<-mean(ate.res$nuis[,3]))
+(EY1reg<-mean(ate.res$nuis[,4]))
+(ATEreg<-EY1reg-EY0reg)
+```
+```{r, class.source = 'fold-show'}
+#IPW
+(EY0ipw<-mean(y*(1-x)/ate.res$nuis[,1]))
+(EY1ipw<-mean(y*x/ate.res$nuis[,2]))
+(ATEipw<-EY1ipw-EY0ipw)
+```
+
+
+```{r,message=FALSE,warning=FALSE,echo=FALSE}
+pscore<-c(pi,ate.res$nuis[,2]) #Compose true and estimated propensity scores
+tpi<-rep(0,n)
+pihat<-rep(1,n)
+isestimated<-factor(c(tpi,pihat)) #indicator for which is which
+pscores<-data.frame(pscore,isestimated)
+ggplot(data=pscores)+geom_density(aes(x=pscore,fill=isestimated,color=isestimated),alpha=0.5)+
+    ylab("P(X=1|Z)")+
+    ggtitle("True and Estimated propensity score distributions")
+```    
+
+
+## Which to use?
+
+- In discrete $X$ case, AIPW has robustness, faster rates (if nonparametric), smaller variance than other estimates
+- Regression estimator optimal in correctly specified parametric case, and may have nicer finite sample properties
+    - Correct specification strong, but this is by far most commonly used adjustment method
+    - Simplicity and wide use means readers will probably ask to see it
+- IPW attractive when propensity score is known or simple (eg, stratified experiments), while regression function hard to estimate
+    - Special case: randomized experiment, just gives difference in means
+- Can construct examples (@robins2015bayesian) with really ugly regression function where IPW consistent but no regression estimator is
+    - Even in that case, may want AIPW as even if regression part is misspecified it may reduce variance
+- Other kinds of procedures: balancing, matching, propensity-augmented regression
+    - These still fundamentally rely on conditional ignorability, but some versions may have good statistical properties
+
+
+## What to do about non-ignorability
+
+- 1st best: go run an experiment or find natural experiment
+- 2nd best (maybe?): some other identification method: future classes
+- Bounds: conditional versions of lecture 2 bounds
+    - Rarely done, but it would be sensible
+- Sensitivity analysis: is it plausible that $Y^x$ *approximately* $\perp X|Z$
+    - If you can quantify distance to independence, may obtain bound as function of nuisance parameter
+    - Gauge distance by prior knowledge of magnitudes, possibly informed by magnitudes of "comparable" relationships
+- Many specific measures: e-values, Cornfield's inequality, etc
+    - Split up into relationship of $X$ and omitted variables $W$, omitted variables and $Y$
+- Omitted variables bias in OLS (scalar $X$, omitted $W$) 
+    - If $Y=\beta_1X +Z^{\prime}\beta_2 + \gamma W+u$, $W=\delta_0+\delta_1X+Z'\delta_2+e$
+    - Regression omitting $W$ gives $\tilde{\beta}_1=\beta_1+\gamma\delta_1$
+    - Prior info on $\gamma,\delta_1$ can sign or bound
+- Helpful to show curve of estimates at each level of strength of confounding
+    - Audience will have different views as to what's plausible
+- Logic of form: "omitted variable must be M times as large as all other known causes of cancer put together" main evidence used to suggest causal relationship between smoking and cancer
+
+
+## What else can go wrong? Overlap
+
+- $0<P(X=x|Z=z)$ for all $z$ in support of $Z$
+- For any attribute set $z$, can find units with assignment to either treatment value
+- Without it, must extrapolate effect for units that never/always did receive treatment
+- Quantitatively, need $\eta<P(X|Z=z)<1-\eta$ for regular estimation
+    - Otherwise, effective sample size in some regions small
+- IPW will helpfully give you high variance and crazy output when overlap fails
+- AIPW will similarly start to be highly variable, though initial variance smaller
+- Regression adjustment will often show no signs of problems
+    - Regression function not identified in regions of 0 overlap
+    - But may extrapolate into zero probability regions using functional form assumptions
+    - Fine if you believe them, but need external justification
+- Variability not a failing of estimator: parameter is not even identified without overlap
+- With only weak overlap, may sometimes be "irregularly identified" [@khan2010irregular]
+    - Optimal rate of convergence need not be $\sqrt{n}$
+    
+
+## When is overlap condition a problem?
+
+- Strongly predictive covariates
+    - E.g. Discrete choice case: $P(X=1|Z)=Pr(Z'\beta+\epsilon>0)$
+    - $\beta_j\neq 0$ and $Z_j$ has heavier tails than $\epsilon$
+    - Many not too correlated $Z$ associated with not too small $\beta$'s [@d2021overlap]
+    - Strict overlap becomes more restrictive as dimension grows
+- Deterministic assignment rules: no noise term
+    - Defer fix to Regression Discontinuity lecture
+- $dim(Z)>n$ or highly flexible classifier (eg SVM: see @mohri2018foundations) 
+    - Data may be *separable*: $\widehat{P}(X=1|Z)$ 1 or 0 always
+    - May classify with *margin* minimal width between $1$ vs $0$ classified points $>0$
+    - Here, weighting methods and RD both fail
+
+```{r,message=FALSE,warning=FALSE}
+set.seed(1234)
+n<-10000
+shift <- 2
+za<-rnorm(n/2,0,1)
+zb<-rnorm(n/2,shift,1)
+z<-c(za,zb)
+xa<-rep(0,n/2)
+xb<-rep(1,n/2)
+X<-factor(c(xa,xb))
+
+#Apply Bayes rule: P(X=1|Z)=P(Z|X=1)P(X=1)/(P(Z|X=1)P(X=1)+P(Z|X=0)P(X=0))
+#By P(X=1)=P(X=0)=0.5 and normality obtain
+probXgivenZ= 1/(1+exp(0.5*shift-z))
+
+dataf<-data.frame(z,X,probXgivenZ)
+
+ggplot(data=dataf)+geom_density(aes(x=z,fill=X,color=X),alpha=0.5)+
+    geom_line(aes(x=z,y=probXgivenZ))+
+    ylab("P(X=1|Z)")+
+    ggtitle("P(Z|X=1), P(Z|X=0), and P(X=1|Z)", subtitle = paste("Normal Distributions shifted by",shift))
+```
+    
+
+## What to do about overlap
+
+- ATE not identified but other parameters may be
+    - Ask yourself: if type $x$ units never/always treated maybe relevant policy is one that preserves this
+    - Later with IV: if treatment is choice, measure effects of incentive on choice, rather than of choice itself
+- "Trimmed ATE" $E[(Y^1-Y^0)w(Z)]$ for weighting function $w(Z)=0$ on regions of 0 overlap
+    - Implement by multiplying by weighting function
+    - May be okay idea in small samples to reduce variance at cost of bias
+- Additional assumptions may restore identification
+    - Extrapolate by assuming functional form for $E[Y|X,Z]$
+    - Typical approach: OLS
+- Lesson: OLS "works" when (A)IPW doesn't precisely because it imposes strong untestable assumptions about units you've never seen
+
+## Finite sample overlap issues
+
+- Case where $P(X|Z)$ *close to* 0 cause unstable estimates and inference
+- Stabilize in finite samples: normalized so they sum to 1
+    - Replace $\frac{1}{\widehat{\pi}(x|Z_i)}$ ("Horvitz-Thompson weights") with $\frac{\sum_i\widehat{\pi}(x|Z_i)}{\widehat{\pi}(x|Z_i)}$ ("Hájek weights")
+    - Asymptotically identical but helps a bit in finite samples
+- Balancing estimators can retain asymptotic normality under $E[\frac{1}{\pi(x|Z)}]<\infty$ instead of strong overlap   
+    - Still need low chance of small $\pi$, but not bounded away (@wager2020class Ch7)
+- Some literature on regularization, corrected inference: active research area
+    - @heiler2021valid m-out-of-n bootstrap for non-Gaussian limits
+    - @sasaki2018estimation on bias correction for trimming
+
+## Extensions
+
+- Continuous treatment
+    - Regression estimator, parametric or not, continues to be valid and widely used if correctly specified
+    - IPW analogues a bit harder since you need conditional densities
+    - See @colangelo2020double, @kennedy2017non for AIPW-like methods
+- Slow rates for nuisance estimation
+    - $o(n^{1/4})$ requires very well behaved nuisance models
+    - Since nuisance terms start to dominate, further corrections can help to improve rates over nonparametric plugin, though not necessarily $\sqrt{n}$ asymptotic normality
+    
+## Conclusions
+
+- Control strategies account for confounding by conditioning on confounders
+- Produces consistent estimates of treatment effects under **conditional ignorability** and **overlap**
+- Estimate by regression, propensity weighting, or combination of the two
+    - All require estimation of nuisance functions: either conditional means or propensity scores
+    - AIPW corrects for errors in one nuisance using the other, allowing asymptotic normality with less precise estimates of nuisances
+- Overlap needed to avoid extrapolation, but verifiable
+- Conditional ignorability not verifiable, but can assess sensitivity to violations
+    - Need understanding of possible confounding factors and their size and impact
+    
+
+
+## References

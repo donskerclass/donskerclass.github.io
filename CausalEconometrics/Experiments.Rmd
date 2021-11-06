@@ -1,0 +1,424 @@
+---
+title: "Experiments"
+author: "David Childers"
+output:
+  html_document:
+    code_folding: hide
+bibliography: classrefs.bib
+---
+
+  
+## Experiments
+
+- An experiment is *the* paradigmatic example of a manipulation that will be described as "causal"
+    - The benchmark via which we define and assess causality in other settings
+- Corresponds to deliberate manipulation of some variable in a system to set it to a value
+    - We call the manipulated variable the **treatment**: I will denote it $X$
+- Goal is to measure results in some other variable(s) that result from this manipulation 
+    - Call measured variables the **outcome** or **response**: I will denote it $Y$
+- System will often have other variables measured before assigning the treatment that correspond to attributes of the units
+    - Call them (baseline or pre-treatment) **covariates** or **controls**: I will denote them $Z$
+    - Precise meaning clearer in structural equation model: "before" means not a descendant of $X$ (no directed path from $X$ to $Z$)
+- Some authors replace $(Y,X,Z)$ with $(Y,A,X)$ or $(Y,W,X)$ (or $T$ or $D$ or $A$ or $(Y,A,L)$ or ...   )
+- In an experiment, $X$ determined by an **assignment mechanism** or **design**
+    - Function which replaces $f_x()$ mechanism that determines $X$ without deliberate manipulation
+    - Typically containing some source of (exogenous) random variation, in which case it is a "randomized experiment" 
+
+  
+
+## Estimands in experiments
+
+- Typical target in experiment is a causal effect of the treatment: a functional of the potential outcomes distributions
+- In a model defined by (finite or infinite dimensional) parameters $\Theta$ (generically, the structural functions $f_1,\ldots,f_p$ and the distribution of the noise $F_{U_1,\ldots,U_p}$), which in turn indexes the set of distributions of all observed and counterfactual quantities, $\mathcal{P}_\Theta:=\{P_\theta(Y,\{Y^x\}_{x\in\mathcal{X}},X,Z):\ \theta\in\Theta\}$ a **functional** is a map $\psi(.):\mathcal{P}_\Theta\to\mathbb{R}$
+    - We will drop reference to $\theta$ when $\theta=\theta_0$, the "true" structure assumed to generate the model, and to which distribution we are using when clear from context (and often when not clear)
+- Example: **Average Treatment Effect** (ATE) (at some values of $X$)
+    - $E[Y^{X=x_1}-Y^{X=x_0}]$ if $X$ set to discrete values. If there are only 2, w.l.o.g. we set $x_1=1$, $x_0=0$
+    - $\frac{d}{dx}E[Y^{X=x}]$ if $X$ continuous
+- Sometimes we are interested in conditioning on a subgroup, e.g.
+    - $E[Y^{X=x_1}-Y^{X=x_0}|Z=z]$ or $\frac{d}{dx}E[Y^{X=x}|Z=z]$ is the **Conditional Average Treatment Effect** (CATE) at $z$
+- Features other than mean: $Pr(Y^x<y)=E[1\{Y^x<z\}]$ CDF of potential outcomes, quantiles, higher moments, etc
+- These features generally do not fully describe entire structural model
+    - If $Y_1 = f_1(Y_2,Y_3,Y_4,...,U_1)$, ATE given $do(Y_2=x)$ is $\frac{d}{dx}E[f_1(x,Y_3^x,Y_4^x,...,U_1)]$
+
+
+
+## Identification with experiments
+
+
+- We say a feature $\psi$ of a model is **identified** if for any $\theta,\theta^\prime$ such that $\psi(\theta^\prime)\neq\psi(\theta)$ the marginal distributions of *observed* variables (here $(Y,A,Z)$) $P_\theta(Y,A,Z)$ and $P_{\theta^\prime}(Y,A,Z)$ are distinct
+    - There then exists a map $\psi(P(Y,A,Z))$ which is one to one, at which point we can omit reference to $\theta$ entirely, as is standard in the literature 
+- In SEM, if $X=f(U_x)$ with $U_x$ independent of all other noise terms $P(Y|do(X=x))=P(Y|X=x)$ for any $x$ in support of distribution
+    - Similarly $P(Y|do(X=x),Z=z)=P(Y|X=x,Z=z)$ in joint support of $X,Z$  (*Not* $P(Y|do(X=x,Z=z))$: CATE is not a causal effect of $Z$)
+- In potential outcomes notation, random assignment condition is $Y^{X=x}\perp X$ for all $x$ in support of distribution
+- $E[g(Y)|X=x]=E[g(Y^x)|X=x]=E[g(Y^x)]$ by independence, for any function $g$
+    - By applying to class of $g$ generating distribution, learn entire distribution
+
+## Limits of identification  
+    
+- Experiments don't identify:
+  - Features of the joint distribution of $Y^{x_1},Y^{x_0}$
+      - Includes counterfactuals which conditional potential outcomes on other potential outcomes
+  - Individual-level effects, eg **Individual Treatment Effect** $Y^1_i-Y^0_i$ for unit $i$
+      - May learn CATE for narrow subgroup, but observationally identical individuals may have heterogeneous ITEs 
+- Identification concept itself is proxy for estimability, though these are not always the same
+    - Distribution of observables can be approximated, often arbitrarily well in the limit of a large random sample
+    - Observed sample may or may not be large or random or have obvious sense in which limit can be taken
+    - Further technical concerns about continuity with respect to approximation can come up (hold this thought until instrumental variables lecture)
+      
+
+## Identification without experiments
+
+- Saw before that $E[Y|X=1]-E[Y|X=0]$ $=E[Y^1-Y^0|X=1]+E[Y^0|X=1]-E[Y^0|X=0]$ ATT + Selection
+  - Could, e.g., consider plausible size of selection effect and report results for each. "Sensitivity analysis"
+  - Reasonable if you have some sense of reasons for deviation from random assignment
+- Could write down an economically plausible model, with agent decisions, all the mechanisms you can think of, with standard functional forms, unknown parameters estimated from data
+- Suppose that given the structure of this model, estimated with data on observables, there is a unique value of treatment effect
+    - Then the model must restrict some features of unobservable potential outcomes
+    - How justifiable are those restrictions? Answer can't be based on data alone
+- Could someone modify the model and change the result without changing the data distribution?
+    - Common case: add unobserved common causes to any case where there is a directed arrow
+    - $X$ causes $Y$ or $X$ and $C$ cause $Y$ and $C$ causes $X$. $C$ is a "*confounder*"
+- When can we rule out this kind of confounding?
+    - $X$ determined by known and sufficiently rigid institutional rule (Maybe encoded in software, regulation, or law)
+    - Physical restrictions on influence of unknown variables
+    - Strong behavioral invariance justified by theory and intervention
+- All of above are strong, and not ensured by "I don't know what else would be there"
+    - Need to be sure rule is in fact followed to the letter
+    - Theoretical invariances surprisingly often contradicted (e.g. Modligliani-Miller on debt vs equity, standard tax incidence theory on nominal tax liability,...)
+    
+
+
+
+## Agnostic bounds
+
+- Suppose we know nothing about assignment mechanism: what can we say?
+- Suppose all we know is $Y^x\in[0,1]$ (w.l.o.g.: with bounds [$\underline{Y}$, $\bar{Y}$] replace $Y$ by $\frac{Y-\underline{Y}}{\bar{Y}-\underline{Y}}$)
+    - Finite bounds needed as otherwise effect could be arbitrarily large or small
+- **Theorem**: 
+$$\begin{gather*} E[Y^1-Y^0]\in[\left\{E[Y|X=1]P(X=1)-E[Y|X=0](1-P(X=1))\right\}-P(X=1), \\
+\left\{E[Y|X=1]P(X=1)-E[Y|X=0](1-P(X=1))\right\}+(1-P(X=1))] \end{gather*}$$
+- **Corollary**: Width of possible interval learnable from data is 1 (as opposed to 2 with data) and is $[0,1]$ at largest, $[-1,0]$ at smallest, so worst case interval always contains 0.
+
+- **Proof**: $E[Y^1-Y^0]=E[Y^1X+Y^1(1-X)]-E[Y^0X+Y^0(1-X)]$
+$=E[Y^1X]-E[Y^0(1-X)]+E[Y^1(1-X)]-E[Y^0X]$
+- Have $E[Y^1X]= E[Y|X=1]P(X=1)$, $E[Y^0(1-X)]=E[Y|X=0](1-P(X=1))$
+- Largest possible effect when $Y^1=1$ when $X=0$ and $Y^0=0$ when $X=1$, so $E[Y^1(1-X)]-E[Y^0X]=1-P(X=1)$
+- Smallest possible effect when $Y^1=0$ when $X=0$ and $Y^0=1$ when $X=1$, so $E[Y^1(1-X)]-E[Y^0X]=P(X=0)$
+- Upper and lower intervals in corollary follow when $E[Y|X=1]=1, E[Y|X=0]=0$ vs $E[Y|X=1]=0, E[Y|X=0]=1$, respectively
+
+## Implications 
+
+- You need theory to even get the sign right, at least in worst case.
+- Why consider worst case?
+    - Persuade an adversarial audience: if you don't, your referee or seminar audience will be happy to do it for you
+    - If you can add a minimal set of assumptions where worst case is informative, can just report that, without defending auxiliary parts of the model that your audience may dispute
+- Anecdote: As an aspiring development economist, I used to attend seminars where Abhijit Banerjee, visiting that year, would sit in the audience.  For every paper presented, he would wait until about halfway through and results and model presented, then propose some feature or behavioral pattern not measured in the data but highly plausible based on theory and institutional background, which he usually knew better than the presenter, which was consistent with all the data presented so far but would reverse the sign of the policy effect, and usually convince the audience that the speaker had their conclusions exactly backward.
+- Lesson: The fact that you wrote down a model which matches observed data with a particular sign of effect doesn't mean you have measured the effect. The fact that you can't rationalize the opposite will mostly be taken as a sign that you are not as clever as Abhijit Banerjee. 
+
+
+
+## What can we learn in an experiment?
+
+
+- Try out a policy: Does it work? "Program evaluation"
+    - Estimation of treatment effect of a policy most relevant when plan is to actually implement that policy
+    - In program evaluation, end goal is often decision to implement or not
+    - Average causal effect is right thing to estimate if $Y$ is measure of outcome relevant to goal of program, welfare is measured by average $Y$ and population over which experiment is run is representative of population to which program applied
+- Test a theory: Does an effect exist?
+    - Ideal experiment directly discriminates between key implication of theory and some alternatives   
+- Learn about new pathways: See something that wasn't supposed to happen
+    - May want to collect extensive set of outcome measures to re-evaluate and form new theories
+- Learn a structural parameter: How big is that elasticity?
+    - Using direct variation isolates measurement from other sources of variation and possibility of misspecification of auxiliary model components
+    - E.g., if studying effect of a policy, may need model of political economy to account for selection into implementation
+  
+
+
+
+
+## Testing Theories with Experiment
+
+ Paper              |       Topic       |  Theoretical Motivation |    Intervention    | Outcome
+-------------------|------------------|---------------------|---------------------|---------------
+@kremer2011improving | Demand        | Law of demand  | price of health goods | quantity $\downarrow$
+@jensen2008giffen  | Demand          | Giffen goods | coupons for grain by income  | quantity $\uparrow$
+@caunedo2021mechanizing | Industrialization  | Lewis dual sector models    | Subsidize tractor rental  | non-farm labor supply $\uparrow$  
+@crepon2013labor | Labor Search  | Matching function | job search assistance by city  | congestion $\uparrow$
+@breza2018morale | Wage Rigidity | @bewley1999wages | unequal wages within teams | productivity $\downarrow$
+@balboni2021people | Poverty trap | inflection point in returns |give people asset (cows) | inflection point found
+
+
+## Estimating treatment effects
+
+- Suppose binary treatment assigned randomly: $(Y^0,Y^1) \perp X$
+- Difference in conditional expectations then equals ATE
+- Further suppose we have a sample from the model of size $n$, $(Y_i,X_i)_{i=1}^{n}$ with $n_0$ units with $X_i=0$ and $n_1$ with $X_i=1$
+    - Maintain that potential outcomes $(Y^0_i,Y^1_i)$ satisfy causal consistency $Y_i=X_iY^1_i+(1-X_i)Y_i^0$
+- Simplest estimator is
+$$\frac{1}{n_1}\sum_{i=1}^{n}Y_i 1\{X_i=1\}-\frac{1}{n_0}\sum_{i=1}^{n}Y_i 1\{X_i=0\}$$
+- Difference in means is (conditionally on $X$) unbiased for and under a LLN consistently estimates ATE
+- In small samples, estimate not exact
+    - May have drawn sample where unobserved variables differ between treatment and control groups
+
+
+## Interpretation: Random coefficients
+
+- Write potential outcomes model in more familiar form
+$$Y_i=Y_i^0+(Y_i^1-Y_i^0)X_i$$
+- Define $\beta_{0,i}=Y_i^0$, $\beta_{1,i}=Y_i^1-Y_i^0$, then
+$$Y_i=\beta_{0,i}+\beta_{1,i}X_i$$
+- Slope is treatment effect, intercept is value if not treated
+- Result is a linear model with *random coefficients*
+- Like linear model, but slope terms no longer constant
+
+## Relating to standard linear model
+- Taking averages, can write as 
+    - $\beta_{0,i}:=\bar{\beta}_0+e_{0i}$ 
+    - $\beta_{1,i}:=\bar{\beta}_1+e_{1i}$
+    - $E[e_{0i}]=E[e_{1i}]=0$
+- Random coefficients model becomes
+$$Y_i=\bar{\beta}_0+\bar{\beta}_1X_i+e_{0i}+X_ie_{1i}$$
+- A standard linear model with heteroskedastic errors
+- Slope coefficient $\bar{\beta}_1$ is ATE
+- *Endogeneity*: under nonrandom assignment, residual may be correlated with $X_i$
+
+## Estimation in Experiments
+
+- If X assigned randomly
+    - $X_i\perp e_{0i}$ No selection bias
+    - $X_i\perp e_{1i}$ Treatment effect independent of treatment assignment
+- $\hat{\beta}_1$ OLS estimator same as difference in means
+- Heteroskedasticity has meaningful interpretation
+    - Variance of residual $e_{0i}+X_ie_{1i}$ depends on $X$ so long as $e_{1i}\neq 0$ 
+    - "Heterogeneous treatment effects"
+
+
+## Inference
+
+- Model looks exactly like linear regression with heteroskedasticity
+  - Suggests OLS with robust standard errors valid inference on ATE
+  - Equivalent to two-sample t-test on difference in means with unequal variances   
+- While that's usually not a bad choice, there is a little bit of subtlety here
+- What are the problems? 
+    - Choice of hypothesis: sharp vs weak null, conditional on data or not
+    - Finite sample properties
+    - Experimental design considerations mean $X$ chosen independent of $Y$ but often *not* i.i.d.
+- Use of White robust SEs valid under iid sampling, with asymptotically correct coverage with respect to distribution of Ys and Xs, for (weak) null hypothesis that ATE=0.
+- Finite sample properties could be improved: use modified degree of freedom adjustment (HC2 or HC3) instead of version without (HC0) or using numer of regressors (HC1)
+- Or bootstrap...
+    
+## Fisher permutation test 
+
+
+- Alternative Method: randomization test
+1. For $j=1...J$, draw $\{X^j_i\}_{i=1}^{n}$ from known assignment mechanism (assumed independent of $(Y_i^1,Y_i^0)_{i=1}^{n}$)
+2. Compute $\{\widehat{\beta}_1^{j}\}_{j=1}^{J}$ by computing difference in means as if $\{X^j_i\}_{i=1}^{n}$ had been the true realization of $j$
+3. Calculate $p=\frac{1}{J}\sum_{j=1}^{J} 1\{|\widehat{\beta}|>\widehat{\beta}^j\}$
+4. If $p<\alpha$ reject sharp null
+- Tests ("Fisher") sharp null: $H_0:$ $Y_i^1=Y_i^0$ for all $i$ as opposed to ("Neyman") weak null $H_0:$ $E[Y_i^1-Y_i^0]=0$
+    - No heterogeneity in treatment effects
+- Measures, with probability of rejection exactly the nominal size $\alpha$ with respect to $P(\{X_i\}_{i=1}^{n}|\{Y_i^0,Y_i^1\}_{i=1}^{n})$
+    - Distribution of treatment *holding fixed potential outcomes*
+    - Under random assignment
+- "Design-based" paradigm: measure uncertainty in treatment assignment only, not error in extrapolation to new units
+- Useful method for exactly measuring uncertainty due to random assignment
+    - Not directly comparable to ATE mean inference
+    - Power properties also not directly ranked: see @ding2017paradox
+
+
+
+## Analysis with covariates
+
+- Common to collect covariates $Z$ even with random assignment of $X$ independent of $Z$
+    - How can/should we use them?
+- Table 1 of most experimental papers reports **covariate balance** 
+    - Mean of $Z_j$ in $X=1,X=0$ groups
+    - Under random $X$, means of $Z$ distributions should on average be similar
+    - If not, might be sign of fault in random number generator: may worry that unobservables also not balanced
+- Difference in means remains unbiased, consistent, simple, when $Z$ present, but may be inefficient
+- Can do instead OLS with added covariates or interacted: (1) or (2)
+  $$Y_i=\beta_0+\beta_1 X_i+Z_i^\prime\gamma+u_i$$
+  $$Y_i=\beta_0+\beta_1 X_i+Z_i^\prime\gamma+X_i*(Z_i-\bar{Z}_i)'\delta+u_i$$
+  
+
+
+##  Properties of regression adjustment for RCTs
+
+- Amazingly, $\widehat{\beta}_1$ remains consistent even with misspecification in both settings (@imbens2015causal Ch7)  
+- **Proof** for case (1)
+- Limit objective is $E[(Y_i-\beta_0-\beta_1 X_i-Z_i^\prime\gamma)^2]$
+- Equivalent to $E[(Y_i-\tilde{\beta}_0-\beta_1 X_i-(Z_i-E[Z_i])^\prime\gamma)^2]$ (with $\tilde{\beta}_0=\beta_0+E[Z_i]^{\prime}\gamma$)
+$$= E[(Y_i-\tilde{\beta}_0-\beta_1 X_i)^2]+E[((Z_i-E[Z_i])^\prime\gamma)^2]-2E[(Y_i-\tilde{\beta}_0-\beta_1 X_i)(Z_i-E[Z_i])^\prime\gamma)]$$
+- Last term equals, by independence of $X$ and $Z$
+$$=-2E[Y_i(Z_i-E[Z_i])^\prime\gamma]+2E[\tilde{\beta}_0+\beta_1 X_i]E[(Z_i-E[Z_i])^\prime\gamma]$$    
+$$=-2E[Y_i(Z_i-E[Z_i])^\prime\gamma]$$
+- Total sum equals $E[(Y_i-\tilde{\beta}_0-\beta_1 X_i)^2]$ plus terms not dependent on $\beta$
+- So arg min with respect to $\beta_1$ is exactly as for univariate regression, which is the ATE! **QED**
+- Proof for case (2) similar.
+- Reason this works is that OLS is first example we will see of a *multiply robust* estimator
+    - Partitioned regression formula: $\widehat{\beta}_1=(\tilde{X}^\prime\tilde{X})^{-1}\tilde{X}^{\prime}Y$ where $\tilde{X}=(I-P_Z)X$ residual from regression of X on $Z$ and constant
+    - Consistent with covariates that correctly model probability of treatment *or* that correctly specify conditional expectation function 
+    - In RCT, treatment's best predictor is a constant, so accounted for by constant term in OLS
+- Variance formulas show asymptotic efficiency gains, with variance never larger 
+    - Variances replaced by residual variances after prediction with $Z$
+    - If $Z$ predictive of outcome, can increase precision to include it 
+- Some finite sample bias ($O(\frac{1}{n})$) remains unless correctly specified (eg saturated interactions with discrete covariates)
+    - In very small samples, without highly predictive covariates, may prefer not to adjust
+    
+## Analysis with other models
+
+- May want to model outcome with nonlinear estimators like logit, probit, etc
+  - No multiple robustness property: need to correctly specify conditional distribution
+  - Precision advantages if correctly specified, but otherwise major bias, even in RCT
+- If target is some more general parameter, as in a structural model, need to consider carefully how experiment influences outcome
+    - What parameters change if results do? Will depend on both your model and estimation method
+    - If ultimate goal is downstream, like policy recommendation, maybe treat this as estimand of interest
+- Before running experiment, should make sure that changing experimental results changes conclusions in model
+- Otherwise, model and experiment are poor fit
+    - Maybe you need to experiment on different measure that theory says is actually discriminative
+    - Maybe you need to change your model to allow sources of variation seen in the data or use a more robust estimation method
+- Model simulation is a straightforward way to assess this
+    - Forward simulate from your model under different parameter values to see how experimental measures change
+    - Apply your estimation method to simulated data from experiments to see if parameters can be recovered
+    - Andrews, Gentzkow, Shapiro provide quantitative sensitivity measures
+
+## Experimental design
+
+- One of the biggest strengths of experimental methods is that you get to choose many features of data to inform results
+- Biggest question is which experiment to run: what intervention will best answer substantive question
+- If you have a model, consider what will happen your theory is right, and if it's wrong. 
+    - What will it look like in both cases? Simulate your analysis under both. 
+- For testing, above procedure leads to *power analysis* 
+    - Want experiment features so that if $X=1$ is better, have high probability of choosing that, and if $X=0$ better, high probability of choosing that
+- Tools like [DeclareDesign](https://declaredesign.org/)  (@blair2019declaredesign) let you simulate through many of the statistical aspects of these choices
+- Realistic analysis of power for different choices will quickly show you why the binary or sometimes ternary experiment remains overwhelmingly the most common
+    - To distinguish reliably between more options needs much more data
+    - Fitting complicated models likely needs more data than you think: even an interaction term may require massive increase in sample size
+  
+## What to choose when designing an experiment
+
+- Things to consider: 
+    - Which variables to intervene on 
+    - Number of levels of intervention 
+    - Sample size in each level 
+    - Randomization strategy
+- Criteria to assess your design
+    - How precise are your estimates? 
+    - Can you distinguish between theories with your sample size? 
+    - Cost
+    - Feasibility
+    - *Ethics*
+- Structure will depend on your budget and question of interest
+    - Web experiments can be fast, easy, and so are ripe for sophisticated methods
+    - Field experiments can be expensive, slow, rife with implementation problems, so strive for simplicity and advance planning
+    - Lab experiments can be in between
+
+    
+
+## How to randomize 
+
+- As an experimenter, you have a choice of distribution
+    - Allow independence, but also aim for efficiency of analysis
+- Simplest random assignment rule is $X_i\overset{iid}{\sim}$Bernoulli(p)
+    - But poor properties: may assign most or all observations to one of treatment or control
+    - If all, effect not even estimable. If most, variance is huge
+- An alternative that avoids this is the "completely randomized" scheme
+    - Fix $n_0,n_1$, and choose uniformly among all $\left(\begin{array}{c}n\\n_{1}\end{array}\right)$ assignments with fixed numbers
+    - $X_i$ no longer independent, since drawing $1$ reduces chance next $X$ is $1$
+    - But any method that conditions on $X$ (permutation test, OLS) unaffected, and versions of LLN still apply
+- With covariates can stratify, sampling conditionally on value of covariate
+    - If completely randomized within stratum (level of covariate) with identical probability in each, achieve no correlation, but avoid covariate imbalance
+    - Level of precision is increasing with fineness of conditioning, all the way down to randomizing within pairs
+    - Or, if criterion is expected ex ante MSE on average over possible distributions @kasy2016experimenters suggests a non-random assignment
+    - This is a little extreme (hard to analyze data), but similar effects achievable by re-randomizing until table passes a balance test
+- With group level units, like households or villages, there are cluster randomized versions of above
+    - Main difference is assigning within-cluster variation if treatment varies by group and individual
+
+## Planning and preliminary data gathering phases
+
+- In order to make plans, often better to iterate: think first, then get data 
+    - "Mathematics is the part of [science] where experiments are cheap" - V.I. Arnol'd
+- But may need to refine results: do lit review, use observational data
+- In between: pilot study: 
+    - Go there, see if intervention/measurement scheme can even be set up as planned 
+    - Use the results for further planning: choice of sample size, treatment values, implementation details, etc
+- Being on the ground and talking to people will usually turn up features of setting that you didn't think of    
+- On the frontier are automated methods for updating results from experiments adaptively 
+    - Defines a sequential protocol for how to change based on preliminary results 
+    - "Bandit algorithms" widely used in tech to find highest value treatment in fewest number of samples 
+- Adaptivity creates challenges for ex post inference, since data no longer iid
+    - @gupta2021efficient defines adaptive methods when target is defined by GMM as in structural models
+    - Case where bandit method used is harder: "Off-policy" setting creates bias
+  
+## Preregistration
+
+- There are a lot of analysis and design choices going into trials, and seemingly innocuous choices can change results
+    - If you are trying to get significant results, often have ways to do so
+    - When systematic, creates bias in distribution of reported effects, usually to larger values
+- One check against this is to publicly preregister your trial and precise analysis method, so decisions known to be made in advance
+    - Use <https://www.socialscienceregistry.org/>
+- Guards against ex-post specification searches, enhances credibility of results, helps convince regardless of outcome
+- Does limit flexibility to discover new outcomes. 
+    - But: you can include both pre-registered and novel analyses, clearly separated 
+    
+## Application: Masks
+
+- @abaluck2021impact ran a cluster-randomized experiment on 600 villages in Bangladesh providing masks and public encouragement to wear them, measuring rates of compliance and then covid tests
+- @recht2021blog asks several critical questions about results
+    - How is effect (test positivity) computed and averaged across units?
+    - Method is "a generalized linear model (GLM) with a normal family and identity link.” Is that robust for estimation? Inference?
+    - Claim "P-values and confidence intervals associated with a regression are valid only if the model is true. What if the model is not true? If the model is wrong, the error bars are meaningless."
+- Is Recht right in this setting? How about in general?
+    - In a later post, he shows in simulations that in an RCT analyzed with logistic regression, including the wrong set of covariates may give a severely biased coefficient on the treatment
+- Note that "(GLM) with a normal family and identity link" is exactly OLS, with treatment indicator at the village level, and the authors computed p-values 2 ways: by randomization test (per the randomization method, which was stratified at cross-and-within village level) and by heteroskedasticity-robust standard errors clustered at the village level   
+
+## Conclusions
+
+- Experiments make the usually difficult identification task of causal inference easy
+- But choosing an experiment to run and executing it takes many careful choices
+- Analyses of experiments can be made robust
+
+## References
+
+<!-- - Experiments:  -->
+<!--     - Representation in SEM, potential outcomes -->
+<!-- - Effect measures: ATE, CATE, results for subgroups -->
+<!-- - Why experiment? -->
+<!--     - Identification concerns: confounding, worst case -->
+<!--     - DAGs: added edges? -->
+<!--     - POs Selection effect size? (Unbounded Y: infinite. Bounded Y: size of bound) -->
+<!-- - What can we learn in an experiment -->
+<!--     - Try out a policy? Does it work? -->
+<!--     - Test a theory: does an effect exist? -->
+<!--     - Learn about new pathways: see something that wasn't supposed to happen -->
+<!--     - Learn a structural parameter? How big is that elasticity? -->
+<!-- - Example experiments for each group -->
+<!-- - Analysis -->
+<!--     - Representation with random coefficients model -->
+<!--     - Difference in means = OLS -->
+<!--     - Inference: Fisher (very briefly), Neyman, robust, clustered, etc -->
+<!-- - Analysis with covariates -->
+<!--   - Difference in means: unbiased consistent, simple, inefficient? -->
+<!--   - Covariate balance: reporting, testing -->
+<!--   - OLS: added covariates or interacted: consistent even with misspecification, some finite sample bias unless correctly specified (eg blocking with discrete covariates), asymptotic efficiency gains (and finite sample) -->
+<!--   $$Y_i=\alpha+\tau X_i+Z_i^\prime\gamma+u_i$$ -->
+<!--   $$Y_i=\alpha+\tau X_i+Z_i^\prime\gamma+X_i*(Z_i-\bar{Z}_i)'\delta+u_i$$ -->
+<!--   - Nonlinear estimators: logit/probit? Precision advantages if correctly specified, but otherwise major bias, even in RCT -->
+<!--   - Structural models: How does experiment enter your model: what parameters change if results do? how do downstream conclusions change? Is your model coherent with need to run experiment? What else is in there? cf AGS sensitivity analysis, simulation, etc -->
+<!-- - Experimental design -->
+<!--   - Planning: how to intervene. Consider your theory is right. Consider it's wrong? Why? Simulate your analysis under both.  -->
+<!--   - Things to consider: which variables to intervene on -->
+<!--   - Structure of intervention: how to instantiate your theory/design your program -->
+<!--   - Number of arms, Sample size in each, randomization strategy -->
+<!-- - Considerations: How precise are your estimates? Can you distinguish between theories with your sample size? Power analysis. Cost, feasibility, *ethics* -->
+<!-- - How to randomize (@imbens2015causal) -->
+<!--   - No covariates: Bernoulli vs completely randomized -->
+<!--   - With covariates:  blocking or paired or rerandomized or non-random fixed (@kasy2016experimenters) -->
+<!--   - with group units: cluster randomized versions of above. Within-cluster variation? -->
+<!-- - Order to do this: think first, then get data "mathematics is branch of science where experiments are cheap" -->
+<!--   - But may need to refine results: do lit review, use observational data -->
+<!--   - In between: pilot study: go there, see if intervention/measurement scheme can even be set up as planned. Use for further planning? -->
+<!--   - On the frontier: adaptive experiments: sequential protocol for how to change. Bandits on-policy and off -->
+<!-- - Preregistration: <https://www.socialscienceregistry.org/> -->
+<!--   - Guards against ex-post specification searches, enhances credibility of results, helps convince regardless of outcome -->
+<!--   - Does limit flexibility to discover new outcomes. But: can include both pre-registered and novel analyses, clearly separated -->

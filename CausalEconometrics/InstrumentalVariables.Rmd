@@ -1,0 +1,470 @@
+---
+title: "Instrumental Variables"
+author: "David Childers"
+output:
+  html_document:
+    code_folding: hide
+bibliography: classrefs.bib
+---
+
+```{r, echo=FALSE,eval=FALSE}
+# - IV problem and assumptions
+# - Examples
+#   - "Causal IV": Experiment + noncompliance
+#   - Measurement error
+#   - Simultaneity
+#   - Rational expectations
+# - DAG, linear homogeneous IV, 2SLS
+# - Potential outcomes
+#   - Binary: LATE assumptions and theorem
+#   - Wald and conditional Wald
+#   - Semiparametric IV: @abadie2003semiparametric 's $\kappa$ and doubly robust versions
+# - Monotonicity/no defiers
+#   - one-sided noncompliance: yes
+#   - Judge/examiner designs: nah
+#   - Interpretation: single index model equivalence
+#   - Violation: partial identifiability of ATE. Manski/Balke-Pearl inequalities
+# - Relevance
+#   - weak IV tests: F-tests and extensions (Cragg-Donald, how big an F do you really need)
+#   - weak IV robust estimation: regularization, test inversion: Anderson-Rubin and friends
+#   - other issues: outlier sensitivity? @young2021 (solutions: Fisher tests? HC3?)
+# - Exogeneity restriction 
+#   - Sargan/Hansen J tests and their use and abuse
+#   - Joint test with monotonicity: Kitagawa / @mourifie2017testing
+#   - Plausibly exogenous IV, sensitivity analysis  
+# - Exclusion restriction
+#   - Consequence: with weak IV: inflated treatment effects (excuses: LATE vs ATE. "measurement error")
+#   - @lal2021much  
+# - Interpretation issues
+#   - Who are compliers?  $\kappa$-weighting @singh2021automatic
+#   - Why is there endogeneity anyway?
+#   - What do we want LATE for? consider ITT, PRTE. Insufficiency of LATE for market counterfactuals.
+# - Extension: continuous instruments
+#   - Marginal Treatment Effect Curve (survey @cornelissen2016)
+# - Extension: continuous treatment
+#   - Linear IV: weighted average of LATEs
+#   - Partially linear/Lasso IV
+#   - Nonparametric IV w/ additive errors:
+#   - etc?  
+``` 
+
+```{r,message=FALSE,warning=FALSE,results='hide'}
+library(foreign)
+library(AER)
+library(npcausal)
+library(stargazer)
+```
+
+## Instrumental Variables: Setting
+
+```{r, fig.height=3,message=FALSE,warning=FALSE}
+library(dagitty)
+library(ggdag)
+ivgraph<-dagitty("dag{Y<-X; X<-W; X<->Y}") #create graph
+#Set position of nodes 
+  coords<-list(x=c(X = 0, Y = 2, W=-1),y=c(X = 0, Y = 0, W=0)) 
+  coords_df<-coords2df(coords)
+  coordinates(ivgraph)<-coords2list(coords_df)
+ggdag(ivgraph)+theme_dag_blank()+labs(title="Instrumental Variables",subtitle="Causal IV") #Plot causal graph
+```
+
+- Goal remains recovering the effect of $X$ on $Y$
+  - Assume above causal graph, in NPSEM-IE model
+- In most non-experimental settings, can't rule out presence of unobserved confounding
+- In some of these cases, we have a variable $W$ which is effectively random, but it's not the treatment we care about
+    - A natural experiment, or, most credibly, an *actual* experiment
+    - Reflected by absence of incoming arrows into $W$
+- Problem that comes up in actual experiments, especially with humans involved: *imperfect compliance*
+  - If you try to make people do $X$, some of them still won't do $X$
+- We can measure the effect of $W$ on $X$: the *first stage*
+  - Amount by which changing $W$ changes actual decision to do $X$
+  - In experiment, this is rate of compliance with assignment
+- We can measure effect of $W$ on $Y$: the *reduced form* or *intent to treat* (ITT) effect
+- If assignment $W$ does not directly affect the outcome, this is only coming from induced variation in $X$
+  - Lack of direct arrow from $W$ to $Y$ is called *exclusion*
+- Can we somehow use these to measure the effect of $X$ on $Y$?
+  - Sometimes!
+  - But only under some more assumptions
+  
+  
+## "Classical IV" (@wright1928tariff) 
+
+- Assume linear structural causal model (demeaned for simplicity)
+  - $Y=\beta X+U$, $X=\gamma W+E$
+- Due to omitted confounders, $Cov(U,X)\neq 0$ "*endogeneity*"
+- But $E\perp U$ by independent errors assumption
+- By linearity, effect of $W$ on $Y$ is $\rho=\beta\cdot\gamma$ 
+- If $\gamma\neq0$ ("relevance"), $\beta=\frac{\rho}{\gamma}$
+  - Estimate by $\frac{\widehat{\rho}}{\widehat{\gamma}}$ ratio of regressions of $Y$ on $W$, $X$ on $W$
+- This is IV every economist knows
+  - Note "endogeneity" as correlation of regressors with errors meaningful only in context of structural equations
+- Extensions to multiple IVs, added controls, via 2SLS
+- Problem: linearity here is not just a convenient calculating device
+  - Implies *homogeneity*: causal effects the same for all units
+  - Relevance is *added* condition beyond implications of structure of graph
+  - Means that IV estimand not derivable from do-calculus methods alone
+- How do we generalize to less restrictive models?
+  - Opens up a cornucopia (or Pandora's box) of different IV extensions
+
+## Binary Instrument, Binary Treatment
+
+- Let $(Y_i,X_i,W_i)\in\mathbb{R}\times\{0,1\}\times\{0,1\}$ be our outcome, treatment of interest, and instrumental variable
+- Goal is to measure effect of $X$, but it may not be randomly assigned
+- Instead, we have instrument $W_i$ which is randomly assigned, so we can measure its effect
+- Instrumental Variables estimator $\widehat{\beta}^{IV}=\frac{\widehat{Cov}(W_i,Y_i)}{\widehat{Cov}(W_i,X_i)}$
+- Can rewrite as ratio of two regressions: $\widehat{\beta}^{IV}=\frac{\widehat{Cov}(W_i,Y_i)/\widehat{Var}(W_i)}{\widehat{Cov}(W,X_i)/\widehat{Var}(W_i)}$
+  - *Reduced form*: $\widehat{\rho}=\widehat{Cov}(W_i,Y_i)/\widehat{Var}(W_i)$ regression of $Y$ on $W$
+  - *First Stage*: $\widehat{\gamma}=\widehat{Cov}(W_i,X_i)/\widehat{Var}(W_i)$ regression of $X$ on $W$
+- Note: *reduced form* has other meanings in SCM context.
+- If $Cov(W_i,X_i)\neq 0$, first stage non-zero (a *relevance* condition), $\widehat{\beta}^{IV}$ converges to IV estimand   
+    - $\beta^{IV}=\frac{E[W_iY_i]-E[W_i]E[Y_i]}{E[W_iX_i]-E[W_i]E[X_i]}$
+- In binary $W$ case, can write regressions as differences in means
+  - $\rho=E[Y_i|W_i=1]-E[Y_i|W_i=0]$, $\gamma=E[X_i|W_i=1]-E[X_i|W_i=0]$
+- Binary instrument case called the *Wald* estimand
+  - $\beta^{IV}=\beta^{Wald}=\frac{E[Y_i|W_i=1]-E[Y_i|W_i=0]}{E[X_i|W_i=1]-E[X_i|W_i=0]}$
+
+## LATE Theorem
+
+- @imbens1994identification ask when Wald estimator gives meaningful result in potential outcomes model
+- Define potential outcomes 
+    - $X^{W=w}$ describing how treatment responds to instrument 
+    - $Y^{X=x,W=w}$ how outcome responds to joint setting of instrument and treatment
+- Impose usual causal consistency assumptions $X_i=W_iX^1_i+(1-W_i)X^0_i$, $Y_i=\sum_{x,w\in\{0,1\}^2}Y_i^{x,w}1\{X_i=x,W_i=w\}$    
+- Conditions
+  1. Random assignment: $(\{Y_i^{X_i=x,W_i=w}\}_{x,w\in\{0,1\}^2},X_i^1,X_i^0)\perp W_i$
+  2. Relevance: $E[X^1_i]-E[X^0_i]\neq 0$
+  3. Exclusion: $Y_i^{X_i=x}:=Y_i^{X_i=x,W_i=1}=Y_i^{X_i=x,W_i=0}$, $x\in\{0,1\}$
+  4. Monotonicity: $P(X_i^1\geq X_i^0)=1$, (or $P(X_i^1\leq X_i^0)=1$, but use former as sign convention w.l.o.g.)
+- **Theorem**: Under (1)-(4), $\beta^{Wald}=E[Y_i^1-Y_i^0|X_i^1=1,X_i^0=0]$
+- The quantity $E[Y_i^1-Y_i^0|X_i^1=1,X_i^0=0]$ is called the **Local Average Treatment Effect** or **LATE**
+    - It is the causal effect for the subpopulation with $X_i^1=1,X_i^0=0$, the *compliers* 
+    - Units who are caused to receive the treatment due to having received the instrument
+
+## Interpretation of Conditions
+
+- Note that binary $X$ binary $W$ means responses of $X$ to $W$ can take only 4 possible forms
+  - $X_i^{1}=1,X_i^{0}=1$ *Always Takers* who get treatment regardless of instrument
+  - $X_i^{1}=1,X_i^{0}=0$ *Compliers* who get treatment iff they get instrument
+  - $X_i^{1}=0,X_i^{0}=0$ *Never Takers* who never get treatment regardless of instrument
+  - $X_i^{1}=0,X_i^{0}=1$ *Defiers* who get treatment iff they *don't* get instrument
+- Monotonicity assumption says $P(X_i^{1}=0,X_i^{0}=1)=0$: hence also called *No defiers* assumption
+  - Claim that direction of effect of $W$ is the same on choice of $X$ for *everyone*
+  - Natural when treatment only available in presence of instrument (can't get drug unless doctor gives it to you)
+  - That case gives *one sided noncompliance*: no defiers, also no always takers
+- Monotonicity somewhat plausible when instrument is *incentive*: give reward for doing $X$. 
+  - Works if units universally like or indifferent to reward (money?) 
+- Monotonicity less plausible in *examiner designs*: randomly assign unit to decision-maker, who then decides to treat or not
+  - Doctors/judges often randomly assigned to patients/defendants, but need differences in judgment to always go the same way 
+- Randomization is sensible when instrument is experiment or natural experiment
+- Relevance says that IV changes level of treatment: you can test to see if this is true!
+- Exclusion says instrument does not affect outcome except through the treatment
+  - Separate from random assignment and not guaranteed! Need a substantive reason why $W->Y$ arrow is missing.
+  - Will fail if simply being told you are assigned to treatment changes outcome: e.g. *placebo* effects
+- In natural experiments, exclusion requires behavioral invariance to source of random variation
+  - Rainfall *might*  be random, but is your outcome unaffected by rain? 
+  - People, especially agricultural workers whose livelihood depends on it, care about the weather!
+  
+  
+    
+## Proof
+
+- Claim: $\beta^{Wald}=\frac{E[Y_i|W_i=1]-E[Y_i|W_i=0]}{E[X_i|W_i=1]-E[X_i|W_i=0]}=E[Y_i^1-Y_i^0|X_i^1=1,X_i^0=0]$
+- Denominator: $E[X_i|W_i=1]-E[X_i|W_i=0]=E[X_i^1|W_i=1]-E[X_i^0|W_i=0]$ by causal consistency
+  - $=E[X_i^1]-E[X_i^0]$ by random assignment
+  - $=P(X_i^1=1)-P(X_i^0=1)\neq 0$ by relevance
+- Numerator: $E[Y_i|W_i=1]-E[Y_i|W_i=0]=E[Y_i^{X=X_i^1,W=1}|W_i=1]-E[Y_i^{X=X_i^0,W=0}|W_i=0]$ by causal consistency
+  - $=E[Y_i^{X=X_i^1,W=1}]-E[Y_i^{X=X_i^0,W=0}]$ by random assignment
+  - $=E[Y_i^{X=X_i^1}]-E[Y_i^{X=X_i^0}]$ by exclusion
+  - $=E[(X_i^{1}-X_i^{0})(Y_i^{1}-Y_i^{0})]$ by causal consistency
+- Apply law of total probability to decompose numerator into always takers, compliers, never takers and defiers
+  - $=0*E[Y_i^{1}-Y_i^{0}|X_i^{1}=1,X_i^{0}=1]P(X_i^{1}=1,X_i^{0}=1)+1*E[Y_i^{1}-Y_i^{0}|X_i^{1}=1,X_i^{0}=0]P(X_i^{1}=1,X_i^{0}=0)+$
+  - $0*E[Y_i^{1}-Y_i^{0}|X_i^{1}=0,X_i^{0}=0]P(X_i^{1}=0,X_i^{0}=0)-1*E[Y_i^{1}-Y_i^{0}|X_i^{1}=0,X_i^{0}=1]P(X_i^{1}=0,X_i^{0}=1)$
+  - $=E[Y_i^{1}-Y_i^{0}|X_i^{1}=1,X_i^{0}=0]P(X_i^{1}=1,X_i^{0}=0)-E[Y_i^{1}-Y_i^{0}|X_i^{1}=0,X_i^{0}=1]P(X_i^{1}=0,X_i^{0}=1)$
+- Reduced form is LATE * proportion of compliers - defier ATE * proportion of defiers
+  - $=E[Y_i^{1}-Y_i^{0}|X_i^{1}=1,X_i^{0}=0]P(X_i^{1}=1,X_i^{0}=0)$ under *monotonicity*
+- Expand first stage $P(X_i^1=1)-P(X_i^0=1)$ into compliers, always takers, and defiers
+  - $=\left(P(X_i^1=1,X_i^0=1)+P(X_i^1=1,X_i^0=0)\right)-\left(P(X_i^1=1,X_i^0=1)+P(X_i^1=0,X_i^0=1)\right)$
+  - $=P(X_i^1=1,X_i^0=0)-P(X_i^1=0,X_i^0=1)$ compliers - defiers
+  - $=P(X_i^1=1,X_i^0=0)$ under monotonicity
+- Reduced form/first stage = $E[Y_i^{1}-Y_i^{0}|X_i^{1}=1,X_i^{0}=0]$ LATE 
+
+## Extension: Adding covariates
+
+```{r, fig.height=3,message=FALSE,warning=FALSE}
+ivzgraph<-dagitty("dag{Y<-X; X<-W; X<->Y; Y<-Z; X<-Z; W<-Z}") #create graph
+#Set position of nodes 
+  coords<-list(x=c(X = 0, Z = -1, Y = 2, W=-1),y=c(X = 0, Z = 0.5, Y = 0, W=0)) 
+  coords_df<-coords2df(coords)
+  coordinates(ivzgraph)<-coords2list(coords_df)
+ggdag(ivzgraph)+theme_dag_blank()+labs(title="Instrumental Variables",subtitle="Causal IV with Covariates") #Plot causal graph
+```
+
+- Often only have conditionally randomly assigned instrument, or think conditions more plausible given controls
+  - E.g., monotonicity within narrow classes of medical cases/defendants only
+- If we make all LATE assumptions conditional on covariates $Z$, conditional Wald identifies conditional LATE
+  - $\beta(z):=E[Y_i^1-Y_i^0|X_i^1=1,X_i^0=0,Z_i=z]=\frac{E[Y_i|W_i=1,Z_i=z]-E[Y_i|W_i=0,Z_i=z]}{E[X_i|W_i=1,Z_i=z]-E[X_i|W_i=0,Z_i=z]}$
+- Under a positivity condition $0<P(W=1|Z=z)<1$ the unconditional LATE is identified as (@frolich2007nonparametric Theorem 1)
+  - $E[Y_i^1-Y_i^0|X_i^1=1,X_i^0=0]=\frac{\int (E[Y_i|W_i=1,Z_i=z]-E[Y_i|W_i=0,Z_i=z])f(z)dz}{\int (E[X_i|W_i=1,Z_i=z]-E[X_i|W_i=0,Z_i=z])f(z) dz}$
+- **Proof:**  
+- $LATE=\int\beta(z)f(z|X^1=1,X^0=0)dz$ L.I.E.
+- $=\int\beta(z)\frac{P(X^1=1,X^0=0|Z=z)f(z)}{P(X^1=1,X^0=0)}dz$ Bayes Rule
+- $=\int\beta(z)\frac{(E[X_i|W_i=1,Z_i=z]-E[X_i|W_i=0,Z_i=z])f(z)}{\int(E[X_i|W_i=1,Z_i=z]-E[X_i|W_i=0,Z_i=z])f(z)dz}dz$ conditional compliers identified by first stage 
+- $=\frac{\int (E[Y_i|W_i=1,Z_i=z]-E[Y_i|W_i=0,Z_i=z])f(z)dz}{\int (E[X_i|W_i=1,Z_i=z]-E[X_i|W_i=0,Z_i=z])f(z) dz}$ conditional Wald identifies $\beta(z)$
+
+## Estimating (Conditional) LATE
+
+- In binary case, convenience of LATE theorem is that it justified linear IV even with heterogeneous effects of treatment and of instrument 
+  - Albeit with an estimand that differs from the homogeneous effect people thought they were estimating
+- Even outside of this case most common estimator is still Two Stage Least Squares 2SLS
+  - Linear homogeneous model $Y=\beta_0+\beta_1X +Z^\prime\beta_2+U$ with endogeneity
+  - Estimate first stage $X=\delta_0+\rho W + Z'\delta_2+E$ by OLS, get predicted $\widehat{X}$
+  - Estimate second stage $Y=\beta_0+\beta_1\widehat{X} +Z^\prime\beta_2+U$ by OLS
+- 2SLS is numerically equivalent to estimating conditional LATE formula with linear and additively separable effect of $Z$ in reduced form and first stage
+  - Assumes heterogeneity in effects does not vary with $Z$
+- To avoid these assumptions, use nonparametric estimators of $E[Y|W,Z]$, $E[X|W,Z]$
+- Plug-in has usual slow rate properties, so may prefer to use robust semiparametric estimator 
+
+
+## Abadie's kappa
+
+- Like adjustment formula, can estimate LATE using conditional means or (inverse) propensity-score-like component or both
+- @abadie2003semiparametric derived weighting functions which re-weights conditional density to that of complier population
+- Let $\pi(z)=P(W=1|Z=z)$, then $\frac{W}{\pi(Z)}$ is propensity weight for population with $W=1$, $\frac{1-W}{1-\pi(Z)}$ is weight for population with $W=0$, and $\frac{W}{\pi(Z)}-\frac{1-W}{1-\pi(Z)}$ reweights to difference in mean between $W=1$ and $W=0$ populations
+- @abadie2003semiparametric Theorem 3.1: Assume conditions of LATE theorem. Define the weights 
+  - $\kappa_0(W,Z,X)= -(1-X)(\frac{W}{\pi(Z)}-\frac{1-W}{1-\pi(Z)})$
+  - $\kappa_1(W,Z,X)= X(\frac{W}{\pi(Z)}-\frac{1-W}{1-\pi(Z)})$
+  - $\kappa(W,Z,X)= (1-\pi(Z))\kappa_0(W,Z,X)+\pi(Z)\kappa_1(W,Z,X)$
+- Then $E[\kappa_0(W,Z)g(Y,Z)]/P(W^1=1,W^0=0)=E[g(Y^0,Z)|W^1=1,W^0=0]$,
+  - $E[\kappa_1(W,Z)g(Y,Z)]/P(W^1=1,W^0=0)=E[g(Y^1,Z)|W^1=1,W^0=0]$, and 
+  - $E[\kappa(W,Z)g(Y,W,Z)]/P(W^1=1,W^0=0)=E[g(Y,W,Z)|W^1=1,W^0=0]$  
+- These can be estimated by conditional probability estimators (eg logit or ML method), provide alternative to linear mean modeling of 2SLS
+- Moreover, $\kappa$ allows us to know features of covariate distribution for complier population
+  - Can report table of average complier characteristics and compare with those for other groups, such as treated, untreated, and full sample
+- As with other IPW-type estimates, sensitive to weak overlap   
+  
+## Semiparametric Estimate
+
+- With a Neyman orthogonal moment condition for conditional IV, can use ML estimators to avoid functional form assumptions
+- @singh2021automatic derive the conditions
+  - Let $\mu(w,z)=E[XY|W=w,Z=z]$, $p(w,z)=E[X|W=w,Z=z]$, and $\pi(z)=P(W=1|Z=z)$ be nuisance parameters and $\theta^1=E[Y^1|W^1=1,W^0=0]$ be target functional
+  - $\psi^1(Y,X,Z,W,\theta^1,\eta)=\mu(1,z)-\mu(0,Z)-\theta^1(p(1,Z)-p(0,Z))+(\frac{W}{\pi(Z)}-\frac{1-W}{1-\pi(Z)})[XY-\mu(W,Z)-\theta^1(X-p(W,Z))]$ is an orthogonal moment identifying target
+- Formula for $\theta^0=E[Y^0|W^1=1,W^0=0]$ is related, except replace $\mu(w,z)=E[(X-1)Y|W=w,Z=z]$,  $p(w,z)=E[X-1|W=w,Z=z]$
+  - $\psi^0(Y,X,Z,W,\theta^0,\eta)=\mu(1,z)-\mu(0,Z)-\theta^0(p(1,Z)-p(0,Z))+(\frac{W}{\pi(Z)}-\frac{1-W}{1-\pi(Z)})[(X-1)Y-\mu(W,Z)-\theta^0(X-1-p(W,Z))]$
+- With sample splitting, you can use any sufficiently fast estimates $\widehat{\eta}$ for nuisance parameters, solve $\frac{1}{L}\sum_{\ell=1}^{L}\frac{1}{n_\ell}\sum_{i\in\mathcal{I}^{(\ell)}}\psi^j(Y_i,X_i,Z_i,W_i,\hat{\theta}^j,\widehat{\eta}^{(-\ell)})=0$  
+- @singh2021automatic also provide orthogonal moments for average complier characteristics, and propose estimators which target inverse propensities and so may be more stable with respect to overlap
+- @kennedy2020sharp independently derive scores for LATE parameters, suggest classifiers for finding which units are compliers
+- Earliest double robust LATE estimator may be @ogburn2015doubly ?
+
+## Evaluating and Testing Model Conditions
+
+- The IV model's conditions are fairly restrictive, and should be evaluated for plausibility against what is known about the variables
+- Your paper should explain the relevant background on data collection, experimental methods, and institutional and economic background for reader to understand how you justified use of the method
+  - Rule of thumb: if paper's main estimate relies on IV but reason for assuming exogeneity, or worse, even what the instrument is, not described in the abstract, that's a red flag that instrument used is probably not great
+- Always display first stage, reduced form, and IV estimate in tables to show components    
+- Beyond intuitive judgments, some of the conditions impose testable restrictions on the data
+  - You absolutely should test these, and present the tests, any time you run IV
+- For linear IV and 2SLS, there are classical "default" tests  
+- Sargan/Hansen J test: applicable only if model *overidentified*: has more instruments than endogenous treatments. 
+  - Works by comparing whether different instruments produce comparable IV estimates
+  - Nominal justification is test of exogeneity, as it will reject if some instruments violate exclusion or exogeneity
+  - With heterogeneous effects, rejection may instead be picking up that different IVs estimate different LATEs
+  - If multiple IVs similar (eg same effect in different locations/times, etc), may all have similar biases and so fail to reject even if exogeneity false
+  - Maybe best thought of as test of functional form restrictions in IV or GMM
+- Durbin-Wu-Hausman test: comparison of IV/2SLS vs OLS estimates 
+  - If endogeneity or omitted variables not a problem in the first place, IV won't be distinguishable from OLS
+  - Good to know, but not a test of IV assumptions, and definitely not license to use use OLS if it can't reject
+  - Power often low because failure of relevance biases IV in direction of OLS
+- First stage F-statistic: tests relevance condition
+  - Folk wisdom, loosely supported by simulation evidence in @stock2005testing, is that F>10 suggests bias is small
+  - Rule derived in linear Gaussian homoskedastic setting with 1 IV and no controls, and even then may not be right choice
+  
+## Relevance and Handling Weak IVs
+
+- When IV relevance condition even close to failing, Gaussian limit theory is bad guide to finite sample properties
+  - Even if not weak, ratio estimators tend to be very heavy-tailed due to chance of dividing by near 0
+- Without *strict* relevance, there may be no confidence interval with finite expected width that provides valid coverage for IV estimate
+- Limit theory localizing first stage effect near 0 shows asymptotic distribution biased towards OLS estimate
+- With many IVs in 2SLS, problem gets more severe
+- Showing pretests for weak IV is fine as matter of transparency, less so for decision-making
+  - Should use tests robust to heteroskedasticity, clustering etc
+  - Critical values have been derived beyond which IV is "safe", for various conflicting definitions of safe
+  - Pre-testing distorts inference on actual effects, and leads to undesirable and hard to correct biases if not accounted for
+- If concerned about weakness, better to directly use inference procedure robust to it: @andrews2019weak survey options
+- Simple one: if reduced form effect is 0, IV estimate of effect must also be 0
+  - No info on first stage used at all, so test distribution normal no matter how weak (@chernozhukov2008reduced)
+- Anderson-Rubin: use $\chi^2$ test of $H_0: \widehat{\rho}-\widehat{\gamma}\beta_0=0$, report all $\beta_0$ that don't reject as confidence interval
+  - Produces CI, not point estimate, which is provably best you can do in local-to-0 case
+  - Other tests (K-test, CLR, etc) operate on same principle, may sometimes have better power
+- If mildly weak, sometimes penalized versions of IV show reduced bias  
+
+
+## Tests in LATE setting
+
+- In LATE setting, have additional structure that can be tested
+- Know that if $W=0$, $X=1$, must be always taker, if $W=1$, $X=1$, must be complier or always taker, etc
+- Monotonicity combined with independence assumption imposes bounds on size of different groups
+- @mourifie2017testing / @kitagawa2015test show that under late independence and monotonicity 
+  - $P(Y\in A,X=0|W=1)\leq P(Y\in A,X=0|W=0)$ and $P(Y\in A,X=1|W=1)\leq P(Y\in A,X=1|W=0)$ for any set $A$
+  - And that these are the full implications of the conditions jointly 
+  - Meaning that no stronger implications are possible, though there exist distributions which fail the conditions but no test can detect
+- Implications hold conditionally on $Z=z$, so can test conditional LATE, and combine tests to measure whether it holds for all $z$
+- @sun2021instrument has more powerful test of same hypothesis, but @mourifie2017testing provides a Stata command, so easiest to use that one
+- Can also derive inequalities testing just exogeneity and not monotonicity, to separate out conditions
+
+## Interpretation: What is a LATE and why should we care?
+
+- LATE result has been criticized because it is a causal effect for a subpopulation defined in terms of counterfactuals
+  - We do not observe who is a complier, and can't design a policy which targets only them
+- If instrument is actual thing we control (prescribe the pill, not take the pill), maybe just want ITT 
+- With homogeneous effects, results can be extrapolated, but then don't need to rely on heterogeneous effects framework
+- Case becomes stronger for use if we consider conditioning
+  - Abadie's $\kappa$ lets us know at least properties of who IV affects
+  - Conditional IV lets us know how effect varies with attributes
+- If target policy is to treat everyone, really do just want ATE
+  - Can show it's not identified in general under these assumptions
+- If Y bounded in $[0,1]$ (w.l.o.g.), under IV assumptions can identify bounds on ATE that are often fairly narrow 
+  - @balke1997bounds give system of inequalities, @kennedy2020sharp add conditioning on covariates
+  - Idea is to replace $Y$ by bounds for those subsets where value is unknown, and observed values where it is
+  - Joint probabilities of $Y,X,W$ restrict possibilities and so conditioning yields tighter bounds than in in unconditional case
+  - Bounds smaller as fraction of compliers grows: extrapolating to fewer units
+
+## What to do about implausible or invalid IV
+
+- Without monotonicity, may retreat to using applicable subsets of @balke1997bounds inequalities
+- When random assignment or exclusion implausible but only slightly so, may do sensitivity analysis (eg @conley2012plausibly)
+  - Assume fixed nonzero degree of correlation of instrument with error or direct effect, construct CI over all plausible values
+  - Bayesian prior natural here, though need additional modeling assumptions for Bayesian IV
+- Weak instruments make exclusion or exogeneity violations worse, since error is scaled by inverse of first stage
+- Systematic reviews of of IV applications (@lal2021much, @young2021) find preponderance of implausibly large effects, in addition to frequent violations of IV assumptions
+- Often find IV larger than OLS estimate, even when intuition for source of endogeneity bias would suggest OLS biased up
+  - Exactly what you would expect if exogeneity condition violated and instrument slightly weak
+  - Also results from high sensitivity to outliers: Fisher randomization tests or HC3 robust SEs may help correct inference 
+- Classic excuse: "measurement error in X": biases OLS toward 0, fixed by valid/relevant IV
+- Tolerable excuse: LATE measures effect for subpopulation which stronger effects
+  - If you are going to argue this, should support with measures of complier characteristics that might suggest this is true
+  - Actually reasonable in many educational applications, which target marginal students for whom remedial education appears highly effective
+
+## Extensions: Multi-valued Instrument
+
+- If $W$ takes more than 2 values, can take any 2, and, if LATE assumptions hold pairwise obtain effect for compliers of that particular change
+- @imbens1994identification show that under LATE conditions 2SLS gives positively weighted average of LATEs for pairs of IVs 
+  - Says we get sign right if all effects the right direction, and get value right if all effects the same, but otherwise not clear why we would care about that particular weighted average
+  - Justification of old methods by showing they don't break too badly is somewhat helpful
+  - Best face on it: researchers are going to summarize effect by a number anyway, and will think of effects as homogeneous, so want to use "simple" method based on homogeneity, then if it's not true fall back to weighted average interpretation
+  - Goes awry when weighting function choice has strong effect on results
+- LATE Model can be shown to be exactly equivalent to one with random utility discrete choice model of treatment decision
+  - $X=1\{\pi(W)\geq V\}$, $V|W\sim U[0,1]$ w.l.o.g., so $\pi(w)=P(X=1|W=w)$ is propensity, $Y^1=\mu_1+U_1$, $Y^0=\mu_0+U_0$, $(V,U_1,U_0)\perp W$
+- For continuous, ordered $W$, we can compare take points where propensity adjacent and arbitrarily close to measure "Local IV" near $\pi(w)=p$ by LATE result
+  - $\tau_{LIV}(p)=\underset{h\to0}{\lim}\frac{E[Y_i|\pi(W_i)=p+h]-E[Y_i|\pi(W_i)=p-h]}{E[X_i|\pi(W_i)=p+h]-E[X_i|\pi(W_i)=p-h]}=\underset{h\to0}{\lim}E[Y_i^1-Y_i^0|p-h<V\leq p+h]=\frac{\partial}{\partial p}E[Y_i|V=p]$
+- Causal effect for subpopulation induced into treatment by marginal change in instrument: hence "Marginal Treatment Effect" Curve
+- Can use curve to identify effects for subpopulations induced into treatment by different policies, which may, e.g., offer varying levels of incentives to take treatment
+- Can estimate nonparametrically, or impose a parametric model. Can also condition curve on covariates $Z$. @cornelissen2016 surveys methods
+ 
+
+## Extensions: Continuous Treatment
+
+- As with adjustment, need either functional form restrictions or smoothing to get effects of a continuous treatment with IV
+- In linear homogeneous case, 2SLS extends naturally, and is most used method
+- Allowing effect of controls to be nonlinear, but treatment linear and additively separable, gives a partially linear IV model, estimable by semiparametric methods
+- Parametric nonlinearities in IV give you GMM. Allowing the first stage to be arbitrarily related gives conditional GMM
+  - Efficient choice of instruments based on conditional expectation functions given IV, can be estimated nonparametrically 
+- Nonparametric nonlinearities in IV create massive estimation issues.
+- NPIV model (@newey2003instrumental, @ai2003efficient) $E[Y-\mu(X)|W]=0$ with continuous $X,W$
+  - Can estimate by regularized 2SLS under stronger version of relevance condition called "completeness"
+  - Obtains "ill-posed" slower than usual nonparametric rates, effectively because with continuum of instruments, parts of instrument set are necessarily weak
+  - Summaries of the effect, like average derivatives or projections, can still be semiparametrically efficient
+- That still assumes additively separable errors: relax by (nonparametric) quantile IV or other extensions  
+
+## Software
+
+- Classic IV in `AER`
+- Weak IV robust inference in `ivmodel`
+- Semiparametric LATE or bounds on ATE in `npcausal`
+- Nonparametric IV (additive or partially linear), with kernels in `np`
+- Lasso IV in `hdm`, DoubleML partially linear IV or semiparametric LATE in `DoubleML`
+- Various tests and extensions mainly in Stata
+
+## Example: Survey Experiment
+
+- @mullainathan2009impact study effect of watching 2005 NYC mayoral debate on candidate evaluation
+- Survey before debate, and choose at random recommendation to watch debate or watch placebo show
+- Use suggestion $W=watch$ as IV for treatment $X=actwatch$ actually watching, with outcome $Y=bloomscore$ candidate score
+- Randomness by design, monotonicity if suggestions don't create aversion to watching, exclusion if suggestion alone doesn't impact candidate views 
+- Table contains (1) Wald IV (=LATE under LATE theorem), (2) OLS estimate, (3) First Stage (4) Reduced Form
+
+```{r,warning=FALSE,message=FALSE}
+
+#Load the data set from your directory
+#In my case this is saved at
+debate<-read.dta("Data/M_Washington_A_Chapter_2010_Dataset.dta")
+
+#Assemble indicator for watched or didn't
+debate$actwatch<-(debate$watchdps1=="yes"|debate$watchdps2=="yes")
+debate$actwatch[is.na(debate$actwatch)]<-FALSE
+debate$actwatch<-as.numeric(debate$actwatch)
+
+#Alternately, use
+debate$actwatch<-as.numeric(debate$watchdps)-1 
+
+ols<-lm(formula=bloomsc~actwatch,data=debate)
+ols.results<-coeftest(ols,vcov=vcovHC(ols,type="HC3"))
+
+reducedform<-lm(bloomsc~watch,data=debate)
+reducedform.results<-coeftest(reducedform,vcov=vcovHC(reducedform,type="HC3"))
+
+firststage<-lm(actwatch~watch,data=debate)
+firststage.results<-coeftest(firststage,vcov=vcovHC(firststage,type="HC3"))
+
+ivwatch<-ivreg(formula=bloomsc~actwatch|watch,data=debate)
+ivwatch.results<-coeftest(ivwatch,vcov=vcovHC(ivwatch,type="HC3"))
+```
+
+```{r,warning=FALSE,message=FALSE,results='asis'}
+stargazer(ivwatch.results,ols.results,firststage.results,reducedform.results,header=FALSE,
+    type="html",
+    omit.stat=c("adj.rsq"),
+    font.size="tiny", 
+    title="Wald Estimate of Debate Watching on Candidate Score")
+```
+
+## Conditional IV
+
+- Since survey collected attributes, it's possible to apply conditional LATE results
+  - Choose just $z=(female, white, black, age)$, though survey collected many more
+  - With random assignment, don't worry about confounding, but do consider predictability of effects 
+- Will use double robust method in `npcausal` for this
+  - Just glm (logit) and random forest for predictions
+  - LATE is imprecisely estimated, noisy with respect to sample split
+  - ATE bounds (scaling score to [0,1]) are wide, but width smaller than 1 with no IV info
+  - First stage is okay: about 1/5 of respondents actually watch the debate 
+
+```{r,message=FALSE,warning=FALSE}
+mydata<-data.frame(y=debate$bloomsc,a=debate$actwatch,z=debate$watch,x1=debate$female,x2=debate$black,x3=debate$white,x4=debate$age)
+mydata<-na.omit(mydata)
+x=as.matrix(mydata[,4:7])
+set.seed(101)
+boundsresults<-ivbds(y=mydata$y/100,a=mydata$a,z=mydata$z,x=x,nsplits=5,sl.lib=c("SL.glm","SL.ranger"))
+lateresults<-ivlate(y=mydata$y,a=mydata$a,z=mydata$z,x=x,nsplits=5,sl.lib=c("SL.glm","SL.ranger"))
+```
+
+- Compare 2SLS, assuming linearity and homogeneity
+```{r,message=FALSE,warning=FALSE}
+tslswatch<-ivreg(formula=bloomsc~actwatch+female+black+white+age|watch+female+black+white+age,data=debate)
+(tslswatch.results<-coeftest(tslswatch,vcov=vcovHC(tslswatch,type="HC3")))
+```
+- In this case, results are very similar, within range of sampling error
+
+
+## Summary
+
+- Classical IV estimates treatment even with confounding under exogeneity and relevance
+  - Derived assuming linear homogenous effects
+- Allowing heterogeneity requires thinking through subpopulations involved in each
+- Under exclusion, relevance, random assignment and monotonicity, binary IV estimates Local Average Treatment Effect
+  - Efficiently estimable also conditional on covariates
+- Can and should justify, test, and report on these conditions when using IV
+  - Formal tests exist for many of them
+- Realistically IV most likely justifiable in experimental settings with some noncompliance
+  - But be on the lookout for natural experiments where (conditionally) random forces impact a treatment but not directly the outcome  
+
+## References

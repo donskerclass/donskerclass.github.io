@@ -1,0 +1,424 @@
+---
+title: "Semiparametric Functional Estimation"
+author: "David Childers"
+output:
+  html_document:
+    code_folding: hide
+bibliography: classrefs.bib
+---
+
+## Problem Setup
+
+- Causal effect of interest is often single feature of much more complicated model
+    - When identified, can write it as *functional* of the distribution
+    - $\psi=\Psi(P):\ \mathcal{P}\to\mathbb{R}^d$
+    - $\mathcal{P} = \{\mathbb{P}_\theta:\ \theta\in\Theta\}$ is class of distributions, indexed by parameters, which may be infinite dimensional (expectation functions, densities, etc)
+- What is reasonable estimator for $\psi$ given data $\{x_i\}_{i=1}^{n}$ with empirical distribution $\mathbb{P}_n$?
+
+
+## Classical answer: maximum likelihood
+
+- $\widehat{\theta}_{MLE}=\underset{\theta\in\Theta}{\arg\min}\log \ell(\{x_i\}_{i=1}^{n},\theta)$
+- $\widehat{\psi}_{MLE}=\Psi(\mathbb{P}_{\widehat{\theta}_{MLE}})$
+- If $\Theta$ finite dimensional, under some regularity conditions, asymptotically optimal to maximize likelihood, and plug in likelihood to estimate functional
+- Limit theory review (we'll use this form): Take FOC and Taylor expand
+
+$$0=\frac{1}{n}\sum_{i=1}^{n}\frac{d}{d\theta}\log\ell(x_i,\widehat{\theta})\approx \frac{1}{n}\sum_{i=1}^{n}\frac{d}{d\theta}\log\ell(x_i,\theta_0)+\frac{1}{n}\sum_{i=1}^{n}\frac{d^2}{d\theta^2}\log\ell(x_i,\bar{\theta})(\widehat{\theta}-\theta_0)$$
+- Rearrange, apply LLN and Slutsky
+$$\sqrt{n}(\widehat{\theta}^{MLE}-\theta_0)= -\frac{1}{\sqrt{n}}\sum_{i=1}^{n}(\mathbb{E}[\frac{d^2}{d\theta^2}\log\ell(x_i,\bar{\theta})])^{-1}\frac{d}{d\theta}\log\ell(x_i,\theta_0)+o_p(1)$$
+- Supposing $\Psi$ differentiable in $\theta$, apply first order Taylor expansion again ("Delta Method")
+$$\sqrt{n}(\widehat{\psi}^{MLE}-\psi_0)= -\frac{1}{\sqrt{n}}\sum_{i=1}^{n}\frac{d\psi}{d\theta}(\mathbb{E}[\frac{d^2}{d\theta^2}\log\ell(x_i,\bar{\theta})])^{-1}\frac{d}{d\theta}\log\ell(x_i,\theta_0)+o_p(1)$$
+
+- We say $g_\psi(x_i)=\frac{d\psi}{d\theta}(\mathbb{E}[\frac{d^2}{d\theta^2}\log\ell(x_i,\bar{\theta})])^{-1}\frac{d}{d\theta}\log\ell(x_i,\theta_0)$ is *influence function* of $\widehat{\psi}$
+- By CLT $\sqrt{n}(\widehat{\psi}^{MLE}-\psi_0)\overset{d}{\to}N(0,E[g_\psi g_\psi^{\prime}])$
+- By the Cramér-Rao lower bound, this is smallest asymptotic variance of any regular estimator of $\psi_0$
+
+## Why not MLE
+
+- Problem: we don't have a correctly specified parametric model of full data distribution
+- Partition $\Theta=(\theta,\beta)$ where $\beta$ is *nuisance*, which may be complicated
+- $\beta$ may be, eg, a conditional expectation function, a density, etc, that we don't want to restrict
+
+- Can we avoid depending on $\beta$ if we just care about $\theta$?
+- If $\beta$ indexes (conditionally) independent part of model, often yes
+    - Conditional likelihood: $\ell(y,x,\theta,\beta)=\ell(y|x,\theta)\ell(x,\beta)$ can just optimize first part
+- In more general case, can't avoid some dependence on $\beta$
+
+
+## Plug in
+
+- Simple case: $\beta$ estimable without knowing $\theta$
+- Suppose we have an identifying formula $E[\phi(x_i,\beta)]=\theta$
+- Suppose we have an estimator $\widehat{\beta}$ of $\beta$
+- Estimate $\widehat{\theta}^{\text{plugin}}=\frac{1}{n}\sum_{i=1}^{n}\phi(x_i,\widehat{\beta})$
+- Ex: adjustment formula under conditional ignorability $\theta=\int E[y|x,z]dP(z)$
+    - $\beta:=E[y|x,z]$ unknown function estimated by $\widehat{\beta}(x)$
+    
+## Convergence
+
+- Suppose $\Vert \widehat{\beta}(x)-\beta\Vert=O_p(g(n))$ and $\widehat{\beta}\in\mathcal{B}$ w.p.a. 1
+- Let $\mathcal{F}=\{\phi(.,\beta):\ \beta\in\mathcal{B}\}$ satisfy a ULLN
+- Define $\partial_\beta f(\beta)|_{\beta_0}[\beta-\beta_0]=\frac{\partial}{\partial t}f(\beta_0+t(\beta-\beta_0))$ be the directional (Gateaux) derivative of a function $f$.
+- Suppose $\partial_{r}E[\phi(x_i,\beta_0+r(\beta-\beta_0))][\beta-\beta_0]\leq C\Vert\beta-\beta_0\Vert$ derivative is uniformly bounded
+- Then 
+$$\widehat{\theta}^{\text{plugin}}-\theta_0\leq \underset{\beta\in\mathcal{B}}{\sup}\{\frac{1}{n}\sum_{i=1}^{n}\phi(x_i,\beta)-E[\phi(x_i,\beta)]\}+E[\phi(x_i,\widehat{\beta})]-\theta_0$$
+- By ULLN
+$$= E[\phi(x_i,\beta_0)]+\int_0^1\partial_{r}E[\phi(x_i,\beta_0+r(\widehat{\beta}-\beta_0))]dr-\theta_0+o_p(1)$$
+- By Taylor's theorem with integral remainder
+$$\leq C\Vert\widehat{\beta}-\beta_0\Vert+o_p(1)=O_p(g(n))$$
+- Result: convergence rate is same as that of $\widehat{\beta}$
+- If estimate is nonparametric, convergence rate of $\theta$ is nonparametric
+    - Even though $\theta$ is finite dimensional, $\beta$ may be function
+    - Typically not possible to get $\sqrt{n}$ asymptotically normal inference
+
+## Sample Splitting
+
+- Take half of data $i=1\ldots N_1$ vs $N_1+1\ldots N_2$
+- Estimate $\widehat{\beta}^{N_1}$ in $N_1$,  Define $\widehat{\theta}^{N_2}=\frac{1}{N_2}\sum_{i=N_1+1}^{N_2}\phi(x_i,\widehat{\beta}^{N_1})$
+- Above proof then goes through with ULLN replaced by standard LLN by independence
+    - ULLNs for nonparametric function classes a pain to verify, and rule out some estimators
+- Lose half of sample size, but easy fix: switch split and estimate $\widehat{\beta}^{N_2}$ and $\widehat{\theta}^{N_1}$
+- Define $\widehat{\theta}^{\text{crossfit}}=\frac{1}{2}(\widehat{\theta}^{N_1}+\widehat{\theta}^{N_2})$
+- Still get same slow rates, bias, etc
+
+## Machine Learning estimators
+
+- Can estimate c.e.f. $E[y|x]$ or density $p(x)$ without functional form restrictions
+- Nonparametric methods: use local information around $x$ 
+- Minimal assumptions: smoothness or other structure
+- Cost: convergence at slower rates than $\sqrt{n}$
+- Google "scikit-learn tutorial" or cross street to ML department to learn about these
+- Typical result $E[(\widehat{f}(x)-E[y|x])^2]=O_p(n^{-\alpha})$ for some $\alpha<\frac{1}{2}$ depending on smoothness, dimension, etc
+- Note: $MSE = Bias(\widehat{f})^2 + Var(\widehat{f})$ means bias not asymptotically negligible, and total error larger than CLT error
+    - Plug in generally converges at same, slow rate, and does not have estimable asymptotic distribution
+    
+## Some useful Machine Learning Estimators
+
+- For conditional expectations $E[y|x]$ 
+    - $x$ is moderate dimensional: random forests, xgboost, BART, factor models, Highly adaptive Lasso
+    - $x$ is low dimensional but function strongly nonlinear: MARS, trend filtering, Lasso over wavelets
+    - $x$ is image or video data: (convolutional) neural networks
+    - $x$ is text data: Recurrent or transformer neural nets, word embeddings, Latent Dirichlet Allocation
+- Many people like Lasso on tabular data because it "looks like" OLS and gives you coefficients
+    - Don't listen to them: nobody knows how to interpret OLS coefficients and the predictions are terrible
+- A small number of people like SVMs and RKHS methods
+    - These people are theorists who have never touched a real data set in their life
+- Many people assume neural networks are best choice on everything
+    - Don't listen to them: "vanilla" neural nets often not great on small data, shine on much bigger data sets
+- For conditional distributions $p(y|x)$: $y$ discrete:
+    - Any estimator of $E[y|x]$, plus regularized GLMs
+    - If goal is *inverse* probability, consider estimating directly, via regularized GMM (@chernozhukov2021automatic)
+        - Benefit is likely better robustness to weak overlap, disadvantage is can't do generic ML 
+- For conditional densities $p(y|x)$: $y$ continuous:   
+    - $x$ low dimensional: kernel density, series
+    - $x$ moderate dimensional: Distributional random forests? This area is pretty open
+- Actual advice: try a bunch of models, and create an "ensemble" by taking linear combination of them
+    - Fit ensemble weights by cross validation: "super-learner"
+    - Include diverse models, including simple parametric models, in list
+
+
+## How to avoid plug in bias
+
+- *Neyman orthogonality*: Dependence of influence function on $\beta$ is *locally* close to 0
+    - May be achievable by defining new influence function $\phi$
+    - Projects derivative wrt $\theta$ on orthogonal complement of span of derivative wrt $\beta$
+    - Projection may require estimation of additional nuisance parameter, $\mu$
+- Letting $\eta=(\mu,\beta)$, a score function $\phi(x_i,\theta,\eta)$ is Neyman orthogonal if
+$\partial_\eta E[\phi(x_i,\theta_0,\eta_0)][\eta-\eta_0]=0$
+- where $\partial_\eta$ is the Gateaux (directional) derivative $\partial_\eta f(\eta)|_{\eta_0}[\eta-\eta_0]=\frac{\partial}{\partial t}f(\eta_0+t(\eta-\eta_0))$
+- Implies that to first order, estimation error in $\eta$ has no effect on moment
+    - Condition "debiases" plug-in by reducing dependence on unknown functions
+- Finding a Neyman orthogonal score can be challenging, and we usually won't be deriving it ourselves, so we'll come back to how to find one after first describing what we can do with it
+    - See @chernozhukov2018dml, @hines2021demystifying, @chernozhukov2017ate for elaboration and examples
+    
+
+    
+## Method: "Cross-fit Double Machine Learning"
+
+- Focus on case where functional has "plug in" form and for which estimators of $\eta$ exist.
+    - Avoids some ugly algebra and some even uglier technicalities
+    - Upshot is, either estimate nuisances at each fixed $\theta$ value (@chernozhukov2018dml, @belloni2017program), or further modify influence function to avoid this (@kallus2020localized).
+- Let $\phi(x_i,\theta,\eta)=q(x_i,\eta)- \theta$ be an influence function for our target functional $\theta$ with nuisance parameters $\eta$ including $\beta$. 
+- Split sample into $I_1$ and $I_2$. On $I_1$ estimate $\hat{\eta}^{(1)}$ using some method (maybe machine learning based) On $I_2$ estimate $\hat{\theta}^{(2)}=E_nq(x_i,\widehat{\eta}^{(1)})$
+- Switch $I_1$ and $I_2$ and repeat previous step, and average $\hat{\theta}^{DML}=\frac{1}{2}\hat{\theta}^{(1)}+\frac{1}{2}\hat{\theta}^{(2)}$
+- Alternately, pool both and set $\hat{\theta}$ to solve sample moment condition
+    - Variants: split $>2$ times, take median rather than average, etc.
+- **Theorem** (@chernozhukov2018dml, mostly) If we have that
+1. $Eq(x_i,\eta_0)=\theta_0$
+2. $\partial_{\eta}Eq(x_i,\eta_0)[\eta-\eta_0]=0$ (our influence function is "Neyman orthogonal")
+3. $\int_0^1\partial^2_{r}E[\phi(x_i,\theta,\eta_0+r(\widehat{\eta}-\eta_0))]\leq E[(\widehat{\eta}-\eta_0)^2]$ 2nd order remainder
+4. $E[(\widehat{\eta}-\eta_0)^2]=o_p(n^{-1/2})$ MSE rate condition
+5. $\phi(x_i,\theta,\eta^{\prime})-\phi(x_i,\theta,\eta)\leq L(x_i)\Vert\eta^{\prime}-\eta\Vert$ Moment is $L$-Lipschitz w.r.t. $\eta$
+- Then $\sqrt{n}(\widehat{\theta}-\theta)\overset{d}{\to}N(0,Var(\phi(x_i,\theta_0,\eta_0))$
+
+<!-- (Note: figure out relationship between plugin and influence correction: DML paper uses Z-estimator formulation) -->
+<!-- (2nd order remainder, fast enough rates for $\widehat{\eta}$, Lipschitz condition, etc )...  -->
+
+## Intuition
+
+- Sample splitting reduces overfitting by ensuring that $\hat{\eta}$ noise independent of $\hat{\theta}$ estimation process
+    - Consider only fixed value of $\hat{\eta}$ rather than fitting jointly same data
+- Second order remainder satisfied exactly if moment is quadratic form, as in some common examples, usually reasonable otherwise
+- Lipschitz condition ensures that convergence of nuisance ensures similarly rapid convergence of moment
+- Neyman orthogonality requires choice of moment to identify correct $\theta_0$ but avoid influence of $\eta$
+- Rate condition: satisfied if nuisance functions $\widehat{\eta}$ converge fast enough
+    - Needs a true function which is not too complicated to not admit a fast estimator
+    - Also needs an estimator achieving those rates: usual nonparametric methods still too slow
+- Depending on form of remainder, rate may involve combination of rates for different subcomponents of $\eta$
+    - E.g. AIPW "double robustness" requires product of $\mu$, $\pi$ rates 
+- Moment form can be relaxed to $E[\psi_a(x,y,z,\eta)\theta_0+\psi_b(x,y,z,\eta)]=0$
+    - $\theta_0=-\frac{E[\psi_b(x,y,z,\eta)]}{E[\psi_a(x,y,z,\eta)]}$ 
+    - Still allows estimating $\eta$ without first knowing $\theta$, so can treat ML part as black box
+    
+
+## Convergence result
+
+- $\sqrt{n}(\widehat{\theta}-\theta_0)=\sqrt{n}E_n\phi(x_i,\theta_0,\widehat{\eta})$
+    - $=\sqrt{n}E_n\phi(x_i,\theta_0,\eta_0)+$
+    - $\left(\sqrt{n}E_n[\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\theta_0,\eta_0)]-\sqrt{n}E[\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\theta_0,\eta_0)]\right)+$
+    - $\sqrt{n}E\phi(x_i,\theta_0,\widehat{\eta})$
+- $=(a)+(b)+(c)$
+- Call these terms the *influence function* term, the *empirical process* term, and the *remainder* term
+- $(a)\overset{d}{\to}N(0,Var(\phi(x_i,\theta_0,\eta_0)))$ by CLT and (1)
+    - This will be dominant term: limit as if we knew $\eta_0$
+- $(c)= \sqrt{n}E\phi(x_i,\theta_0,\widehat{\eta})+\sqrt{n}\partial_{\eta}E\phi(x_i,\theta_0,\eta_0)[\eta-\eta_0]+\sqrt{n}\frac{1}{2}\int_0^1\partial^2_{r}E[\phi(x_i,\theta_0,\eta_0+r(\widehat{\eta}-\eta_0))]dr$
+    - $=0+0+\sqrt{n}\frac{1}{2}\int_0^1\partial^2_{r}E[\phi(x_i,\eta_0+r(\widehat{\eta}-\eta_0))]dr$
+    - First term by moment definition (1), second by Neyman orthogonality (2)
+    - $\leq \sqrt{n}*o_p(n^{-1/2})=o_p(1)$
+    - By remainder condition (4) and rate condition (5)
+
+## Empirical Process term (b)
+
+- Term (b)$=\sqrt{n}(E_n-E)[\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\theta_0,\eta_0)]$ is one where sample splitting used
+- Without sample splitting, converges to 0 iff $\mathcal{F}:=\{\phi(x_i,\theta_0,\eta)-\phi(x_i,\theta_0,\eta_0): \eta\in B_{\epsilon}(\eta_0)\}$ is *Donsker*
+    - See @vanderVaart1996weak for gory details
+    - Rough summary: holds if function class is "not too complex". Category includes most models with finite number of parameters, nonparametric models of sufficient smoothness (>d/2 derivatives), well-behaved compositions.
+    - May not hold if function class is sample size dependent: doesn't play well with adaptive estimators.
+- With sample splitting, just need rate results
+    - Prove for $\widehat{\theta}^{(2)}$, $n=n_2$, rest follows by symmetry
+- **Lemma** (@kennedy2020sharp lemma 2): $(b)=O_P(E[(\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\theta_0,\eta_0))^2])$
+- **Proof**: $E[E_n[\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\theta_0,\eta_0)]|\mathcal{I}_1]=E[\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\theta_0,\eta_0)|\mathcal{I}_1]=E[\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\theta_0,\eta_0)]$ by independence, so $E[(b)|\mathcal{I}_1]=0$
+    - $Var[(E_n-E)[\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\eta_0)]|\mathcal{I}_1]=Var[E_n[\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\theta_0,\eta_0)]|\mathcal{I}_1]$
+    - $=\frac{1}{n}Var[\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\theta_0,\eta_0)|\mathcal{I}_1]\leq\frac{1}{n}E[(\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\theta_0,\eta_0))^2]$
+    - By Chebyshev, $\forall t>0$ $P(\frac{(E_n-E)[\phi(x_i,,\theta_0\widehat{\eta})-\phi(x_i,\theta_0,\eta_0)]}{\frac{1}{\sqrt{n}}E[(\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\theta_0,\eta_0))^2]^{1/2}}\geq t)=E[P(\frac{(E_n-E)[\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\theta_0,\eta_0)]}{\frac{1}{\sqrt{n}}E[(\phi(x_i,\theta_0,\widehat{\eta})-\phi(x_i,\theta_0,\eta_0))^2]^{1/2}}\geq t|\mathcal{I}_1)]\leq\frac{1}{t^2}$
+    - For any $\epsilon>0$ Set $t=\frac{1}{\sqrt{\epsilon}}$ to bound probability by $\epsilon$
+- **Corollary** By Lipschitz condition and rate result, $(b)=o_p(1)$
+
+
+
+## Influence Functions
+
+- How do we get moments that satisfy above conditions?
+- Typically occurs when $\phi(x_i,\theta,\eta)$ is the *efficient influence function* of functional $\theta$
+- Recall that for parametric models with well-behaved likelihoods, smallest possible asymptotic variance is *Cramér-Rao* lower bound
+    - Roughly, if, $\sqrt{n}(\hat{\psi}-\psi)\overset{d}{\to}N(0,V)$, $V\geq E[g_\psi g_\psi^{\prime}]=\frac{d\psi}{d\theta^\prime} E[\frac{d}{d\theta}\log\ell(x_i,\theta_0)\frac{d}{d\theta^\prime}\log\ell(x_i,\theta_0)]^{-1}\frac{d\psi}{d\theta}$
+    - Under some regularity conditions on $\hat{\psi}$
+- For semiparametric models, with nuisance parameter $\beta\in\mathcal{B}$, if $\{\beta(t):\ t\in T\}\subset\mathcal{B}$ is a regular parametric submodel, Cramér-Rao lower bound should still hold
+- Thus, the supremum over all parametric submodels of Cramér-Rao bounds should form a lower bound on the worst case variance of the semiparametric model
+- A function $\phi(x_i,\eta)$ is an *efficient influence function* for $\psi$ if $E[\phi(x_i,\eta_0)^2]$ equals this worst case lower bound
+- In general, properties of such functions beyond the scope of this class: see @van2000asymptotic
+- In parametric case, it is just influence function of MLE
+- Nonparametric case: $\mathcal{P}$ is the space of all possible distributions $P$ of data and $\psi=\Psi(P_0)$ 
+    - When it exists, influence function is $\frac{d\Psi((1-r)P_0+r\delta_x)}{dr}$, the Gateaux derivative of functional with respect to a point mass at a data point $x$
+    - @ichimura2021,  @hines2021demystifying discuss how to perform these calculations and use to derive orthogonal moment conditions: generally nontrivial calculation
+- Case with both infinite and finite components generally requires even more delicate methods (eg @chen2018overidentification)
+- Today: just go over a few others have derived, point you to literature
+
+## Examples
+
+- AIPW formula for $E[Y^x]$ by adjustment: $\eta=(\mu,\pi)$, $\phi()=\mu(x,Z_i)+\frac{(Y_i-\mu(x,Z_i))1\{X_i=x\}}{\pi(x|Z_i)}$
+    - Shown to be Neyman orthogonal in adjustment lecture
+- Functionals of regression $\beta=E[Y|X,Z]$, $\theta=E[m(Y,X,Z,\beta)]$ for some function $m$ linear in $\beta$
+    - $\eta=(\beta,\mu)$ for $\mu$ s.t. $E[m(Y,X,Z,s(X,Z))-\mu_0(X,Z)s(X,Z)]=0$ for any $s(X,Z)$
+    - Orthogonal moment is $E[m(Y,X,Z,\beta)+\mu(X,Z)(Y-\beta(X,Z))]-\theta=0$
+    - @chernozhukov2021automatic suggest (regularized) GMM over set of test functions $\{s_j()\}_{j=1}^J$ to estimate $\mu$, ML regression to estimate $\beta$
+    - Special cases of m: $m=\beta(x,Z)$ returns ATE $m=w(X)\frac{d}{dX}\beta(X,Z)$ gives weighted average derivative
+    - In ATE case, above is just AIPW with sieve GMM for the inverse propensity 
+- @farrell2021deep give more general formula for initial nuisance function defined by M-estimator  
+    - Let $\beta_0(z):=\underset{\beta\in\mathcal{B}}{\arg\min}E[\ell(Y,X,\beta(Z))]$ for a loss function $\ell$, 
+    - Let $\psi_0=E[H(Z,\beta_0(Z),x^*)]$ be target functional for known $H$
+    - $\mu(z)=E[\ell_{\beta\beta}(y,t,\beta(z))|Z=z]$ is additional function to estimate
+    - Then $H(z,\beta_0(z),x^*)-H_\beta(z,\beta_0(z),x^*)\mu(z)^{-1}\ell_\beta(y,x,\beta(z))-\psi_0$ is a Neyman-orthogonal score
+    - Show cases for logit, Tobit, etc and suggest neural network first stage  
+- "Sufficient statistics approach" @chetty2009sufficient uses envelope theorem to note that policy effects near optimum have derivative 0 wrt structure parameters
+    - Optimal policy estimates are effectively Neyman orthogonal semiparametric estimates
+    - Debiasing approach may obtain similar robustness to nuisance features in more general economic settings
+    
+
+## Example: Partially linear model 
+
+- $y = \theta x + \beta(z) + \epsilon$
+- $E[\epsilon|x,z]=0$, $\theta\in\mathbb{R}$, $\beta(z)$ unrestricted function
+- $E[y|z] = \theta E[x|z] + \beta(z)$
+- $y-E[y|z] = \theta(x - E[x|z]) +\epsilon$  
+- $\eta = (\ell(z),m(z)):=(E[y|z],E[x|z])$ are *nuisance functions*: can learn without knowing $\theta$ 
+- Score function is $\psi(y,x,z,\eta,\theta)=(x-E[x|z])^2\theta+(y-E[y|z])(x-E[x|z])$
+    - $\partial_{(\ell,m)} E[\psi(x,z,\eta,\theta)]=(E[E[x|z]-x],2\theta E[E[x|z]-x]+E[E[y|z]-y])=(0,0)$ so Neyman orthogonal
+- $\theta= \frac{E[(y-E[y|z])(x-E[x|z])]}{E[(x-E[x|z])^2]}$
+- Interpretation: regress $y$ and $x$ on $z$, then regress residuals
+    - If $(\ell(z),m(z))$ are linear functions of $z$, this is exactly Frisch-Waugh-Lowell decomposition
+    - $\widehat{\theta}^{OLS}=(((M_zX)^{\prime}(M_zX))^{-1}((M_zX)^{\prime}M_zY)$
+- Visualization: plot $y_i-\widehat{\ell}(z_i)$ against $x_i-\widehat{g}(z_i)$
+    - Allows evaluation of linearity of $x$ effect, visually displays uncertainty
+
+
+
+## Code example
+
+- Implementation in `DoubleML` in R/Python
+    - Nuisances by any machine learning algorithm in `mlr3`/`scikit-learn`
+- Lasso version in `hdm`, kernel version (no crossfitting) in `npplreg` in `np`  
+- Simulated data 
+    - $d_i = m_0(x_i) + s_1 v_i$, $y_i = \alpha d_i + g_0(x_i) + s_2 \zeta_i$
+    - $m_0(x_i) = a_0 x_{i,1} + a_1 \frac{\exp(x_{i,3})}{1+\exp(x_{i,3})}$, $g_0(x_i) = b_0 \frac{\exp(x_{i,1})}{1+\exp(x_{i,1})} + b_1 x_{i,3}$
+    - $a_0=1, a_1=0.25, s_1=1, b_0=1, b_1=0.25, s_2=1$
+
+
+```{r,message=FALSE,warning=FALSE}
+library(DoubleML) #Cross-fitting
+library(mlr3) #ML algorithms and fitting framework
+library(mlr3learners) #Extra ML algorithms
+library(data.table) #data format this needs for some reason
+library(ggplot2) #Plotting software
+lgr::get_logger("mlr3")$set_threshold("warn")
+set.seed(1111)
+```
+```{r,eval=FALSE,class.source = 'fold-show'}
+#Choose Random Forest for nuisance function estimates 
+learner = lrn("regr.ranger", num.trees = 100, mtry = 20, min.node.size = 2, max.depth = 5)
+ml_g = learner$clone() #Use random forest for prediction of outcome
+ml_m = learner$clone() #use random forest for prediction of treatment
+#Simulate data from partially linear model with effect 0.5, 20 nuisance predictors
+data = make_plr_CCDDHNR2018(alpha=0.5, n_obs=500, dim_x=20, return_type='data.table') 
+obj_dml_data = DoubleMLData$new(data, y_col="y", d_cols="d")
+#Partially linear regression with cross-fitting
+dml_plr_obj = DoubleMLPLR$new(obj_dml_data, ml_g, ml_m)
+dml_plr_obj$fit(store_predictions=TRUE)
+print(dml_plr_obj)
+```
+
+```{r, echo=FALSE, eval=FALSE}
+#Alternate simulation
+set.seed(42) #Reproducible numbers
+n <- 500;
+npred<-20 #predictors
+z <- matrix(runif(n*npred),nrow=n)
+b <- as.vector(2*runif(npred)-1)
+g1 <- rnorm(npred); g2 <- rnorm(npred);
+x <- cos(z%*%b)+rnorm(n)
+y <- rnorm(n,mean=x+z%*%g1+sin(z%*%g2))
+sims<-data.table(y=y,d=x,x=z)
+dml_data = DoubleMLData$new(sims, y_col="y", d_cols="d.V1")
+#Partially linear regression with cross-fitting
+dml_plr_object2 = DoubleMLPLR$new(dml_data, ml_g, ml_m)
+dml_plr_object2$fit(store_predictions=TRUE)
+print(dml_plr_object2)
+```
+
+## Results
+
+```{r}
+#Choose Random Forest for nuisance function estimates 
+learner = lrn("regr.ranger", num.trees = 100, mtry = 20, min.node.size = 2, max.depth = 5)
+ml_g = learner$clone() #Use random forest for prediction of outcome
+ml_m = learner$clone() #use random forest for prediction of treatment
+#Simulate data from partially linear model with effect 0.5, 20 nuisance predictors
+data = make_plr_CCDDHNR2018(alpha=0.5, n_obs=500, dim_x=20, return_type='data.table') 
+obj_dml_data = DoubleMLData$new(data, y_col="y", d_cols="d")
+#Partially linear regression with cross-fitting
+dml_plr_obj = DoubleMLPLR$new(obj_dml_data, ml_g, ml_m)
+dml_plr_obj$fit(store_predictions=TRUE)
+print(dml_plr_obj)
+```
+
+## Residual on Residual Plot from Simulation
+
+```{r,message=FALSE, warning=FALSE}
+Vhat<-data$d-dml_plr_obj$predictions$ml_g
+Zetahat<-data$d-dml_plr_obj$predictions$ml_g
+residuals<-data.frame(Vhat,Zetahat)
+
+ggplot(data=residuals,aes(x=Vhat,y=Zetahat))+
+    geom_point(alpha=0.5)+
+    geom_smooth(method="lm",formula="y~x")+
+    ggtitle("Y Residuals vs X residuals",subtitle = "Line fit by OLS on full sample")
+```
+
+## Beyond a partially linear model
+
+- Case where main effect nonparametric but still additive is a *Generalized Additive Model*
+    - $y=f(x)+\sum_j g_j(z)+u$
+    - `mgcv`, `gam` use splines for each nonparametric component: see <https://noamross.github.io/gams-in-r-course/>
+    - Gain flexibility, visualization of components, but still restricts functional form
+    - Lose $\sqrt{n}$-asymptotic normality
+- Full generality requires interactions $y=g(x,z)+\epsilon$
+    - For discrete $x$, use AIPW (`DoubleMLIRM` (for "Interactive Regression Model") with `score="ATE"` in `DoubleML`)
+- For interactions and continuous $x$, plugin possible but rates suffer curse of dimensionality 
+    - Even worse, standard nonparametric and  ML methods doesn't let you single out $x$
+    - Result is your smoother or regularizer might create large bias $x$ to 
+- One possibility: pick out low dimensional summary of $x$ effect
+    - e.g. Weighted average: $\int\int w(x)f(x,z)dxdz$, weighted average derivative: $\int\int w(x)\partial_xf(x,z)dxdz$
+    - Semiparametric estimator with robust moments can remain consistent
+- Projection onto parametric model: find criterion function $\hat{\theta}$ minimizes 
+    - Derive efficient influence function for minimizer under nonparametric model (eg via Gateaux derivative method)
+    - Allows arbitrary misspecification, interpretation as best (partially) linear predictor
+- In between: find semiparametric estimate of average kernel-weighted function $\int\int K(\frac{x-u}{h})f(x,z)dxdz$
+    - Then take bandwidth to 0 to get semiparametric kernel estimator
+    - Approach taken in @colangelo2020double, @kennedy2017non, 
+    - Lose $\sqrt{n}-$ asymptotic normality, but consistent and faster than plugin 
+
+```{r,message=FALSE, warning=FALSE}
+library(dplyr)
+xvars<-dplyr::select(data,starts_with("X"))
+```
+
+## Kernel Estimate from Simulation Data
+
+- Applying @kennedy2017non kernel-based estimator to data from above experiment, find noisier and less precise but still reasonable estimate of average potential outcome
+
+```{r,message=FALSE,warning=FALSE,class.source = 'fold-show'}
+library(npcausal)
+kernreg<-ctseff(data$y,data$d,xvars,bw.seq = seq(.5, 2, length.out = 10),
+        sl.lib=c("SL.mean","SL.ranger"))
+plot.ctseff(kernreg)+title("Kernel Estimate of Average Potential Outcome ")
+```
+
+    
+## More general applications
+
+- Papers using debiased influence function + sample splitting approach now come out at too fast a pace to follow
+    - Take your favorite model with unknown function as a component
+    - Replace that by nonparametric function
+    - Derive efficient influence function for low-dimensional target
+- Still no fully automated way to do this, which is why every application gets a new paper
+- Sieve GMM approach of @ai2003efficient (and subsequent works by Chen et al) probably most general framework, if you can express your model as conditional GMM
+    - Original version requires joint GMM estimation of nuisance functions and parameters, so imposes specific (basis-function-based) nonparametric estimators
+    - Follow-ups allow multi-step estimates, with other estimators for nuisance functions
+    - Verifying regularity conditions and deriving variance formulas may be nearly as challenging as deriving influence functions from scratch...
+- Example double ML applications
+    - IV, DiD, missing data, mediation, selection, (dynamic) discrete choice, quantile regression, density estimation, survival models, (policy and value functions in) reinforcement learning, online estimation, (almost?) any effect in NPSEM-IE models,  etc
+    - If model widely used, somebody has done it or is working on it 
+
+
+
+
+<!-- ## When to use semiparametrics -->
+
+
+
+## Conclusions
+
+- Semiparametric methods allow precise estimation and inference for low-dimensional objects with minimal assumptions on shape of high dimensional objects
+- In causal inference, usually summary of treatment, with nuisance given by shape of other relationships
+- Parametric estimators are generally inconsistent if incorrectly specified
+- Plug in nonparametric estimators pass on slow rates and bias to low-dimensional summaries
+- Use of orthogonal moments reduces sensitivity to estimation error
+    - Usually obtain $\sqrt{n}-$ asymptotic normality with $o_p(n^{-1/4})$ rates for nuisances
+- Wide variety of machine learning estimators can estimate conditional means, etc at these rates    
+- Sample splitting can reduce overfitting and dependence on exact structure of nuisance estimator beyond rate
+- Obtain orthogonal moments by calculating influence functions
+
+
+
+
+## References

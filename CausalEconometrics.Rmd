@@ -1,0 +1,32 @@
+---
+title: "Causal Econometrics"
+author: "David Childers"
+output: html_document
+---
+
+## Course Description
+
+Causal Econometrics (CMU course number 47-873) is a graduate-level course covering models and methods used in contemporary applied economics and related fields to identify, estimate, and evaluate causal effects and design and execute studies that can credibly evaluate policies and economic theories. Topics include potential outcomes and directed acyclic graphs formalisms for causality and recent developments in control, instrumental variables, panel data, and regression discontinuity methods, including via non- and semi-parametric methods for identification and estimation. Additional topics may be selected based on student interest. The presumed background for participants is a knowledge of Econometric theory at the level of CMU 47-811 PhD Econometrics I (or roughly the first half of Bruce Hansen's *[Econometrics](https://www.ssc.wisc.edu/~bhansen/econometrics/)*).
+
+## Motivation
+
+A common goal of empirical research in economics and related fields is to determine the impact of realized or hypothetical interventions in order to assess theories and improve policies. Causal inference is the field which builds models of these impacts and provides tools for their estimation from data. This course will provide an overview of the main classes of modeling approaches to causal inference and econometric methods for working with these models applied in contemporary empirical economics. The focus will especially concern “credible” or “quasi-experimental” methods which attempt to isolate and measure sources of variation in the data which mimic direct application of the policies of interest. These methods, when applicable, provide measures relying on minimal and transparent assumptions and so form a lingua franca for persuasive scientific communication (and, increasingly, a requirement for publication in top venues). The goal will be to develop understanding of methods popularly used in empirical practice and also emerging developments likely to be useful in students’ own research. To facilitate this applied focus, assignments will be based on understanding, replicating, and extending contemporary applied economic research papers, and content may be tailored towards methods useful in students’ particular research areas.
+
+## Syllabus
+
+[Syllabus](files/pdf/CausalEconometricsSyllabus.pdf)
+
+## Course Materials
+
+The following files, derived from the lecture slides for the course and containing both text and R code, are provided as-is, as a resource for students and researchers interested in the topics. As the course is ongoing, additional topics and updates may be provided as the course proceeds. Additional course materials may be available upon request. If you have questions, comments, or criticisms of the material, please [contact me](mailto:dchilder@andrew.cmu.edu).
+
+1. [Introduction to Causality](CausalEconometrics/CausalityIntro.html)
+2. [Experiments](CausalEconometrics/Experiments.html)
+3. [Adjustment](CausalEconometrics/Adjustment.html)
+4. [Directed Acyclic Graphs](CausalEconometrics/DAGs.html)
+5. [Semiparametric Functional Estimation](CausalEconometrics/Semiparametrics.html)
+6. [Instrumental Variables](CausalEconometrics/InstrumentalVariables.html)
+
+
+
+
