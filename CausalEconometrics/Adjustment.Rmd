@@ -41,7 +41,7 @@ ggdag(yxzdag)+theme_dag_blank()+labs(title="Z confounds relationship of X to Y")
 - Overlap
     - $P(X=x|Z=z)>0$ $\forall z$ in support of $Z$
 - (Causal) Consistency
-    - $Y_i=Y_i(x)1\{X_i=x\}$
+    - $Y_i=Y_i^x1\{X_i=x\}$
 - These can be derived from full structural model, but for today take as given
 - We are continuing to assume treatment is well defined, observations are independent, and there is no interaction among units (i.e. SUTVA)
 
@@ -193,7 +193,7 @@ $$E[Y^x]=\int E[Y|X=x,Z=z]dP(z)$$
     - Strong overlap: $\pi(z)>\eta$ for all $z$ in support of $Z$ 
     - (Uniform) consistency $\underset{z}{\sup}\left|\widehat{\mu}^{n_2}(x,z)-\mu(x,z)\right|\overset{p}{\to}0$, $\underset{z}{\sup}\left|\widehat{\pi}^{n_2}(x,z)-\pi(x,z)\right|\overset{p}{\to}0$
     - Fast MSE rates: $E[(\widehat{\mu}^{n_2}(x,z)-\mu(x,z))^2]E[(\widehat{\pi}^{n_2}(x,z)-\pi(x,z))^2]=o(\frac{1}{n})$
-- Under these conditions, $\sqrt{n_1}(\widehat{\gamma}^{n_1}_x-\gamma_x)=\sqrt{n_1}(\widehat{\gamma}^{exact}_x-\gamma_x)+\sqrt{n_1}(\widehat{\gamma}^{n_1}_x-\widehat{\gamma}^{exact}_x)\overset{d}{\to}N(0,V^*)+o_p(1)$
+- Under these conditions (@wager2020class Ch 3), $\sqrt{n_1}(\widehat{\gamma}^{n_1}_x-\gamma_x)=\sqrt{n_1}(\widehat{\gamma}^{exact}_x-\gamma_x)+\sqrt{n_1}(\widehat{\gamma}^{n_1}_x-\widehat{\gamma}^{exact}_x)\overset{d}{\to}N(0,V^*)+o_p(1)$
     - Cross-fit version converges at rate $\sqrt{n}$
     
 ## Interpreting conditions

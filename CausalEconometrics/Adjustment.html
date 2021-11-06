@@ -249,7 +249,7 @@ ggdag(yxzdag)+theme_dag_blank()+labs(title=&quot;Z confounds relationship of X t
 </ul></li>
 <li>(Causal) Consistency
 <ul>
-<li><span class="math inline">\(Y_i=Y_i(x)1\{X_i=x\}\)</span></li>
+<li><span class="math inline">\(Y_i=Y_i^x1\{X_i=x\}\)</span></li>
 </ul></li>
 <li>These can be derived from full structural model, but for today take as given</li>
 <li>We are continuing to assume treatment is well defined, observations are independent, and there is no interaction among units (i.e. SUTVA)</li>
@@ -476,7 +476,7 @@ ggdag(yxzdag)+theme_dag_blank()+labs(title=&quot;Z confounds relationship of X t
 <li>(Uniform) consistency <span class="math inline">\(\underset{z}{\sup}\left|\widehat{\mu}^{n_2}(x,z)-\mu(x,z)\right|\overset{p}{\to}0\)</span>, <span class="math inline">\(\underset{z}{\sup}\left|\widehat{\pi}^{n_2}(x,z)-\pi(x,z)\right|\overset{p}{\to}0\)</span></li>
 <li>Fast MSE rates: <span class="math inline">\(E[(\widehat{\mu}^{n_2}(x,z)-\mu(x,z))^2]E[(\widehat{\pi}^{n_2}(x,z)-\pi(x,z))^2]=o(\frac{1}{n})\)</span></li>
 </ul></li>
-<li>Under these conditions, <span class="math inline">\(\sqrt{n_1}(\widehat{\gamma}^{n_1}_x-\gamma_x)=\sqrt{n_1}(\widehat{\gamma}^{exact}_x-\gamma_x)+\sqrt{n_1}(\widehat{\gamma}^{n_1}_x-\widehat{\gamma}^{exact}_x)\overset{d}{\to}N(0,V^*)+o_p(1)\)</span>
+<li>Under these conditions (<span class="citation">Wager (2020)</span> Ch 3), <span class="math inline">\(\sqrt{n_1}(\widehat{\gamma}^{n_1}_x-\gamma_x)=\sqrt{n_1}(\widehat{\gamma}^{exact}_x-\gamma_x)+\sqrt{n_1}(\widehat{\gamma}^{n_1}_x-\widehat{\gamma}^{exact}_x)\overset{d}{\to}N(0,V^*)+o_p(1)\)</span>
 <ul>
 <li>Cross-fit version converges at rate <span class="math inline">\(\sqrt{n}\)</span></li>
 </ul></li>

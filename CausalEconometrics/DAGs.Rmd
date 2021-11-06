@@ -441,7 +441,7 @@ adjustmentSets(sequencegraph,exposure="X",outcome="Y",type="all")
 - Steps  
   - Regress $Y$ on $X,Z$ to get $Z$ effect (identified since X blocks backdoor) 
   - Regress $Z$ on $X$ to get $X$ effect (identified since $Z$ unconfounded)
-  - Average Z effect over levels of $X$ to get $X$ effect (if linear, multiply Y on Z coefin step 1 by Z on X coef in 2)
+  - Average Z effect over levels of $X$ to get $X$ effect (if linear, multiply Y on Z coef in step 1 by Z on X coef in 2)
 - Derivation: Press a button at <https://causalfusion.net/> and it will even write the paper for you 
   
 ##  Adding assumptions to Structural Causal Models
@@ -475,7 +475,7 @@ adjustmentSets(sequencegraph,exposure="X",outcome="Y",type="all")
 
 
 
-```{r, fig.height=3, eval=FALSE}
+```{r, fig.height=3, eval=FALSE, echo=FALSE}
 confoundgraph<-dagify(Y~X+Z,X~Z) #create graph
 latentconfoundedgraph<-toMAG(confoundgraph)
 

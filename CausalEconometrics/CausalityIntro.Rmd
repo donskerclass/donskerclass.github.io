@@ -92,6 +92,7 @@ yxdag<-dagify(Y~X) #create graph with arrow from X to Y
   coordinates(yxdag)<-coords2list(coords_df)
 ggdag(yxdag)+theme_dag_blank()+labs(title="X causes Y",subtitle="X is a parent of Y, Y is a child of X") #Plot causal graph
 ```
+
 - $U_1,U_2$ not shown explicitly: $X$ and $Y$ are variables of interest, with exogenous random variation caused by $U_1,U_2$
 
 ## Direced Acyclic Graphs
@@ -181,7 +182,7 @@ ggdag(yxydag)+theme_dag_blank()+labs(title="Unobserved Common Cause") #Plot caus
 - Uncertainty arises in this model only because not all potential outcomes observed, not from sampling variability
     - Sometimes called "design based inference"
 - Setting represents cases where extrapolation to larger population is not desired or sensible
-    - "Suppose we have data on school districts of Minnesota. How does Minnesota go to infinity? By invasion of surrounding states and provinces of Canada, not to mention Lake Superior, and eventually by rocket ships to outer space?" (Geyer 2005)
+    - "Suppose we have data on school districts of Minnesota. How does Minnesota go to infinity? By invasion of surrounding states and provinces of Canada, not to mention Lake Superior, and eventually by rocket ships to outer space?" (@geyer2013asymptotics)
 - "Identification" not usually feasible here, but can perform inference
     - Extrapolation is only to same set of districts at same time, but with different policy
 - Not actually clear what you can do with that extrapolation: if you change the policy next year, will potential outcomes be exactly the same, or will they be drawn from some distribution (maybe identical, maybe not)?
@@ -296,7 +297,7 @@ $Y_i^1$ | $Y_i^0$ | $X_i$ | $Y_i$
 - Model interventions with reference to distributions identifiable with experiments
     - Draw conclusions about counterfactuals only with knowledge of structural invariances
 - Tools exist which sharply distinguish conclusions at 2nd and 3rd levels
-    - E.g. Hernán and Robins book for SWIGs, Pearl, Dawid for Causal Bayesian networks
+    - E.g. @@hernan2020causal book for SWIGs, Pearl, Dawid for Causal Bayesian networks
 - Practically: work with "program evaluation" tools which (usually) rely on limited set of interventional assumptions only
     - "quasiexperimental approach"
 - A model at higher level always has implications at lower level, so can test the observational/interventional implications
@@ -311,7 +312,7 @@ $Y_i^1$ | $Y_i^0$ | $X_i$ | $Y_i$
 - Commonality is to exploit "quasi-experimental variation"
     - Rely on limited set of assumptions in which to mimic effect of an experiment
 - Terminology note: sometimes called "reduced form" methods, contrasted with "structural" methods relying on economic model
-    - Phrase is confusing since not related to above, older definition of "reduced form" (Haile 2020, Marschak 1944)
+    - Phrase is confusing since not related to above, older definition of "reduced form" (@haile2020structural, Marschak 1944)
     - All methods rely on some model, just may use only limited set of model characteristics
 - 5 tools most commonly used in practice
     - Experiments
@@ -321,7 +322,7 @@ $Y_i^1$ | $Y_i^0$ | $X_i$ | $Y_i$
     - Difference in Differences / Unobserved effects panel data models
 - By no means an exhaustive list! But constitutes most of what gets used in practice.
 
-## The "credibility revolution" worldview
+## The "credibility revolution" worldview (@angrist2010credibility)
 
 - A complete model of all relationships of interest is great for telling a coherent story
 - Social world is full of considerations not captured in model and heterogeneity in effects that are
@@ -370,7 +371,7 @@ $Y_i^1$ | $Y_i^0$ | $X_i$ | $Y_i$
 
 ## Next time
 
-- Read Cattaneo & Abadie survey of methods
+- Read @abadie2018econometric survey of methods
 - Experiments: how and why to design, run, and analyze them
 
 

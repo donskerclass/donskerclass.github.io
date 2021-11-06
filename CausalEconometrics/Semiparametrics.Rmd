@@ -88,7 +88,7 @@ $$\leq C\Vert\widehat{\beta}-\beta_0\Vert+o_p(1)=O_p(g(n))$$
 - Minimal assumptions: smoothness or other structure
 - Cost: convergence at slower rates than $\sqrt{n}$
 - Google "scikit-learn tutorial" or cross street to ML department to learn about these
-- Typical result $E[(\widehat{f}(x)-E[y|x])^2]=O_p(n^{-\alpha})$ for some $\alpha<\frac{1}{2}$ depending on smoothness, dimension, etc
+- Typical result $E[(\widehat{f}(x)-E[y|x])^2]=O_p(n^{-\alpha})$ for some $\alpha<1$ depending on smoothness, dimension, etc
 - Note: $MSE = Bias(\widehat{f})^2 + Var(\widehat{f})$ means bias not asymptotically negligible, and total error larger than CLT error
     - Plug in generally converges at same, slow rate, and does not have estimable asymptotic distribution
     

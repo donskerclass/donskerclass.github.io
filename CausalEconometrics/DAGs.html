@@ -733,7 +733,7 @@ ggdag(sequencegraph)+theme_dag_blank()+labs(title=&quot;Graph with confounders i
 <ul>
 <li>Regress <span class="math inline">\(Y\)</span> on <span class="math inline">\(X,Z\)</span> to get <span class="math inline">\(Z\)</span> effect (identified since X blocks backdoor)</li>
 <li>Regress <span class="math inline">\(Z\)</span> on <span class="math inline">\(X\)</span> to get <span class="math inline">\(X\)</span> effect (identified since <span class="math inline">\(Z\)</span> unconfounded)</li>
-<li>Average Z effect over levels of <span class="math inline">\(X\)</span> to get <span class="math inline">\(X\)</span> effect (if linear, multiply Y on Z coefin step 1 by Z on X coef in 2)</li>
+<li>Average Z effect over levels of <span class="math inline">\(X\)</span> to get <span class="math inline">\(X\)</span> effect (if linear, multiply Y on Z coef in step 1 by Z on X coef in 2)</li>
 </ul></li>
 <li>Derivation: Press a button at <a href="https://causalfusion.net/" class="uri">https://causalfusion.net/</a> and it will even write the paper for you</li>
 </ul>
@@ -784,14 +784,6 @@ ggdag(sequencegraph)+theme_dag_blank()+labs(title=&quot;Graph with confounders i
 </ul></li>
 <li>Identification algorithms in these settings and more exist, and more settings every week</li>
 </ul>
-<pre class="r"><code>confoundgraph&lt;-dagify(Y~X+Z,X~Z) #create graph
-latentconfoundedgraph&lt;-toMAG(confoundgraph)
-
-#Set position of nodes 
-  coords&lt;-list(x=c(X = 0, Z = 1, Y = 2),y=c(X = 0, Z = -0.1, Y = 0)) 
-  coords_df&lt;-coords2df(coords)
-  coordinates(confoundgraph)&lt;-coords2list(coords_df)
-ggdag(confoundgraph)+theme_dag_blank()+labs(title=&quot;Confounding of effect of X on Y by Z&quot;) #Plot causal graph</code></pre>
 </div>
 <div id="estimation" class="section level2">
 <h2>Estimation</h2>

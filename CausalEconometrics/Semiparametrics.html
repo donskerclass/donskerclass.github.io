@@ -298,7 +298,7 @@ pre code {
 <li>Minimal assumptions: smoothness or other structure</li>
 <li>Cost: convergence at slower rates than <span class="math inline">\(\sqrt{n}\)</span></li>
 <li>Google “scikit-learn tutorial” or cross street to ML department to learn about these</li>
-<li>Typical result <span class="math inline">\(E[(\widehat{f}(x)-E[y|x])^2]=O_p(n^{-\alpha})\)</span> for some <span class="math inline">\(\alpha&lt;\frac{1}{2}\)</span> depending on smoothness, dimension, etc</li>
+<li>Typical result <span class="math inline">\(E[(\widehat{f}(x)-E[y|x])^2]=O_p(n^{-\alpha})\)</span> for some <span class="math inline">\(\alpha&lt;1\)</span> depending on smoothness, dimension, etc</li>
 <li>Note: <span class="math inline">\(MSE = Bias(\widehat{f})^2 + Var(\widehat{f})\)</span> means bias not asymptotically negligible, and total error larger than CLT error
 <ul>
 <li>Plug in generally converges at same, slow rate, and does not have estimable asymptotic distribution</li>
