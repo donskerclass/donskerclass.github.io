@@ -258,8 +258,11 @@ ggdag(ivgraph)+theme_dag_blank()+labs(title=&quot;Instrumental Variables&quot;,s
 <ul>
 <li><span class="math inline">\(Y=\beta X+U\)</span>, <span class="math inline">\(X=\gamma W+E\)</span></li>
 </ul></li>
-<li>Due to omitted confounders, <span class="math inline">\(Cov(U,X)\neq 0\)</span> “<em>endogeneity</em>”</li>
-<li>But <span class="math inline">\(E\perp U\)</span> by independent errors assumption</li>
+<li>Due to omitted confounders, <span class="math inline">\(Cov(U,X)\neq 0\)</span> “<em>endogeneity</em>”
+<ul>
+<li><span class="math inline">\(Y\)</span> and <span class="math inline">\(X\)</span> equations are <em>not</em> full structural equations, as <span class="math inline">\(U\)</span> and <span class="math inline">\(E\)</span> contain shared omitted variable</li>
+<li>But <span class="math inline">\(\beta\)</span> and <span class="math inline">\(\gamma\)</span> <em>are</em> structural coefficients, and <span class="math inline">\(W\)</span> is uncorrelated with the omitted variable</li>
+</ul></li>
 <li>By linearity, effect of <span class="math inline">\(W\)</span> on <span class="math inline">\(Y\)</span> is <span class="math inline">\(\rho=\beta\cdot\gamma\)</span></li>
 <li>If <span class="math inline">\(\gamma\neq0\)</span> (“relevance”), <span class="math inline">\(\beta=\frac{\rho}{\gamma}\)</span>
 <ul>

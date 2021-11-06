@@ -92,7 +92,8 @@ ggdag(ivgraph)+theme_dag_blank()+labs(title="Instrumental Variables",subtitle="C
 - Assume linear structural causal model (demeaned for simplicity)
   - $Y=\beta X+U$, $X=\gamma W+E$
 - Due to omitted confounders, $Cov(U,X)\neq 0$ "*endogeneity*"
-- But $E\perp U$ by independent errors assumption
+  - $Y$ and $X$ equations are *not* full structural equations, as $U$ and $E$ contain shared omitted variable
+  - But $\beta$ and $\gamma$ *are* structural coefficients, and $W$ is uncorrelated with the omitted variable
 - By linearity, effect of $W$ on $Y$ is $\rho=\beta\cdot\gamma$ 
 - If $\gamma\neq0$ ("relevance"), $\beta=\frac{\rho}{\gamma}$
   - Estimate by $\frac{\widehat{\rho}}{\widehat{\gamma}}$ ratio of regressions of $Y$ on $W$, $X$ on $W$
