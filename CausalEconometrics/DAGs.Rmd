@@ -309,7 +309,7 @@ ggdag(mediatorgraph)+theme_dag_blank()+labs(title="Mediator structure") #Plot ca
 - Causal interpretation of discrimination controversial for another reason, that it's not always clear what it would mean to manipulate $X$
 - Problem is that while recorded as categorical, group status (race, gender, religion,...) often a proxy for a *bundle* of attributes (@sen2016race)
 - Different manipulations may alter some but not all parts of bundle
-  - E.g. resume audit studies, per @bertrand2004emily measure effect of having name [Lakisha](https://www.youtube.com/watch?v=qdjiduJNwiY) instead of Emily on your resume, but not, say, replacing a person in one group with a (comparable?) person in another group
+  - E.g. resume audit studies, per @bertrand2004emily, measure effect of having name [Lakisha](https://www.youtube.com/watch?v=qdjiduJNwiY) instead of Emily on your resume, but not, say, replacing a person in one group with a (comparable?) person in another group
 - Ambiguity may be reduced by including in model collection of attributes making up measured variable and relationships between them
     - Add nodes and arrows for name, accent, appearance, family history, etc
 - Less fraught example: $BMI=weight/height$ can imagine changing by altering numerator or denominator. 
@@ -324,7 +324,7 @@ ggdag(mediatorgraph)+theme_dag_blank()+labs(title="Mediator structure") #Plot ca
 mgraph<-m_bias() #A common teaching example, so it has a canned command
 ggdag(mgraph)+theme_dag_blank()+labs(title="Graph illustrating m-bias")
 ```
-```{r}
+```{r, class.source = 'fold-show'}
 adjustmentSets(mgraph,exposure="x",outcome="y",type="all")
 ```
 
