@@ -263,7 +263,7 @@ pre code {
 <ul>
 <li>There then exists a map <span class="math inline">\(\psi(P(Y,A,Z))\)</span> which is one to one, at which point we can omit reference to <span class="math inline">\(\theta\)</span> entirely, as is standard in the literature</li>
 </ul></li>
-<li>In SEM, if <span class="math inline">\(X=f(U_x)\)</span> with <span class="math inline">\(U_x\)</span> independent of all other noise terms <span class="math inline">\(P(Y|do(X=x))=P(Y|X=x)\)</span> for any <span class="math inline">\(x\)</span> in support of distribution
+<li>In SCM, if <span class="math inline">\(X=f(U_x)\)</span> with <span class="math inline">\(U_x\)</span> independent of all other noise terms <span class="math inline">\(P(Y|do(X=x))=P(Y|X=x)\)</span> for any <span class="math inline">\(x\)</span> in support of distribution
 <ul>
 <li>Similarly <span class="math inline">\(P(Y|do(X=x),Z=z)=P(Y|X=x,Z=z)\)</span> in joint support of <span class="math inline">\(X,Z\)</span> (<em>Not</em> <span class="math inline">\(P(Y|do(X=x,Z=z))\)</span>: CATE is not a causal effect of <span class="math inline">\(Z\)</span>)</li>
 </ul></li>
@@ -281,7 +281,7 @@ pre code {
 <ul>
 <li>Features of the joint distribution of <span class="math inline">\(Y^{x_1},Y^{x_0}\)</span>
 <ul>
-<li>Includes counterfactuals which conditional potential outcomes on other potential outcomes</li>
+<li>Includes counterfactuals which condition potential outcomes on other potential outcomes</li>
 </ul></li>
 <li>Individual-level effects, eg <strong>Individual Treatment Effect</strong> <span class="math inline">\(Y^1_i-Y^0_i\)</span> for unit <span class="math inline">\(i\)</span>
 <ul>

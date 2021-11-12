@@ -47,7 +47,7 @@ bibliography: classrefs.bib
 
 - We say a feature $\psi$ of a model is **identified** if for any $\theta,\theta^\prime$ such that $\psi(\theta^\prime)\neq\psi(\theta)$ the marginal distributions of *observed* variables (here $(Y,A,Z)$) $P_\theta(Y,A,Z)$ and $P_{\theta^\prime}(Y,A,Z)$ are distinct
     - There then exists a map $\psi(P(Y,A,Z))$ which is one to one, at which point we can omit reference to $\theta$ entirely, as is standard in the literature 
-- In SEM, if $X=f(U_x)$ with $U_x$ independent of all other noise terms $P(Y|do(X=x))=P(Y|X=x)$ for any $x$ in support of distribution
+- In SCM, if $X=f(U_x)$ with $U_x$ independent of all other noise terms $P(Y|do(X=x))=P(Y|X=x)$ for any $x$ in support of distribution
     - Similarly $P(Y|do(X=x),Z=z)=P(Y|X=x,Z=z)$ in joint support of $X,Z$  (*Not* $P(Y|do(X=x,Z=z))$: CATE is not a causal effect of $Z$)
 - In potential outcomes notation, random assignment condition is $Y^{X=x}\perp X$ for all $x$ in support of distribution
 - $E[g(Y)|X=x]=E[g(Y^x)|X=x]=E[g(Y^x)]$ by independence, for any function $g$
@@ -57,7 +57,7 @@ bibliography: classrefs.bib
     
 - Experiments don't identify:
   - Features of the joint distribution of $Y^{x_1},Y^{x_0}$
-      - Includes counterfactuals which conditional potential outcomes on other potential outcomes
+      - Includes counterfactuals which condition potential outcomes on other potential outcomes
   - Individual-level effects, eg **Individual Treatment Effect** $Y^1_i-Y^0_i$ for unit $i$
       - May learn CATE for narrow subgroup, but observationally identical individuals may have heterogeneous ITEs 
 - Identification concept itself is proxy for estimability, though these are not always the same

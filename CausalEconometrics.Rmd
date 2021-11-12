@@ -26,6 +26,8 @@ The following files, derived from the lecture slides for the course and containi
 4. [Directed Acyclic Graphs](CausalEconometrics/DAGs.html)
 5. [Semiparametric Functional Estimation](CausalEconometrics/Semiparametrics.html)
 6. [Instrumental Variables](CausalEconometrics/InstrumentalVariables.html)
+7. [Difference in Differences](CausalEconometrics/DifferenceinDifferences.html)
+8. [Regression Discontinuity](CausalEconometrics/RegressionDiscontinuity.html)
 
 
 

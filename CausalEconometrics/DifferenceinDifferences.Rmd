@@ -1,0 +1,392 @@
+---
+title: "Difference in Differences"
+author: "David Childers"
+output:
+  html_document:
+    code_folding: hide
+bibliography: classrefs.bib
+---
+
+```{r,echo=FALSE,eval=FALSE}
+<!-- ## Outline -->
+<!-- - 2x2 DiD -->
+<!--   - Motivation -->
+<!--   - Assumptions and identification of ATT -->
+<!--   - Estimation: simple means, regression TWFE -->
+<!-- - Interpretation of conditions -->
+<!--   - Parallel trends: when and why: random timing, functional form -->
+<!--   - No anticipation: "causal consistency" across periods -->
+<!-- - Adding covariates: -->
+<!--   - TWFE -->
+<!--   - IPW-DiD: @abadie2005semiparametric -->
+<!--   - DR-DID: @santanna2020drdid -->
+<!-- - Extension: repeated cross-section   -->
+<!-- - Extending beyond 2 time periods: Binary treatment -->
+<!--   - Pooling periods -->
+<!--   - Extending TWFE: account for trends, serial correlation, heterogeneity -->
+<!-- - Dynamic effects: event study model -->
+<!--   - Staggered rollout design -->
+<!--   - Heterogeneity: aggregation of multiple 2-by-2s -->
+<!--   - Methods: @callaway2020difference and friends -->
+<!--   - Visualization -->
+<!-- - Diagnostics: -->
+<!--   - If still using TWFE, display decompositions (Goodman-Bacon, @de2020two, etc) -->
+<!--   - Placebo test: compare to alternate timings -->
+<!--   - Parallel pretrends: interpretation, plots, statistical issues: @rambachan2019honest -->
+<!-- - Continuous treatment? Nonlinearities? -->
+<!-- - Strict exogeneity assumption -->
+<!--   - Compare sequential exogeneity: marginal structural models, etc -->
+<!--   - Feedback vs unobserved heterogeneity: Arellano-Bond, Blackwell, a few dynamic IV papers -->
+<!-- - Illustration -->
+<!--   - Run code in @callaway2020did -->
+```
+  
+## Panel Data and Causal Inference
+
+- Experiment and adjustment strategies are motivated by making treated and control groups as similar as possible
+- Natural to seek out other situations which exploit similarity 
+- This is especially plausible when units are "the same" in some sense: same person, same company, same country, etc
+  - Observe each person/company/unit at multiple times
+- Data structure which labels units in common groups as the same is called **panel data** (or longitudinal data)
+- Observations take form $(\{Y_{i,t},X_{i,t},Z_{i,t}\}_{t=1}^{T})$
+  - Have $T$ observations from each unit $i$, using subscript $i,t$ to label the $t^{th}$ observation of unit $i$
+  - Distributions and sampling are assumed across units $i$, with correlation across $t$ within a unit
+- The hope is that comparing *within* a unit will remove sources of dissimilarity that might otherwise exist *across* units    
+- Units may possess attributes, usually not observed, which are shared across observations even if they differ across units
+  - Label these attributes $\alpha_i$ (absence of time subscript indicates common value across $t$)
+  - Called "time-invariant (unobserved) heterogeneity" or *fixed effects*
+  - Economists also use "fixed effects" to refer to certain estimators or models of their properties, often interchangeably since they are usually paired, even though conceptually distinct
+  - This is guaranteed to cause confusion if talking to a statistician, who will not be able to infer from context which you are referring to 
+- Goal remains to measure treatment effects
+- Arguably most common class of causal inference methods in applied economics
+  - Panel data widely available and perceived to be helpful for estimating causal effects
+  
+## Within-unit comparison
+
+- Consider $T=2$ and binary $X_{it}$ such that $X_{i,1}=0$, $X_{i,2}=1$: before and after treatment
+- Potential outcomes for these units satisfy the following 
+  - *Causal consistency*: $Y_{i,t}= \sum_{x_1,x_2}Y_{i,t}^{X_{i,2}=x_2,X_{i,1}=x_1}1\{X_{i,2}=x_2,X_{i,1}=x_1\}$
+  - *No anticipation*: $Y_{i,1}^{X_{i,2}=1,X_{i,1}=0}=Y_{i,1}^{X_{i,2}=0,X_{i,1}=0}=Y_{i,1}^{X_{i,1}=0}$
+  - *Stationarity*: Either *strict*: $Y_{i,2}^{X_{i,2}=0,X_{i,1}=0}=Y_{i,1}^{X_{i,2}=0,X_{i,1}=0}$
+    - or *in distribution*: $F(Y_{i,2}^{X_{i,2}=0,X_{i,1}=0}|X_{i,2}=1,X_{i,1}=0)=F(Y_{i,1}^{X_{i,2}=0,X_{i,1}=0}|X_{i,2}=1,X_{i,1}=0)$, more weakly
+    - or *in mean*: $E[Y_{i,2}^{X_{i,2}=0,X_{i,1}=0}|X_{i,2}=1,X_{i,1}=0]=E[Y_{i,1}^{X_{i,2}=0,X_{i,1}=0}|X_{i,2}=1,X_{i,1}=0]$, weaker still
+- Under these conditions, the *difference in means* $E[Y_{i,2}-Y_{i,1}|X_{i,2}=1,X_{i,1}=0]$
+  - $=E[Y_{i,2}^{X_{i,2}=1,X_{i,1}=0}-Y_{i,1}^{X_{i,2}=1,X_{i,1}=0}|X_{i,2}=1,X_{i,1}=0]$ (causal consistency)
+  - $=E[Y_{i,2}^{X_{i,2}=1,X_{i,1}=0}-Y_{i,1}^{X_{i,2}=0,X_{i,1}=0}|X_{i,2}=1,X_{i,1}=0]$ (no anticipation)
+  - $=E[Y_{i,2}^{X_{i,2}=1,X_{i,1}=0}-Y_{i,2}^{X_{i,2}=0,X_{i,1}=0}|X_{i,2}=1,X_{i,1}=0]$ (stationarity (in mean))
+
+## Interpretation 
+
+- No anticipation means future treatment plans don't affect present outcomes: reasonable if treatment is a surprise  
+- Stationarity is a strong sense in which units may be similar: in the absence of treatment, the potential outcome would not change over time
+  - Nothing aside from treatment changes (systematically) between observations
+  - Might be plausible on a very short time frame: eg "high frequency data" for financial assets
+- Before and after comparisons can measure *a* treatment effect $E[Y_{i,2}^{X_{i,2}=1,X_{i,1}=0}-Y_{i,2}^{X_{i,2}=0,X_{i,1}=0}|X_{i,2}=1,X_{i,1}=0]$
+  - Average Treatment Effect on the Treated or **ATT** (in period 2, of getting treatment at that time but not before)
+- It is very common to restrict attention to only two possible time paths: $X_{i,2}=1,X_{i,1}=0$ denoted $X_i=1$, or $X_{i,2}=0,X_{i,1}=0$, denoted $X_i=0$ 
+  - $X_i=1$ are (eventually) "treated units", $X_i=0$ are control or never-treated units: treatment can only turn "on", not "off"
+- In that setting, can rewrite result as ATT $=E[Y_{i,2}^{X_{i}=1}-Y_{i,2}^{X_{i}=0}|X_{i}=1]$
+- Sometimes focus on just these two cases is justified by assumption of *static* effect $Y_{i,1}^{X_{i,2}=x,X_{i,1}=1}=Y_{i,1}^{X_{i,2}=x,X_{i,1}=0}=Y_{i,2}^{X_{i,2}=x}$ $\forall x$: outcome depends only on current treatment
+  - This isn't necessary to estimate ATT, but would justify extrapolation to effects with $X_{i,1}=1$
+  - Rules out dynamic impact of treatment on future outcomes, so restrictive
+  - My guess is that more often, restriction is just that data only has these two, and people prefer to save on notation by including only one superscript, and are indifferent about using notation that appears to imply homogeneity since other effects not identified anyway
+- Note that these conditions are non-nested with experiment conditions, which would require identical potential outcomes *across* units
+  - Highly implausible if treatment assignment associated with potential outcomes
+
+## Relaxing stationarity: Difference-in-Differences
+
+- Outside of high frequency data (relative to rate of change of process), stationarity assumption is probably implausible
+  - Ship of Theseus: is anything is truly the same over time?
+- Consider same setup, but remove assumption of stationarity
+- Assume 2 groups: *Treatment* $X_i=1$ and *Control* $X_i=0$, 2 time periods *Treatment* $t=2$, and *Baseline* $t=1$
+  - Group $X_i=1$ gets treatment in $t=2$, not $t=1$ i.e, $X_{i,2}=1, X_{i,1}=0$, group $X_i=0$ never does, $X_{i,2}=0, X_{i,1}=0$
+- Goal is **Average Treatment Effect on the Treated** (ATT) $E[Y_{i,2}^{X_i=1}-Y_{i,2}^{X_i=0}|X_i=1]$
+- Assume **parallel trends**: average potential outcome without treatment changes by same amount in both groups
+    - $E[Y_{i,2}^0-Y_{i,1}^0|X_i=1]=E[Y_{i,2}^0-Y_{i,1}^0|X_i=0]$
+- Then can replace (unobserved) $E[Y_{i,2}^0|X_i=1]$ by $E[Y_{i,1}^0|X_i=1]+E[Y_{i,2}^0-Y_{i,1}^0|X_i=0]$ 
+- ATT $E[Y_{i,2}^1-Y_{i,2}^0|X_i=1]$ can be written as
+    - $E[Y_{i,2}^1-Y_{i,1}^0|X_i=1]-E[Y_{i,2}^0-Y_{i,1}^0|X_i=0]$
+- Assuming **causal consistency** and **no anticipation**, see potential outcomes $Y_{i,2}=Y^1_{i,2}$ for $X_i=1$, $Y_{i,t}=Y^0_{i,t}$ for $X_i=0$ *or* $t=1$
+    - $ATT=E[Y_{i,2}-Y_{i,1}|X_i=1]-E[Y_{i,2}-Y_{i,1}|X_i=0]$
+- This is **difference-in-differences** (abbreviated **DiD**, **Diff in Diff**, etc)
+
+
+## Interpretation of Conditions
+
+- Parallel trends is a weird assumption: mix of randomization and functional form assumption
+- Implied by random assignment of treatment across units, though does not require it
+  - In that case, could drop time period $1$ and just compare means in period 2 
+- Would also hold under stationarity (in distribution or in mean). 
+  - $F(Y_{i,2}^{x})=F(Y_{i,1}^{x})$ for $x=1,0$, means being in time 1 vs 2 is effectively random
+  - In that case, could drop the control units with $X=0$ and just compare $X=1$ units across time
+- @roth2021parallel note that you could also have mixture of units, some stationary, some random
+- None of the above are how economists typically explain or motivate DiD: instead, think about parametric model
+- Allows *level* to differ by fixed amount, so long as *change over time* is not associated with treatment, or vice versa
+  - Typically described as allowing for *time invariant* characteristics to be associated with treatment
+  - More accurately, allows *time invariant* characteristics that have *additive* effect on outcome to be associated with treatment
+  - Or allows time varying effects which have additive impact on all units
+  - Since economists love additivity, this is considered a substantial weakening relative to conditions for difference in means
+  - But this requirement is very much a functional form assumption: e.g. if effects are additive in levels they usually won't be in logs
+
+## Conditional Means Estimator
+
+- Baseline value is $\beta_0=E[Y_{i,1}|X_i=0]$ in control group, 
+    - Estimable by pre-treatment average $\bar{Y}_{1,control}$,  
+- Treatment group differs in baseline period by $\beta_1= E[Y_{i,1}|X_i=1]-E[Y_{i,1}|X_i=0]$
+    - $\bar{Y}_{1,treat}$ estimates $\beta_1+\beta_0$
+- Effect of time is $\delta_0= E[Y_{i,2}|X_i=0]-E[Y_{i,1}|X_i=0]$ on control units (*and* treatment units by parallel trends)
+    - $\bar{Y}_{2,control}$ estimates $\beta_0+\delta_0$
+- Treatment effect is $\delta_1=(E[Y_{i,2}|X_i=1]-E[Y_{i,1}|X_i=1])-(E[Y_{i,2}|X_i=0]-E[Y_{i,1}|X_i=0])$
+    - $\bar{Y}_{2,treat}$ estimates $\beta_0+\delta_0+\beta_1+\delta_1$
+$$\hat{\delta}_1=(\bar{Y}_{2,treat}-\bar{Y}_{2,control})-(\bar{Y}_{1,treat}-\bar{Y}_{1,control})$$ 
+$$=(\bar{Y}_{2,treat}-\bar{Y}_{1,treat})-(\bar{Y}_{2,control}-\bar{Y}_{1,control})$$ 
+
+  Time / Unit       | Before   | After      | After-Before    |
+--------------------|----------|-------------------|-------------|
+Control             | $\beta_0$| $\beta_0+\delta_0$ | $\delta_0$ |
+--------------------|----------|------------------|------------|
+Treatment           | $\beta_0+\beta_1$| $\beta_0+\delta_0 +\beta_1+\delta_1$ | $\delta_0+\delta_1$ |
+--------------------|----------|------------------|------------|
+Treatment - Control |$\beta_1$| $\beta_1+\delta_1$ | $\delta_1$ |  
+
+## Regression Representation
+
+- Treat observations with same $i$ but different $t$ as different observations
+- Diff-in-diff has *numerically equivalent* representation as OLS regression on sample of size $nT$
+$$Y_{i,t}=\beta_0+\beta_1X_{i}+\delta_0d2_{t}+\delta_1(X_i*d2_{t})+u_{i,t}$$
+    - $d2_{t}$ is 1 if $t=2$, 0 otherwise. "Time dummy"
+    - $X_i*d2_{t}$ interaction indicates post-treatment difference  
+- So long as $u_{i,t}$ independent over time and groups, just OLS
+    - Same estimation, inference, properties
+    - Within-group heterogeneity absorbed into averages
+
+    
+## Two Way Fixed Effects Representation
+
+- An alternative regression representation (TWFE) gives identical estimates, but emphasizes heterogeneity: For all $i,t$:
+$$Y_{i,t}=\alpha_i+\sum_{\tau=2}^{T}\gamma_{t}d\tau_t+\delta_1X_{i,t}+u_{i,t}$$ 
+  - $\alpha_i$ are "unit fixed effects," corresponding to impact of time-invariant attributes of each individual
+  - $d\tau_t$ are "time fixed effects," $=1$ at time $\tau$ and 0 otherwise, representing shared impact of aggregate features of time
+- Estimation issue: $\alpha_i$ not directly observed, are increasing in number with the sample size, and are allowed to be correlated with the error term
+  - Here interpreted as deviation from prediction formula where $\delta_1$ is a structural coefficient
+- Multiple numerically equivalent ways to estimate 
+- First difference transform: $\Delta Y_{i,t}=Y_{i,t}-Y_{i,t-1}$
+  - Apply to both sides and $\alpha_i$ disappear, $\Delta X_{i,2}=X_i$ and $\Delta d2_t=d2_t$ 
+  - OLS regression coefficient in $\Delta Y_{i,2}=\gamma_{2}+\delta_1X_{i}+\Delta u_{i,t}$ is exactly DiD estimator
+- Least Squares Dummy Variables: often called "Fixed Effects estimator"
+  - Add a dummy variable equal to one for unit $i$ and 0 otherwise for each unit $i$, with coefficient $\alpha_i$, estimate equation by OLS
+- By FWL, LSDV equivalent to OLS after subtracting within-unit mean from all other covariates
+  - In this setting, $\widehat{\delta}_1$ also numerically identical to DiD
+- Because number of regressors grows with sample size, usual OLS asymptotic theory inapplicable to $\widehat{\alpha}_i^{OLS}$
+  - But other coefficients consistently estimated
+
+## Two Way Fixed Effects: the Reckoning  
+  
+- The TWFE regression model is how most applied economists think about DiD
+  - "It controls for time and unit effects"
+- Regression specification written with homogeneous additive effects, but numerical equivalence shows that even with heterogeneity, it can recover ATT
+- This may have led to overly sanguine view that extended homogeneous, additive specifications would produce estimates which were at least weighted averages or best linear predictors of causal effects
+  - Easy to add control variables, multiple time periods, interaction terms, continuous treatment, etc
+  - Most "difference in differences" papers are actually TWFE with one or more of these extensions  
+- Spate of recent papers has shown this is generally false, especially but not only in dynamic setting
+  - Without explicitly accounting for heterogeneity, can get combinations containing negative weights or otherwise deviating from interpretable functional
+  - Examples include @goodman2021difference, @borusyak2021revisiting, @de2020two, @sun2020estimating, @callaway2021difference, etc
+- Interesting and practically important to show how strategy of running OLS no matter what the problem is can mess up
+  - Especially given that most existing applied econometric work takes that form
+- But preferable to *start with* assumptions and desired quantity, and derive estimators based on that  
+  - If you want to allow heterogeneity, maybe better to assume that if not explicitly included in model, unlikely that model will account for it
+
+
+## Adding Covariates
+
+- Parallel trends can be replaced with a version which holds conditional on covariates
+  - $E[Y_{i,2}^0-Y_{i,1}^0|X_i=1, Z_i=z]=E[Y_{i,2}^0-Y_{i,1}^0|X_i=0, Z_i=z]$
+  - Conditional independence of $\Delta Y_{i,2}^0\perp \Delta X_{i,2}|Z_i$ guaranteed by conditional random assignment (e.g. due to backdoor criterion), 
+  - Conditional parallel trends weakens to allow additively separable time-invariant heterogeneity
+- Note that $Z_i$ here have no $t$ index: they are fixed or *baseline* covariates, which are causally upstream of treatment group
+  - Example: "Ashenfelter dip": people who get job training often experienced low wages just before starting
+  - Since wages mean-reverting, may need to condition on past years' wages to make participants comparable to others
+- Conditional version of same proof guarantees $ATT(z)=E[Y_{i,2}-Y_{i,1}|X_i=1, Z_i=z]-E[Y_{i,2}-Y_{i,1}|X_i=0, Z_i=z]$
+- Averaging then ensures $ATT=\int(E[Y_{i,2}-Y_{i,1}|X_i=1, Z_i=z]-E[Y_{i,2}-Y_{i,1}|X_i=0, Z_i=z])f(z|X_i=1)dz$
+- Most common to use conditional mean estimator
+  - Under linearity, corresponds to adding covariates $Z$ to regression representation
+
+## IPW and Doubly Robust DiD
+
+- @abadie2005semiparametric developed inverse propensity weighted version of DiD
+- Let $\pi(z)=P(X_i=1|Z_i=z)$, conditional probability of being in treatment group, satisfy *overlap* $0<\pi(z)<1$
+- Let $w(x,z)= \frac{\pi(z)}{E[X]}(\frac{x}{\pi(z)}-\frac{1-x}{1-\pi(z)})$. Then $ATT=E[w(X_i,Z_i)\Delta Y_{i,2}]$ (@abadie2005semiparametric Lemma 3.1)
+- Proof: $E[\frac{\pi(z)}{E[X]}\frac{X_i}{\pi(Z_i)}\Delta Y_{i,2}]-E[\frac{\pi(Z_i)}{E[X]}\frac{1-X_i}{1-\pi(Z_i)}\Delta Y_{i,2}]=$
+  - $=\int (E[\Delta Y_{i,2}|X_i=1,Z_i=z]- E[\Delta Y_{i,2}|X_i=0,Z_i=z])\frac{\pi(z)}{E[X]}f(z)dz$ (Inverse Propensity Lemma)
+  - $=\int (E[\Delta Y_{i,2}|X_i=1,Z_i=z]- E[\Delta Y_{i,2}|X_i=0,Z_i=z])f(z|X_i=1)dz$ (Bayes rule $\frac{P(X=1|z)f(z)}{P(X=1)}=f(z|X=1)$)
+  - $= E[Y^1_i-Y^0_i|X_i=1]$ =ATT by weighting form
+- Doubly robust formula from @santanna2020drdid combines this with mean estimation
+- Let $g(z)$ be an arbitrary model of $P(X=1|Z=z)$ and $m(x,z,t)$ an arbitrary model of $E[Y_{t}|X=x,Z=z]$
+- Define $w^g(x,z)=\frac{x}{E[X]}-\frac{g(z)(1-x)}{1-g(z)}/E[\frac{g(Z)(1-X)}{1-g(Z)}]$. 
+- Then $E[w^g(x,z)(\Delta Y_{i,2}-(m(0,Z,2)-m(0,z,1)))]=$ ATT if either $g(z)=\pi(z)$ or $m(x,z,t)=E[Y_{t}|X=x,Z=z]$ for $x=0,t=1,2$ (@santanna2020drdid)
+  - Argument sketch: if $g=\pi(z)$, $w^\pi(x,z)=w(x,z)$ from Abadie and IPW applies. If outcome regression right, weighting irrelevant.
+- @santanna2020drdid also show this formula achieves semiparametric efficiency, show version with estimates converges
+  - R library `DRDID` implements with linear model for mean, logistic for propensity score
+
+
+## Repeated cross sections 
+
+- May have observations from $t=1$ and $t=2$ drawn separately, as from a survey that contacts new people each time
+  - *Repeated cross-section* data loses ability to pair an individual unit with another as in panel data
+- Estimators that only use averages within a period, like sample average based DiD, can be used without changes
+  - Know current and former treatment status usually because it is at a group level: e.g. a state/local policy
+- For IPW or DR estimators, need a correction for relative sample size (see references) but usable
+- Estimators which use the panel structure more directly, including general TWFE regression or nonlinear panel models, may become infeasible
+  - Lose ability to perform nonlinear within-unit comparisons
+
+## Multi-valued treatment (@callaway2021difference)
+
+- Consider DiD setup except that $X_{i,t}$ can take on several values $x_0,x_1,x_2,\ldots x_K$
+- Suppose there is a baseline value $x_0$ at which units start, and subsequently change to $x_k$, $k\in1\ldots K$
+- Possible extension of parallel trends might be pair-wise parallel trends for all pairs $x_0,x_k$
+  - $E[Y_{i,2}^{X_i=x_0}-Y_{i,1}^{X_i=x_0}|X_i=x_k]=E[Y_{i,2}^{X_i=x_0}-Y_{i,1}^{X_i=x_0}|X_i=x_0]$
+- Then $E[Y_{i,2}-Y_{i,1}|X_i=x_k]-E[Y_{i,2}-Y_{i,1}|X_i=x_0]$ identifies $ATT(x_k|x_k)=E[Y_{i,2}^{x_k}-Y_{i,2}^{x_0}|X_i=x_k]$
+  - Average treatment effect of dose $x_k$ for units receiving dose $x_k$
+- Can obtain $ATT(x_k|x_k)$ at every value, estimate by any binary method above
+- However, ATT is not like ATE: this cannot answer effect of changing $x$ from level $x_j$ to $x_k$
+  - $ATT(x_k|x_k)-ATT(x_j|x_j)=\underset{\text{effect of change for }x_k\text{ units}}{(ATT(x_k|x_k)-ATT(x_j|x_k))}+\underset{\text{selection into level of treatment}}{(ATT(x_j|x_k)-ATT(x_j|x_j))}$
+- Result is that slope of response curve is biased up or down relative to effect even with parallel trends
+  - Is outcome larger due to treatment or due to attributes of the treated?
+- Avoid only with a stronger assumption: $E[Y_{i,2}^{x_k}-Y_{i,2}^{x_0}|X_i=x_k]$ independent of $x_k$: homogeneous response
+- A continuous regressor in TWFE has a fixed slope, but without homogeneity estimates a mix of selection and treatment effects
+- Suggestion: because ATT is not usually ATE, may be informative to display how attributes vary with $x_k$
+  - E.g., table of conditional means of covariates for treated, untreated, etc
+  
+## Multiple treatment periods
+
+- Typically have more than just before and after periods: observations for $t=1,\ldots,T$, $T>2$
+- Allows for several extensions: time-varying effects, dynamic effects (of current treatment on future outcomes), generalized parallel trends assumptions, etc
+- Binary treatment $X_{i,t}$ can follow $2^T$ possible patterns over time
+- For simplicity, common to restrict to *staggered adoption* setting, following setup of @callaway2020difference
+  - For units in group $G=g$, treatment switches from $0$ to $1$ at time $g$, and stays there until end of data
+  - Let $G_g$ be an indicator for being in group for $g\in\{1,\ldots T\}\cup\infty$, with $g=\infty$ denoting never treated
+- *Causal consistency* is $Y_{i,t}=\sum_{g\in1\ldots,T\cup\infty}Y_{i,t}^gG_{g,i}$
+- *No anticipation* says $Y_{i,t}^g=Y_{i,t}^0$ for all $t<g$: no effect of treatment until it happens
+  - $Y_{i,t}^0$ equivalent to $Y_{i,t}^\infty$: never treated form comparison group
+- (Conditional) *parallel trends* with respect to never treated: $E[Y_{i,t}^0-Y_{i,t-1}^0|Z=z,G_g=1]=E[Y_{i,t}^0-Y_{i,t-1}^0|Z=z,G_\infty=1]$ $\forall t\geq g,g\neq\infty$
+  - Or with respect to *not-yet-treated*: $E[Y_{i,t}^0-Y_{i,t-1}^0|Z=z,G_g=1]=E[Y_{i,t}^0-Y_{i,t-1}^0|Z=z,X_{s}=0,G_g=0]$ $\forall t\geq g,s\geq t$
+- In unconditional case, can estimate $ATT(g,t):=E[Y^g_t-Y^0_t|G_g=1]$  by $E[Y_t-Y_{g-1}|G_g=1]-E[Y_t-Y_{g-1}|G_\infty=1]$ in first case, $E[Y_t-Y_{g-1}|G_g=1]-E[Y_t-Y_{g-1}|X_t=0]$ in latter
+  - Comparing to not-yet-treated adds power by assuming comparability to many more units
+- With covariates, can use IPW or DR estimator over $Y_t-Y_{g-1}$, with conditioning set $Z=z,G_g+G_\infty=1$ or $Z=z,G_g+X_t=1$ respectively for the propensity score and conditional mean
+  - I.e., restrict conditioning to within set of units in treatment or control for that comparison
+
+
+<!-- - This is the extension that has everybody losing their minds -->
+
+## Dynamic responses and event studies
+
+- Effect of $X_{i,g}$ on $Y_{i,t}$ for $t=g,g+1,\ldots,T$ traces out path of responses to having been treated starting at $g$ 
+- Measures dynamic effect of permanent change: in time series jargon, measures *cumulative response*
+  - Typical estimand in time series is *impulse response*: effect of 1 period change
+- Common to plot dynamic responses as function of $e=t-g$, time exposed since treatment, to create *event study plot*
+- Can aggregate $ATT(g,t)$ to $ATT(e)=\sum_g\sum_t1\{t-g=e\}ATT(g,t)P(G=g|G+e\leq T)$ to get aggregated event study plot
+  - Doesn't avoid all issues of comparing across ATTs since composition of longer length responses only includes those treated further back
+  - May restrict to shared support to reduce this effect
+- "Classical" event study plot instead estimated by TWFE with indicators of time since treatment $X_{i,t}^e:=1\{G_i+e=t\}$
+  - $Y_{i,t}=\alpha_i+\gamma_t+\sum_{e=-K}^{-2}\delta_eX_{i,t}^e+\sum_{e=0}^{L}\beta_eX_{i,t}^e+u_{i,t}$ for $K,L$ representing maximum lead and lag in the data
+  - Note absence of 1 period, w.l.o.g. $e=-1$ since otherwise not identifiable
+- Unlike @callaway2020difference estimate, this imposes that responses $e$ periods out are the same for all treatment groups $g$
+- @sun2020estimating show that this can lead to substantial biases, propose simple alternative in covariate-free case: include all interactions
+  - $Y_{i,t}=\alpha_i+\gamma_t+\sum_{g}\sum_{e\neq-1}\delta_{g,e}G_{g,i}X_{i,t}^e+u_{i,t}$
+- Inclusion of coefficients on values of $e<-1$ gives estimates of effects that should be 0 by no anticipation
+  - Estimator does not impose this condition so that it can be plotted and tested
+- If mean outcomes display difference in trend before treatment starts, may suggest issue with pre-trends   
+
+## Illustration: Minimum Wage and Teen Unemployment
+
+- @callaway2020difference method, data: use DR estimator within period with not-yet-treated as control, conditioning on county population
+  - Obtain estimates for effects by year of adoption in each year in data set
+```{r,message=FALSE,warning=FALSE}
+library(did) #Runs staggered adoption DiD
+data(mpdata) #minimum wage by county, toy data set
+mw.attgt <- att_gt(yname = "lemp", gname = "first.treat", idname = "countyreal",
+    tname = "year", xformla = ~lpop,data = mpdta,control_group = "notyettreated")
+summary(mw.attgt)
+```
+
+## Plots of results
+
+- Show group-year estimates and event-study plot aggregated by years since adoption
+
+```{r,message=FALSE,warning=FALSE}
+library(gridExtra) #Graph Display
+DiDgraphs<-list()
+DiDgraphs[[1]]<-ggdid(mw.attgt, ylim = c(-.3,.3)) #Plot results
+mw.dyn.balance <- aggte(mw.attgt, type = "dynamic", balance_e=1) #Aggregate by time since rise
+DiDgraphs[[2]]<-ggdid(mw.dyn.balance,ylim=c(-.3,.3))
+grid.arrange(grobs=DiDgraphs,nrow=1,ncol=2) #Arrange In 2x2 grid
+```
+
+
+
+## Testing assumptions
+
+- Parallel trends in post-treatment potential outcomes is not a testable assumption
+  - Specifically describes properties of how unobservable future $E[Y_{i,2}^0|X_i=1]$ would appear in absence of treatment
+- But, with multiple pre-treatment periods $e=\{-K,\ldots,-2\}$, stronger assumption of parallel trends in *all* periods' potential outcomes is testable
+  - By causal consistency, can measure $E[Y_{i,t}^{0}|X_i=1],E[Y_{i,t}^{0}|X_i=0]$ for $t< 1$ to test for parallel *pre*-trends
+  - Rejection of parallel pre-trends implies failure of all-period parallel trends or no anticipation, suggesting possibility of some missing attributes
+  - Neither rejection or non-rejection implies anything at all for post-treatment parallel trends, which could be parallel or non-parallel just in later periods
+- Common reason for failure of parallel trends in post but not pre is treatment assigned specifically based on perceived future evolution of outcome
+  - A law designed tackle social or economic outcome $Y$ is likely to passed in those places and times where it is perceived to be changing
+- Need a positive argument why outcome is not changing differentially in times and places when enacted
+  - Maybe centralized assignment based on formula you can control for? (Many congressional policies)
+  - Idiosyncratic factors affecting timing of implementation: legislative schedules, close votes, clueless or inattentive politicians?
+  - Or claim that dynamics somehow preset except for policy intervention: maybe reasonable if looking at very high frequency
+- Most common application, to study effect of policy on outcome it was intended to affect, using fact that policy implemented in different places at different times, is exactly the setting where parallel post-treatment trends least likely to hold, or for parallel pre-trends to be suggestive of invariances which would justify it
+  - Have to explain argue that policymakers who made a policy regarding a particular outcome did not do so with any information about that outcome
+  - Please, dive into legislative record, explain the political economy: very few papers do this
+  
+## What to do if parallel trends doesn't hold
+
+- Usually the best argument you can make is that parallel trends holds approximately
+  - Therefore useful to do sensitivity analysis allowing "small" violations
+- @rambachan2019honest describe how to construct CIs uniform over set of estimates with restricted violations of parallel trends
+  - A variety of ways to impose this: can restrict absolute level, or level relative to estimated pretrends, or based on size/direction of plausible confounders, etc
+  - R package `HonestDiD` provides implementation: works for any asymptotically normal estimate of DiD effect, with static or dynamic effects
+- More generally, think about dynamics: maybe you want to use an alternative model  
+
+## Feedback effects
+
+- Beyond staggered outcomes setting, may have complicated pattern of $X_{i,t}$
+- Treatments like laws may change only infrequently, but others may change each time period
+  - Drug regimen, business investment pattern, household decision, etc
+- Pattern of outcomes then depends on whole sequence of treatments
+- Pattern of treatments may also evolve over time based on past treatments and outcomes
+- Even with linearity and homogeneity, this feedback is ruled out by panel data models
+  - Transforms which get rid of unobserved heterogeneity combine data from multiple periods
+  - May retain consistency if entire sequence conditionally randomly assigned based on ex ante characteristics
+- Sequential random assignment given current state $Y^{X_t=x_t,X_{t-1}=x_{t-1}\ldots}\perp X_t|Z_t,X_{t-1},Z_{t-1},\ldots$ can be handled in DAG framework (@hernan2020causal Section 3)
+  - Estimators based on IPW, outcome modeling or both
+- Case with unobserved heterogeneity *and* feedback more difficult
+  - @arellano1991some covered linear case, @blackwell2021 some less restrictive results
+- Proper coverage of this topic deserves much more attention, but mentioning it here as a warning
+  - Because you can, and many do, use such $X's$ in TWFE without even changing functional form
+
+## Extensions and alternatives
+
+- Key idea behind DiD modeling is using model features to impute $Y^0$ for units where it isn't seen
+- While parallel trends is one way to do this, assuming growth is comparable in control units, other models are possible
+  - Most commonly, could allow for different trends, with pattern based on several time periods, like a per-unit linear trend
+  - Or allow trends which have different impact across units via interactive fixed effects (@bai2009panel), or matrix completion (@athey2021matrix)
+  - Or model outcome as weighted average of other units' contemporaneous outcomes as in synthetic control (@abadie2021using)
+  - Or use time series model of process as in interrupted time series (@brodersen2015)
+- Choice of modeling assumptions should depend on economic and institutional context
+  - Parallel trends is effectively a linear model for aggregate phenomena, and should be evaluated relative to class of plausible structural models for dynamics 
+  
+## Conclusions
+
+- Panel data allows combination of within-unit and across unit comparisons
+- Making this work requires some functional form assumptions 
+- Parallel trends enables estimation of Average Treatment on the Treated by Difference in Differences
+- Estimable by difference in means or regression, but extensions require care and accounting for heterogeneity
+  - Covariates, multiple periods, dynamic effects all have robust estimators
+
+
+## References
+  
