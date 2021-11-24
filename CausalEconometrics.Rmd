@@ -28,6 +28,7 @@ The following files, derived from the lecture slides for the course and containi
 6. [Instrumental Variables](CausalEconometrics/InstrumentalVariables.html)
 7. [Difference in Differences](CausalEconometrics/DifferenceinDifferences.html)
 8. [Regression Discontinuity](CausalEconometrics/RegressionDiscontinuity.html)
+9. [Time Series](CausalEconometrics/TimeSeries.html)
 
 
 

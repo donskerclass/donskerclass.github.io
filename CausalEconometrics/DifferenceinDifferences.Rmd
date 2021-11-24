@@ -96,7 +96,7 @@ bibliography: classrefs.bib
 ## Relaxing stationarity: Difference-in-Differences
 
 - Outside of high frequency data (relative to rate of change of process), stationarity assumption is probably implausible
-  - Ship of Theseus: is anything is truly the same over time?
+  - Ship of Theseus: is anything truly the same over time?
 - Consider same setup, but remove assumption of stationarity
 - Assume 2 groups: *Treatment* $X_i=1$ and *Control* $X_i=0$, 2 time periods *Treatment* $t=2$, and *Baseline* $t=1$
   - Group $X_i=1$ gets treatment in $t=2$, not $t=1$ i.e, $X_{i,2}=1, X_{i,1}=0$, group $X_i=0$ never does, $X_{i,2}=0, X_{i,1}=0$
@@ -339,7 +339,7 @@ grid.arrange(grobs=DiDgraphs,nrow=1,ncol=2) #Arrange In 2x2 grid
   - Idiosyncratic factors affecting timing of implementation: legislative schedules, close votes, clueless or inattentive politicians?
   - Or claim that dynamics somehow preset except for policy intervention: maybe reasonable if looking at very high frequency
 - Most common application, to study effect of policy on outcome it was intended to affect, using fact that policy implemented in different places at different times, is exactly the setting where parallel post-treatment trends least likely to hold, or for parallel pre-trends to be suggestive of invariances which would justify it
-  - Have to explain argue that policymakers who made a policy regarding a particular outcome did not do so with any information about that outcome
+  - Have to argue that policymakers who made a policy regarding a particular outcome did not do so with any information about that outcome
   - Please, dive into legislative record, explain the political economy: very few papers do this
   
 ## What to do if parallel trends doesn't hold
