@@ -293,7 +293,7 @@ ggdag(markovdag, edge_type = "arc")+theme_dag_blank()+labs(title="X and Y depend
   - $(O_{t+1}\perp O^{t-1}|O_t)_{G}$ state variables in time $t$ d-separate future from past
   - This implies probability distribution is also (first order) Markov: $P(O_{t+1}|O^{t})=P(O_{t+1}|O_{t})$
 - This simplifies analysis enormously, and is the basis for huge fraction of dynamic economic modeling (@ljungqvist2018recursive, @stokey1989recursive)
-- Conditional ignorability can be truncated to $\{Y_{t+h}^{x_t}\ \forall x_t\}\perp X_t|X_t,Y_t$ and $GIRF_{k,t,h}(x_k,x_k^\prime|X_{t-1},Y_{t-1})= E[Y_{t+h}^{x_t}-Y_{t+h}^{x_t^\prime}|X_{t-1},Y_{t-1}]$
+- Conditional ignorability can be truncated to $\{Y_{t+h}^{x_t}\ \forall x_t\}\perp X_t|X_{t-1},Y_{t-1}$ and $GIRF_{k,t,h}(x_k,x_k^\prime|X_{t-1},Y_{t-1})= E[Y_{t+h}^{x_t}-Y_{t+h}^{x_t^\prime}|X_{t-1},Y_{t-1}]$
   - Adding overlap, $E[GIRF_{k,t,h}(x_k,x_k^\prime|X_{t-1},Y_{t-1})]=E[Y_{t+h}^{x_k}-Y_{t+h}^{x_k^\prime}]$
 - Restriction to one period dependence can be extended to $k$ periods by adjusting state space
   - Redefine $\tilde{O}_t=(O_t,O_{t-1},\ldots,O_{t-k})$, then conditional law of motion for first element is unchanged, and the lags shift up by 1 each period

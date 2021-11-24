@@ -555,7 +555,7 @@ ggdag(markovdag, edge_type = &quot;arc&quot;)+theme_dag_blank()+labs(title=&quot
 <li>This implies probability distribution is also (first order) Markov: <span class="math inline">\(P(O_{t+1}|O^{t})=P(O_{t+1}|O_{t})\)</span></li>
 </ul></li>
 <li>This simplifies analysis enormously, and is the basis for huge fraction of dynamic economic modeling (<span class="citation">Ljungqvist and Sargent (2018)</span>, <span class="citation">Stokey, Lucas, and Prescott (1989)</span>)</li>
-<li>Conditional ignorability can be truncated to <span class="math inline">\(\{Y_{t+h}^{x_t}\ \forall x_t\}\perp X_t|X_t,Y_t\)</span> and <span class="math inline">\(GIRF_{k,t,h}(x_k,x_k^\prime|X_{t-1},Y_{t-1})= E[Y_{t+h}^{x_t}-Y_{t+h}^{x_t^\prime}|X_{t-1},Y_{t-1}]\)</span>
+<li>Conditional ignorability can be truncated to <span class="math inline">\(\{Y_{t+h}^{x_t}\ \forall x_t\}\perp X_t|X_{t-1},Y_{t-1}\)</span> and <span class="math inline">\(GIRF_{k,t,h}(x_k,x_k^\prime|X_{t-1},Y_{t-1})= E[Y_{t+h}^{x_t}-Y_{t+h}^{x_t^\prime}|X_{t-1},Y_{t-1}]\)</span>
 <ul>
 <li>Adding overlap, <span class="math inline">\(E[GIRF_{k,t,h}(x_k,x_k^\prime|X_{t-1},Y_{t-1})]=E[Y_{t+h}^{x_k}-Y_{t+h}^{x_k^\prime}]\)</span></li>
 </ul></li>
