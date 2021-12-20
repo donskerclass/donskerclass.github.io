@@ -1,0 +1,434 @@
+---
+title: "Outcome and Effect Heterogeneity"
+author: "David Childers"
+output:
+  html_document:
+    code_folding: hide
+bibliography: classrefs.bib
+---
+
+```{r, eval=FALSE,echo=FALSE}
+- Distributions of potential outcomes
+  - Identification (under random or conditional random assignment)
+- Estimators 1d 
+- Distribution regression
+  - LPM and Probit/logit forms
+- Quantile regression
+  - Check function loss
+  - distribution theory caveats: nondifferentiability: need for continuous density. Numerical issues.
+  - Issues with quantile *function* estimation: non-crossing and solutions, extreme quantiles, uniformity
+- Conditional density estimators: 
+  - kernels, projections
+  - IPW versions of above: @dinardo1996labor
+  - Bayes: mixture modeling
+- ML estimates: kernel/neural/regularized versions of all above. Random forests as weighting: Quantile random forests. Distributional random forests
+- Semiparametrics: 
+  - pointwise CDF by DML @belloni2017program
+  - projection bases by DML @kennedy2021semiparametric
+- Say something about IV quantile? Many competing versions, needs additional assumptions...
+- Distributions *of* treatment effects
+  - Generic nonidentification and bounds
+  - Identification of CATE
+- CATE estimators
+  - Regression, (T,X,R)-learners
+  - Estimation problem: isolating heterogeneity from treatment function
+- Do you really want CATE?
+```
+
+  
+## Heterogeneous Effects
+
+- Most tools described so far estimate a low dimensional summary of response to intervention
+  - Typically, an average potential outcome $E[Y^x]$ (in our usual notation)
+- Running theme of identification results has been avoidance of assumptions of homogeneity of effects
+  - Move past linear additive model, which is typically justified only by convenience
+- If this is a concern, it would be nice to measure this heterogeneity
+  - How much do outcomes vary and how are they distributed?
+  - Can we predict this variation in the outcomes?
+- These two tasks lead to two estimation challenges
+  - Outcome distribution modeling
+  - Conditional treatment effect estimation
+- Heterogeneity matters to extent we care about features beyond average
+  - Preferences over inequality across individuals or risk over outcomes may make distribution inherently interesting
+  - Through aggregation, it may also impact group-level outcomes
+- Prediction of effect heterogeneity may be used in interpretation, exploration, and decision-making
+  - Fundamentally a mix of causal and description or prediction problems
+  - Arguably, main use is as input into one of several possible fully causal problems, so applicability depends on intended use
+  - Different targets if goal is multivariate causal effect, specification of causal pathways, or policy choice
+
+
+
+## Identifying Outcome Distributions
+
+- Almost every method we have described for identifying an average potential outcome can be trivially converted into a method for identifying the distribution of potential outcomes
+- Replace $Y$ with $G(Y,u)$ for collection of functions $\{G(.,u)\ u\in\mathcal{U}\}$ 
+- Identification result for $E[Y^x]$ also gives value for $E[G(Y^x,u)]$ for any $u\in\mathcal{U}$ if expectation is finite
+  - Holds for experiments, control, IV, RD, and almost any other method which does not impose functional form restrictions on outcome distribution
+  - Exception is for DiD, due to fundamentally functional-form dependent nature of parallel trends assumption 
+    - See @athey2006identification for results under distinct but related assumptions which do allow identifying distributions
+- $G(Y,u)=1\{Y<u\}$, $\mathcal{U}$ the support of $Y$, identifies the CDF $F_{Y^{x}}(u)$ of the counterfactual distribution
+- From the CDF, can identify other representations of the distribution
+  - If distribution is absolutely continuous, **density function** is $f_{Y^x}(u)=\frac{d}{du}F_{Y^{x}}(u)$
+  - If $Y\in\mathbb{R}$, inverse of distribution describes **quantile function** $Q_{Y^x}(\tau)=\inf\{u\in\mathbb{R}: F_{Y^x}(u)\geq \tau\}$
+- $G(Y,u)=(Y)^u$ for $u=1\ldots\infty$ gives the **moments** of distribution (when these exist) 
+- Alternate choices give various transforms of distribution
+  - Complex exponentials $e^{iu(.)}$ give the Characteristic Function or Fourier Transform
+  - Other choices give a few less common but sometimes effective summaries like Wavelet Transform or Kernel Mean Embedding (@singh2021generalized)
+- If goal is counterfactual distributions, main challenge is not identification but estimation  
+  
+## Effects on Distributions vs Distributions of Effects
+
+- By subtracting average potential outcomes, can obtain average treatment effect $E[Y^x-Y^{x^\prime}]$ of change from $x^\prime$ to $x$
+- By subtracting averages of nonlinear transforms of potential outcomes, can measure effect on that transform
+- $F_{Y^{x}}(u)-F_{Y^{x^\prime}}(u)$ measures effect on probability of outcome being below $u$
+- $Q_{Y^x}(\tau)-Q_{Y^{x^\prime}}(\tau)$ is the **Quantile treatment effect** (at quantile $\tau$)
+  - Measures the effect of change in $x$ on $\tau^{th}$ quantile of outcome 
+  - E.g., for $\tau=0.5$, this is the effect of treatment on median result
+- Measures of this form describe the effect of treatments on distributions
+- Aside from ATE, they do not describe features of the distribution of effects $Y^x-Y^{x^\prime}$
+- Reason for this is the fundamental problem of causal inference
+  - Even in experiments, never observe both $Y^x$ and $Y^{x^\prime}$ for the same unit  
+  - Aside from ATE, **no** other features of effect distribution are identified
+- If we care about effect distributions, have 3 possible options
+  - Learn **bounds** on feature of interest
+  - Apply conditioning to learn averages within a subset
+  - Impose additional assumptions on structural causal model
+
+## What can we learn about effect distributions?
+
+- Counterfactuals depend on joint distribution $F(t,s)=Pr(Y^{x}<t,Y^{x^\prime}<s)$
+- Experiments allow us to learn marginal distributions $F_x(t)=F(t,\infty)$, $F_{x^\prime}(s)= F(\infty,s)dt$
+- What can we learn about a joint from its marginals? **Fréchet-Hoeffding** bounds provide one answer
+  - $\max(F_x(t)+F_{x^\prime}(s)-1,0)\leq F(t,s)\leq \min(F_x(t),F_{x^\prime}(s))$ (form in @nelsen2007introduction 2.5.1 or any other reference on copulas)
+- Upper and lower bound correspond to deterministic increasing and decreasing matching of points in $Y^x$ and $Y^{x\prime}$ distributions respectively 
+- Applying this result to *difference* in potential outcome, obtain Makarov bounds on $F_{Y^{x}-Y^{x^\prime}}(s)$
+  - $\underset{t}{\sup}(\max(F_{x}(t)-F_{x^\prime}(t-s),0))\leq F_{Y^{x}-Y^{x^\prime}}(s)\leq \underset{t}{\inf}(\min(F_{x}(t)-F_{x^\prime}(t-s)+1,1))$
+  - These bounds are tight for CDF at any given point $s$, though @firpo2019partial provide stronger results for bounds over multiple points
+- One can say substantially more if willing to impose functional form assumptions on $f_Y(x,U)$, the structural function generating $Y$
+- Linearity, additivity, or monotonicity, and restrictions on dimension can all (nearly) pin down distribution of treatment effects
+  - You should have substantive reasons to impose these assumptions if you are going to rely on them for identification and not just as approximations
+- A few cases where functional form assumption of structural function may be reasonable 
+  - Known source of heterogeneity due to structure of measurement instrument: e.g., validation using exact ground truth of error structure induced by your microscope/biomedical test/survey instrument
+  - Case where potential outcomes known to decision-maker, in which case preferences may ensure monotonicity, as in some economic models of choice (@french2011)
+- Bounds can be strengthened using conditional distributions of counterfactuals
+  - Conditionals interesting in their own right and we will return to them later 
+  
+## Outcome Distribution Estimation
+
+- Because identification results are based on same formulas with new outcome variables $G(Y,u)$ in place of $Y$, one can repurpose the same estimators
+- The main difference is that conditional mean estimators for $E[Y|X]$, $E[Y|X,Z]$ should be replaced by ones which perform well across functions $G(Y,u), u\in\mathcal{U}$
+- In the case $G(Y,u)=1\{Y\leq u\}$, regression estimates for $1\{Y\leq u\}$ across different values of $u$ called **distribution regression**
+  - Because outcome is binary, can apply logit or probit $P(Y\leq u |X)=\Phi(X^{\prime}\beta(u))$ or $\frac{exp(X^{\prime}\beta(u))}{1+exp(X^{\prime}\beta(u))}$ or linear probability model
+  - Estimated by MLE/regression applied separately at each value of $u$ so requires no special programs
+  - Uniform convergence across $u$ and inference methods in @chernozhukov2013inference
+- Other choices of $G(Y,u), u\in\mathcal{U}$, such as basis functions, can be estimated by similar procedure  
+- Variety of alternative conditional distribution estimators which are not defined as collection of conditional means
+- Representation using quantiles needs new procedure: quantile regression
+- Representations based on densities have different properties
+  - Kernel, projection, and likelihood based estimators available
+  - Generally harder to estimate, in terms of slower rates   
+- Statistical properties matter for use in formulas that use the estimates as one component of a subsequent formula  
+  
+
+
+  
+## Quantile Regression 
+
+- Versatile, widely applied tool for modeling conditional quantiles $Q_{Y|X}(\tau)$
+- Fact that enables use is that a quantile is elicitable using the **check function** (or **pinball**) loss $\rho_{\tau}(y,f)=(y-f)(\tau-1\{y-f<0\})$
+  - A feature $j(F)$ of a distribution $F$ is *elicitable* if there is some loss function $\ell(,)$ such that the risk $E_F[\ell(y,f)]$ for that loss function with respect to distribution $F$ of a prediction rule $f$ is (uniquely) minimized by $f=j(F)$
+- **Claim**: Suppose $y$ has density $p(y)$: then $Q_y(\tau) = \underset{f\in\mathbb{R}}{\arg\min}E[\rho_{\tau}(y,f)]$
+- **Proof**: Take FOC $E[\rho_{\tau}(y,f)]=(\tau-1)\int_{-\infty}^{f}(y-f)dP(y)+\tau\int_{f}^{\infty}(y-f)dP(y)$ by Leibniz rule
+  - $\frac{d}{df}E[\rho_{\tau}(y,f)]=(\tau-1)((f-f)p(f)-\int_{-\infty}^{f}dP(y))-\tau((f-f)p(f)+\int_{f}^{\infty}(y-f)dP(y))$
+  - $=(1-\tau)P(f)-\tau(1-P(f))=P(f)-\tau$
+  - Setting $\frac{d}{df}E[\rho_{\tau}(y,f)]=0$, obtain $P(f)=\tau$, or $f$ is the $\tau^{th}$ quantile of the $y$ distribution
+- Without the existence of a density, subdifferential argument shows that *set* of minimizers contains the quantile
+- Identical proof using conditional density shows that $Q_{y|x}(\tau) = \underset{f(x)\in\mathbb{R}}{\arg\min}E[\rho_{\tau}(y,f(x))|X=x]$
+- Result is that check function loss can be used with any procedure that minimizes a loss function to find a predictor which approximates the conditional quantile
+- **Quantile regression** (@koenker2005, @koenker2017) applies empirical risk minimization with the check function loss over the class of linear functions $f(x)=x^\prime\beta$
+  - $\widehat{\beta}(\tau)=\underset{\beta}{\arg\min}\frac{1}{n}\sum_{i=1}^{n}\rho_{\tau}(y_i,x_i^\prime\beta)$
+- Note that in special case of the median $\tau=0.5$, $\rho_{\tau}(y,f)=0.5|y-f|$ and so quantile regression is called **Least Absolute Deviations** (LAD) regression
+  - Sometimes used as alternative to OLS due to robustness to outliers
+
+## Properties of quantile regression estimator
+
+- Variants of the standard extremum estimator arguments show that quantile regression is consistent and asymptotically normal for any $\tau\in(0,1)$
+  - Some complications due to nondifferentiability of the loss function
+- By linearity, the optimization problem for linear quantile regression is linear program, so reasonably fast code exists
+   - `rq()` in library `quantreg` with standard R formula syntax eg `rq(y~z1+z2,tau=0.2)` 
+   - [quantgen](https://ryantibs.github.io/quantgen/) extends to L1-penalized Lasso version, which is also a linear program
+- Major advantage of quantile regression is that by running it for different values of $\tau$, can obtain $\widehat{\beta}(\tau)$ for entire *quantile function*
+  - Obtain uniform convergence to a Gaussian process over quantiles $[\epsilon,1-\epsilon]$ (@chernozhukov2013inference, @belloni2017program)
+- The linear form is correctly specified if conditional distribution follows a location-scale model $y_i=x_i^\prime\alpha+(x_i^\prime\gamma)u_i$, $u_i\perp x_i$ $u_i\overset{iid}{\sim}F(u)$
+  - Then $Q_{y_i|x_i}(\tau)=x_i^\prime\alpha+(x_i^\prime\gamma)Q_{u_i}(\tau)=x_i^\prime\beta(\tau)$  for $\beta(\tau)=\alpha+\gamma Q_{u_i}(\tau)$
+- Result based on *monotone invariance* lemma: suppose $h()$ is monotone: then $Q_{h(y)}(\tau)= h(Q_{y}(\tau))$
+  - **Proof**: $Pr(y\leq Q_{y}(\tau))=\tau$ (def of quantile) so $Pr(h(y)\leq h(Q_{y}(\tau)))=\tau$ (monotonicity) so $h(Q_{y}(\tau))$ is the $\tau$ quantile of $h(y)$.
+
+
+## Challenges with quantile regression
+
+- The need for a continuous density can result in optimization and inference issues when $y$ discrete or widely spaced
+  - Results in slow or inaccurate optimization, and somewhat variable coefficients, as reflected in dependence of asymptotic variance on density
+- Quantiles at values near 0 or 1 become very difficult to estimate due to small fraction of data in extremes
+  - If needing a proper function on entire space, may seek to extrapolate using a parametric model   
+- In case of misspecification, or even just due to sampling, estimated process may not preserve properties of a quantile function
+  - $x^\prime\hat{\beta}(\tau)$ may fail to be increasing in $\tau$ for some values of $x$, leading curves $x\to x^\prime\hat{\beta}(\tau)$ to not be strictly ordered with espect to $\tau$:  called **quantile crossing**
+  - While calculating the process at nearby $\tau$ values may result in some crossing, its presence can be a sign of misspecification 
+  - A simple fix, if needing, e.g., to invert quantile to get back a CDF, is **monotone rearrangement** (@chernozhukov2010quantile): sort the values of $x^\prime\hat{\beta}(\tau)$ from smallest to largest
+- As the linear functional form can be restrictive, flexibility can be increased by including nonlinear terms in $x$
+- As with mean regression, there is a tradeoff between complexity and ability to obtain fast rates of convergence and valid asymptotic inference
+- Machine learning literature has applied check loss in high dimensional nd regularized settings including Lasso, neural nets, and so on
+- Inference methods for coefficients based on normal approximations still require bounds on degree of complexity of x, restricting to low dimensional predictors
+
+  
+## Conditional Density Estimation
+
+- Unlike CDF or quantile estimation, where estimation of the whole function can be achieved at the same rate as a parametric model, density estimation at even a single point requires substantially more data
+- Local methods, like kernels, approximate distributions by averaging (smoothed) measures of the fraction of points within a window
+- Kernels conditional density estimation for $f(y|x)$ takes the ratio of kernel density estimates of the joint density $f(y,x)$ divided by an estimate of the marginal $f(x)$
+  - An estimator of $f(y|x)$ of form $\frac{\frac{1}{h_y}K(\frac{y-Y_i}{h_j})\Pi_{j=1}^{d_x}\frac{1}{h_j}K(\frac{x_j-X_{i,j}}{h_j})}{\Pi_{j=1}^{d_x}\frac{1}{h_j}K(\frac{x_j-X_{i,j}}{h_j})}$ achieves rate $n^{-2/(d_x+5)}$ with optimal bandwidth (@hall2004cross, `npcdens` in R library `np`)
+  - Rate gets worse with number of predictors
+- Alternate estimators use likelihood models for densities, which may be tailored to the application
+  - Lightly parameterized estimators may achieve high efficiency, at cost of high degree of fragility if misspecified
+  - Models where number of parameters is effectively unbounded or growing with the sample size, restore flexibility, at cost of generally retaining dimension-dependent rates
+  - Examples include mixture models, with growing numbers of components and exponential family models, with log density proportional to the sum of a set of coefficients times bases functions
+  - Bayesian nonparametric estimators based on these likelihoods, such as Dirichlet process mixture models and Gaussian process exponential family models, provide a way to work with and regularize such density models, but do not overcome the slow rate of convergence (@ghosal2017fundamentals) 
+
+## Weighting method: Trees
+
+- One of the most generically useful classes of methods for conditional mean and distribution estimation is **Random Forests**
+  - These are made by combining a large number of simpler estimators called (decision) trees
+- A (decision) **tree** is a piecewise constant function, defined sequentially
+    - Pick some predictor $j\in 1\ldots d_x$, split space in two regions, where $x_{j,i}$ is above or below a threshold $s_1$ 
+    - Within each region $x_{j,i}<s_1$, $x_{j,i}\geq s_1$, pick another predictor in $1\ldots d_x$, and another threshold $s_2$, and split the region in two
+    - Continue choosing and splitting regions in two until space is split into $J$ non-overlapping rectangular subregions $\{R_j\}_{j=1}^{J}$ called "leaves"
+- Choice of subsequent predictor and threshold by "greedy" algorithm: **recursive binary splitting**   
+    - For each predictor $x_{j,i}$ $j=1\ldots d_x$, pick a threshold $s$ to split into regions $R_1=\{X:\ X_i<s\}$, $R_2=\{X:\ X_i\geq s\}$ to minimize loss function based on differences in distribution of outcome in $R_1$ and $R_2$
+    - Choose the split $j\in1\ldots d_x$ with the smallest loss to define the chosen region
+- While trees are usually used for predicting conditional means or probabilities, more generally useful in that they create a *partition* of a space, and so can define a data-adaptive measure of which points are "close" in a sense relevant to the outcome by assigning each point $x$ to $j(x)$, the leaf in which it is contained 
+     - Final tree contains a collection of weights for any point in the space: $w_i(x)=\frac{x_i\in R_{j(x)}}{|\{ i:\ x_i\in R_{j(x)}\}|}$
+     - Estimate $E[Y|X=x]$ by $\sum_i w_i(x)Y_i$, the average value within a leaf
+- If performing inference, it may be helpful to split the samples used to estimate the weights and the conditional means, giving rise to "honest" trees (@wager2018estimation, R library `grf`)     
+- Loss functions may be defined based on difference in means in case where that is a goal, or based on tests for identical distributions    
+
+## Bagging
+
+- Bagging, short for "bootstrap aggregation" is a way of performing regularization, by *averaging a model with itself*
+- Idea is that model fit to one set of data can overfit, producing high variability
+- If we had $2^{nd}$ data set, could fit model on that data and average prediction with that of the first model
+    - Even though both overfit, they do so to different data, so shared component reflects systematic variation
+- In practice, only have one data set, but can "pull yourself up by your own bootstraps" by **resampling** the data
+- From original data set $\mathcal{O}_{n}$ draw observations $(y_i,X_i)$ independently *with replacement* to create new data set $\mathcal{O}_{b}$ 
+    - Data set will on average have only about $\frac{2}{3}$ of original observations, with rest as duplicates  
+- Fit any model $\widehat{f}_b$ on data $\mathcal{O}_{b}$, e.g., a decision tree by recursive partitions
+- Then draw with replacement again to create another data set and fit the same model again to the new data set
+- Repeat $B$ times, and use as the final model the average of all the models on different data sets $\mathcal{O}_b$
+    - $\widehat{f}^{\text{Bagged}}=\frac{1}{B}\sum_{b=1}^{B}\widehat{f}_b$
+- Note each predictor fit to part of data set, so don't gain quite as much for each from large samples
+- But because errors produced this way nonsystematic, may get substantial out of sample improvement, especially if using a complex model prone to overfitting like a deep decision tree
+
+
+## Random Forests
+
+- Bagging can be applied to any procedure, but does well when fit model is a tree
+- Large trees can incorporate info from many predictors, but variability can be high, which is helped by bagging
+- Further, because average of trees doesn't have to be a tree, bagging can also increase expressivity of model
+- In practice, because data is shared between bags, tree fit within each tends to be pretty similar
+- To increase expressivity of ensemble as a whole, force models to be different by only using a *random subset of features*
+    - In each bag, sample $m<d_x$ random elements of $(x_{1,t},x_{2,t},\ldots,x_{d_x,t})$ and fit tree using only those features
+    - Typically use $m\approx \frac{d_x}{3}$ for regression, $m\approx \sqrt{d_x}$ for classification
+- Since "top" features may be removed, forced to find best prediction with other features instead
+    - Each individual tree predicts less well, but with $B$ large, **combination** accounts for all features by including them in the average
+- Final predictor is based on random collection of trees, and so is called a **Random Forest**
+- Weights $w_i(x)$ in random forest are average over bags of weights in individual trees, and prediction of $E[Y|X=x]$ is $\sum_i w_i(x)Y_i$ 
+- A **quantile random forest** (@meinshausen2006quantile, R library `quantregForest`) is random forest applied to $1\{Y_i<u\}:\ u\in\mathcal{U}$
+- A **distributional random forest** (@ćevid2021distributional, R library `drf`) computes the weights based on a test of identical distribution applicable to high dimensional data
+  - They can then be applied to means, kernels, and other outcomes
+
+## Adjustment  
+
+- Average conditional CDF $F_{Y^x}(u)$ identifiable under conditional random assignment as $\int E[1\{Y<u\}|X=x,Z]dP(z)$  
+- When applying the adjustment formula result, one can apply averaged conditional mean estimation, inverse propensity weighting, or augmented IPW doubly robust approaches
+  - For distribution or quantile regression as conditional mean estimator, results for averaged conditional mean estimation are in @chernozhukov2013inference
+  - IPW estimation proposed by @dinardo1996labor, though without limit theory
+  - For AIPW approach, including cross-fitting to allow high dimensional predictors in the conditional mean or propensity estimates, uniformity results are provided in @belloni2017program 
+- Note that while distribution of $Z$ averaged over, $u$ is not, so the difference from mean estimation case is that estimation and inference are for a function, not just a scalar
+- Statistical efficiency depends on complexity of function class $\{G(Y,u): u\in\mathcal{U}\}$, 
+  - This is still small, essentially parametric, for applications like CDF or quantiles of outcome distribution
+  - With averaged mean or IPW estimator, $\sqrt{n}$ rates go through if nuisance estimators also parametric and low complexity
+  - If we use Neyman orthogonal cross-fit estimator like AIPW, avoid *additional* dependence on complexity of nuisance functions even if conditioning set is high dimensional and nuisances estimated by something like, e.g., quantile random forests or L1-penalized distribution regression
+- Under reasonable conditions, AIPW estimate asymptotically Gaussian over the space of the process, and distributions cn be estimated by a bootstrap procedure
+  - Can test hypotheses about a function with Gaussian limit distribution by comparing maximum (Kolmogorov-Smirnov) or average (Cramer-von Mises) difference to null hypothesis function.
+- Where this standard limit behavior is not the case is when we estimate outcome by density instead of CDF or quantiles, as density is not estimable at parametric rates
+  - @dinardo1996labor applies IPW to kernel density estimate of outcome (wage) distribution
+  - @kennedy2021semiparametric estimate finite dimensional projections of densities, which can be made robust since essentially parametric
+- Precisely what can be said about when averaged density estimation can do better than plug-in still appears to be an open question 
+
+
+## Data Example: Wage Distribution Response to Labor Supply Shock
+
+- @breza2021rationing experimentally vary (residual) labor supply in 60 villages by randomizing temporary hiring of large number of workers
+- Average wage of remaining workers rises if shock is in peak agricultural season, but not substantially in off-peak season, a fact the authors attribute to surplus labor (per Arthur Lewis)
+- Heterogeneity is of interest: how does wage distribution respond to shock?
+- Simplest approach: conditional empirical CDF (valid with discrete treatment and predictors only)
+
+```{r,message=FALSE,warning=FALSE}
+#Libraries
+library(quantreg) #quantile regression
+library(quantregForest) #quantile random forests
+library(ggplot2) #Plots
+library(drf) #distributional random forests
+library(Counterfactual) #Conditional counterfactual distributions
+library(npcausal) #Conditional counterfactual distributions 
+library(haven) #Stata data
+library(dplyr) #data manipulation
+
+#Data set from Breza Kaur and Shamdasani (2021)
+#In my case this is saved at
+rationing<-read_dta("Data/rationing_worker.dta")
+spilloversample<-dplyr::filter(rationing,surv_el==1 & sample_spillover==1 & e_manwage==1)
+spilloversample$treated<-factor(spilloversample$treat)
+spilloversample$peakseason<-factor(spilloversample$peak, labels=c("Off-Peak Season","Peak Season"))
+
+ggplot(spilloversample)+facet_wrap(~peakseason)+
+  stat_ecdf(aes(x=dailywagetot,color=treated))+
+  ggtitle("Wage Distribution Response to Labor Supply Shock: Conditional CDF",
+          subtitle="Breza, Kaur, and Shamdasani (2021)")+
+  ylab("Fraction of Workers")+xlab("Daily Total Wage (Rupees)")
+```  
+- Alternately represent by conditional kernel density, which applies smoothing and may improve interpretation, but is less precisely estimated due to slower rate of density vs CDF estimation
+
+```{r,message=FALSE,warning=FALSE}
+ggplot(spilloversample)+facet_wrap(~peakseason)+
+  geom_density(aes(x=dailywagetot,fill=treated,color=treated),alpha=0.5)+
+  ggtitle("Wage Distribution Response to Labor Supply Shock: Conditional Kernel Density",
+          subtitle="Breza, Kaur, and Shamdasani (2021)")+
+  ylab("Probability Density of Workers")+xlab("Daily Total Wage (Rupees)")
+```
+
+## Example Continued: Quantile Treatment Effects from Distribution Regression
+
+- Conditioning on covariates can improve precision even in experimental case  
+- Apply @chernozhukov2013inference method with logit distribution regression controlling for baseline wage and other characteristics to calculate quantile treatment effects on log wage in peak months
+  - "Total" or unconditional effect is raw difference in outcomes across empirical quantiles 
+  - "Structure" effect is Treatment on Treated: difference in average CDFs $\int F_1(y|x)dF_1(x)$ vs $\int F_0(y|x)dF_1(x)$ with respect to treated distribution at a particular quantile
+  - "Composition" effect is difference due to change in covariates $\int F_0(y|x)dF_1(x)$ vs $\int F_0(y|x)dF_0(x)$: should be 0 in randomized experiment
+- Plotted effects with uniform confidence bands confirm $\approx 0-10$ percent wage gain roughly uniformly over the distribution, albeit with noise
+  
+
+```{r,message=FALSE,warning=FALSE,results=FALSE}
+peaksample<-filter(spilloversample,peak==1) #Just on-peak observations
+
+
+taus <- c(1:99)/100 #Estimate at 99 quantiles evenly spaced
+
+#Control for baseline characteristics as in Table 3 Col. 3 of Breza et al (2021)
+logitres<-counterfactual(ldailywagetot_w~bl_ldwagetot+bl_dwagetot_miss+bl_e_manwage+bl_e_manwage_miss+factor(round_id),
+          data=peaksample, group=treat, treatment=TRUE, quantiles=taus, 
+          decomposition=TRUE, method="logit", seed=123,
+          printdeco=FALSE, 
+          sepcore = TRUE,ncore=2)
+```
+
+
+```{r,message=FALSE,warning=FALSE}
+#Steal plotting code from software vignette
+
+first <- sum(as.double(taus <= .10))
+last <- sum(as.double(taus <= .90))
+rang <- c(first:last)
+duqf_SE<- (logitres$resSE)[,1]
+l.duqf_SE<- (logitres$resSE)[,3] 
+u.duqf_SE<- (logitres$resSE)[,4] 
+duqf_CE<- (logitres$resCE)[,1] 
+l.duqf_CE<- (logitres$resCE)[,3] 
+u.duqf_CE<- (logitres$resCE)[,4] 
+duqf_TE<- (logitres$resTE)[,1] 
+l.duqf_TE<- (logitres$resTE)[,3] 
+u.duqf_TE<- (logitres$resTE)[,4]
+range_x <- min(c(min(l.duqf_SE[rang]),min(l.duqf_CE[rang]),min(l.duqf_TE[rang])))
+range_y <- max(c(max(u.duqf_SE[rang]),max(u.duqf_CE[rang]),max(u.duqf_TE[rang])))
+par(mfrow=c(1,3))
+plot(c(0,1), range(c(range_x, range_y)), xlim = c(0,1), type = "n",
+  xlab = expression(tau), ylab = "Difference in Wages", cex.lab=0.75, main = "Total")
+  polygon(c(taus[rang],rev(taus[rang])),c(u.duqf_TE[rang], rev(l.duqf_TE[rang])), density = -100, border = F,
+          col="grey70",lty=1,lwd=1)
+lines(taus[rang],duqf_TE[rang])
+abline(h=0,lty=2)  
+
+plot(c(0,1), range(c(range_x, range_y)), xlim = c(0,1), type = "n",
+  xlab = expression(tau), ylab = "Difference in Wages", cex.lab=0.75, main = "Structure")
+  polygon(c(taus[rang],rev(taus[rang])),c(u.duqf_SE[rang], rev(l.duqf_SE[rang])), density = -100, border = F,
+          col="grey70",lty=1,lwd=1)
+lines(taus[rang],duqf_SE[rang])
+abline(h=0,lty=2)
+
+plot(c(0,1), range(c(range_x, range_y)), xlim = c(0,1), type = "n",
+  xlab = expression(tau), ylab = "Difference in Wages", cex.lab=0.75, main = "Composition")
+  polygon(c(taus[rang],rev(taus[rang])),c(u.duqf_CE[rang], rev(l.duqf_CE[rang])), density = -100, border = F,
+          col="grey70",lty=1,lwd=1)
+lines(taus[rang],duqf_CE[rang])
+abline(h=0,lty=2)
+```
+  
+- Kolmogorov-Smirnov tests of Quantile Treatment on Treated cannot reject constant effect (p=`r logitres$testSE[3,1]`), or uniformly positive effect ("stochastic dominance") (p=`r logitres$testSE[4,1]`), can reject no difference in distributions (p=`r logitres$testSE[2,1]`)
+
+## Example: Series Conditional Density
+
+- Estimate average projected conditional counterfactual density of peak month log wage with and without treatment by @kennedy2021semiparametric doubly robust method
+  - 10 cosine bases, random forest for nuisance models, same covariates as above    
+
+```{r,message=FALSE,warning=FALSE}
+xyz<-data.frame(peaksample$ldailywagetot_w,peaksample$treat,peaksample$bl_ldwagetot,peaksample$bl_dwagetot_miss,peaksample$bl_e_manwage,peaksample$bl_e_manwage_miss,peaksample$round_id)
+xyzclean<-as.matrix(filter(xyz,is.na(xyz)==FALSE))
+xcovariates<-xyzclean[,3:7]
+treat<-xyzclean[,2]
+lwage<-xyzclean[,1]
+set.seed(1234)
+cdensity(lwage,treat,xcovariates,kmax=10,progress_updates=FALSE)
+```
+  
+- Test rejects equality of distributions in $L^2$ distance
+  
+## Conditional Average Treatment Effects
+
+- While distributions quantify the degree of heterogeneity, they don't explain its sources
+- One way researchers seek to measure this is by finding variables which predict the treatment effects
+- If $Y$ is outcome, $X$ is treatment, $R$ is a set of predictor variables the Conditional Average Treatment Effect or **CATE** is
+  - $\tau(r):=E[Y|do(X=x),R=r]-E[Y|do(X=x^\prime),R=r]$ or $E[Y^x-Y^{x^\prime}|R=r]$
+- In a randomized experiment, if $R$ is not a descendant of $X$ or $Y$, this is identifiable by the conditional difference in means $E[Y|X=x,R=r]-E[Y|X=x^\prime,R=r]$ 
+- More generally, in an observational study containing possible control variables $Z$ (possibly intersecting or not with $R$), it is identifiable under the following conditions (@pearl2016causal Ch 3.3)
+  - $Z\cup R$ satisfies the backdoor criterion to be an adjustment set for $X$, in which case
+  - $\tau(r)=\int (E[Y|X=x,Z=z,R=r]-E[Y|X=x^\prime,Z=z,R=r])dP(Z=z|R=r)$
+- The criterion that the union must satisfy the backdoor ensures that all confounding is controlled for and also that the additional conditioning does not open up any connections due to conditioning on a descendant or a collider.
+- The precise causal role of $R$ is ambiguous in this object, because it is only required to help predict the treatment effect
+  - It is different from $E[Y|do(X=x,R=r)]-E[Y|do(X=x^\prime,R=r)]$, which describes a compound treatment 
+- Sometimes CATE is used to suggest possible variables on which to run future experiments, with the idea that observed associations might be causal
+- Sometimes it is used to bolster a narrative account of role of $R$: often this story gives a more precise causal interpretation.
+- One particularly helpful application is to target treatments towards the units that will have the highest benefit
+  - Explicitly targeting policy can make use of CATE estimates, but they are not the goal on their own
+
+## Estimating CATE
+
+- Because the identification formula for CATE (almost always presented in the case of experiment or control) depend on a conditional expectation, unless $R$ is discrete, CATE is a nonparametric function 
+- Even in the experiment case, where $\tau(r)=E[Y|X=x,R=r]-E[Y|X=x^\prime,R=r]$, several possibilities have been proposed (@kunzel2019metalearners describes several) 
+- Difficult issue is that since concern is the difference in conditional means, this may have different properties than the functions that make it up
+  - E.g., if treatment effect identically 0, $E[Y|X=x,R=r]$ may be high dimensional, complicated function, but difference will be completely flat and smooth and so potentially easier to handle
+- A direct plug-in estimator ("S-learner") which estimates $E[Y|X,R]$ by a nonparametric regression of form $\mu(x,R)$ over the full sample can perform well if sufficiently flexible, but any bias trying to fit the whole function may be targeted at the wrong components
+  - Consider Lasso on $X,R$: it may drop $X$ entirely and so shrink the treatment effect too far
+- Alternately, one might split the sample into $X=x$ and $X=x^\prime$ groups and estimate $E[Y|R]$ in each ("T-learner"), avoiding the issue of regularizing away the effect but losing any info shared across values of $x$
+- Adapting to the different dimensionality and complexity of the means and treatment effects in a problem that is generally nonparametric is a statistical issue whose study is still ongoing.
+- Due to the nonparametric rates in higher dimensions if being fully general and small subgroups that must be analyzed even in the discrete case, CATE estimates are often very noisy, and, since generally not the primary object of study, can be prone to be emphasized or not by authors based on a specification search of what looks "interesting" in the data.
+  - In fields where sample sizes are small, theory is weak, and estimates are prone to publication bias, these estimates are often seen (possibly rightly) as fairly unreliable
+- Beyond better statistical estimates, ex ante theoretical understanding of the causal role of non-treatment variables and the target task for which one wishes to use them may alleviate these problems by restricting focus to only certain Conditional Average Treatment Effects, or to different parameters altogether. 
+
+## Conclusion
+
+- Causal effects are generally heterogeneous
+- We can find bounds on distributions of causal effects (as opposed to effects on distributions) but rarely point estimates
+- We can learn about distributions of outcomes by distribution estimators like quantile and distribution regression and conditional density estimation
+- When learning effects on distributions by adjustment, can help to have uniform results over CDF or quantile function
+- We can predict treatment effects in subgroups on average using covariates, but estimation is a challenge 
+
+
+## References
