@@ -29,9 +29,10 @@ bibliography: classrefs.bib
     - Maybe these are fine! We know from physical or economic principle what somebody would have done
     - Or maybe not: why depend on theory you can't verify?
     
-## NPSEM-IE
+## Structural Causal Model (SCM)
 
-- "Nonparametric Structural Equation Model with Independent Errors"
+<!-- - "Nonparametric Structural Equation Model with Independent Errors" -->
+
 - A canonical structural model of causal interactions between variables
     - Imposes only qualitative restriction of which variables cause which other variables
 - Each endogenous variable $(Y_1,\ldots,Y_J)$  is described by a structural equation 
@@ -44,9 +45,10 @@ $$Y_p=f_p(Y_1,Y_2,\ldots,Y_{p-1},U_p)$$
 - Variables $U$ are **exogenous**
     - Not caused by any variable $Y$ in system
     - Represent any source of possibly idiosyncratic variation or heterogeneity in each realization of a particular variable
-- Independent Errors assumption: $(U_1,\ldots,U_p)$ are drawn from *mutually independent* joint distribution $\Pi_{j=1}^{p}F_{U_j}$
+- We will, unless otherwise specified, assume Independent Errors assumption
+  - $(U_1,\ldots,U_p)$ are drawn from *mutually independent* joint distribution $\Pi_{j=1}^{p}F_{U_j}$
 
-## Causal Implications of NPSEM-IE
+## Causal Implications of SCM
 
 - Observational distribution  $P(Y_1,\ldots,Y_p)$ is joint distribution of $(Y_1,\ldots,Y_p)$ consistent with system of equations and joint distribution of $U_j$
     - Call map from $(U_1,\ldots,U_p)$ to $(Y_1,\ldots,Y_p)$ the *reduced form* of the system, and the pushforward of $\Pi_{j=1}^{p}F_{U_j}$ through this map the observational distribution
@@ -100,12 +102,12 @@ ggdag(yxdag)+theme_dag_blank()+labs(title="X causes Y",subtitle="X is a parent o
 - Common to add assumption that structural equations are *acyclic*
     - Causal graph has no directed path from a variable to itself
     - Variables do not cause themselves
-- Ensures NPSEM-IE delivers distributions which exist and are unique
+- Ensures SCM delivers distributions which exist and are unique
 - Reduced form can be produced constructively by recursive substitution
     - Start with variables with no incoming arrows
     - Substitute variable in direction of arrows for its structural equation
     - Repeat until no endogenous variable appears on righthand side
-- For acyclic NPSEM-IE, we have fully complete understanding of identification of any feature of interventional or counterfactual distributions
+- For acyclic SCM with independent errors, we have fully complete understanding of identification of any feature of interventional or counterfactual distributions
     - Defined using "do-calculus" and automated in software: more in later classes
 - Refer to models of this form as "*Directed Acyclic Graphs*" or **DAGs**    
 
@@ -297,7 +299,7 @@ $Y_i^1$ | $Y_i^0$ | $X_i$ | $Y_i$
 - Model interventions with reference to distributions identifiable with experiments
     - Draw conclusions about counterfactuals only with knowledge of structural invariances
 - Tools exist which sharply distinguish conclusions at 2nd and 3rd levels
-    - E.g. @@hernan2020causal book for SWIGs, Pearl, Dawid for Causal Bayesian networks
+    - E.g. @hernan2020causal book for SWIGs, Pearl, Dawid for Causal Bayesian networks
 - Practically: work with "program evaluation" tools which (usually) rely on limited set of interventional assumptions only
     - "quasiexperimental approach"
 - A model at higher level always has implications at lower level, so can test the observational/interventional implications

@@ -1,0 +1,372 @@
+---
+title: "Causal Inference for Decisions and Policy"
+author: "Causal Econometrics - David Childers"
+output:
+  html_document:
+    code_folding: hide
+bibliography: classrefs.bib
+---
+
+```{r, echo=FALSE,eval=FALSE}
+# - Question: what are we using causal inference for?
+# - Decision Theory: states, decisions, loss functions, risk, regret
+# - States vs Models: adding distributions on top
+# - Average case: Bayesian decision making
+#   - Procedure: average over prior, construct posterior, then posterior predictive distribution of counterfactual outcomes given choice, then minimize expected loss over choices
+#   - Justification: complete class theorems: for any problem, there is a Bayes or limit-of-Bayes procedure with as low or lower risk
+# - Worst case. Minimax risk, minimax regret  
+# - Asymptotics? Show near-optimality: work with empirical risk, work in limit Gaussian problem @hirano2020
+# - Application: binary treatment: Neyman Pearson vs regret. @manski2021econometrics
+# - Techniques: predict then optimize (ie plug in or "as-if" optimization) vs end to end
+#   - When can we separate job of econometrician from policy economist?
+#   - Sufficient conditions: upper hemicontinuity. Berge's theorem of the maximum. Argmax theorem @vanderVaart1996weak 3.2.1
+#   - Noise: Brainard's principle
+#   - Motivations for not just optimizing: communication to heterogeneous audience @andrews2021communication
+# - Treatment allocation problem
+#   - Representation as weighted classifier
+#   - Empirical welfare maximization @kitagawa2018should
+#   - Regret bounds
+#   - Doubly robust version: @athey2021policy
+#   - Extensions: multivariate treatments: @zhou2018offline 
+# - Constraints: budgets, fairness, simplicity/feasibility of implementation, incentive compatibility, political economy
+# - Applications: @sverdrup2020policytree
+# - Policy choice without identification: @assunccao2019optimal
+# - Dynamic treatment policies: @chakraborty2014dynamic  (see also: Hernan and Murray. Takuya Ura might have a paper?)
+#   - Dynamic constraints @adusumilli2020dynamically
+```  
+  
+## Causal Decision-Making
+
+- Causal inference builds models of consequences of actions, and provides methods for learning features of those models
+- A natural reason why we would care about that endeavor is that we ourselves would like to take actions and understand their consequences
+- If the ultimate goal is to use estimates to inform actions, this should tell us which features of the model are important to learn
+  - It also tells us that we should evaluate our learning based on the the quality of the resulting decisions
+- This perspective suggests new estimands and also new ways of estimating them
+- To derive them, we will have to take a detour through **decision theory**
+- For an overview of causal structure in decision-making, see @pearl2009causality Ch 4. 
+- For a recent survey of how this decision-theoretic perspective has led to procedures for learning decisions from data in economics, see @hirano2020
+- Focus today will be on general principles, with illustration (mainly) in the case of binary decisions
+  - Apply to question of *policy targeting*: who should we treat? 
+
+## Decision Theory
+
+- The primitives in decision theory are a set of **actions** $x\in\mathcal{X}$, a set of **states** $s\in\mathcal{S}$, and the resulting **consequences** of those actions, which may differ by state, $Y^x(s)\in\mathcal{Y}$
+- We evaluate consequences in a particular state by a **loss function** $\ell(Y^x(s),x,s):\ \mathcal{Y}\times\mathcal{X}\times\mathcal{S}\to\mathbb{R}$, such that smaller values are preferred 
+  - Economists typically reverse the sign and call it a **utility function**, or if considered over a group, a **welfare function**
+- Our goal is to choose an $x$ such that loss is small, but we do not have access to $s$
+- Instead, we have some limited amount of information, corresponding to **observations** $o(s)\in\mathcal{O}$
+- A **policy** or **decision rule** is a map $x(o):\ \mathcal{O}\to\mathcal{X}$
+- A "good" policy is one which makes loss $\ell(Y^{x(o(s))}(s),x(o(s)),s)$ small, in some sense
+- Because loss depends on state $s$, there is in general no unique ordering, and we have to use our subjective judgment to pick one
+- A **criterion** is a map from (a subset of) $\{f(.):\mathcal{S}\to\mathbb{R}\}$ to $\mathbb{R}$ applied to a loss function evaluated over a policy $\ell(Y^{x(o(s))}(s),x(o(s)),s)$
+  - Different choices lead to different branches of decision theory
+- Optimal choices, when they exist, minimize the criterion over the space of policies: (a subset of) $\{x(.):\ \mathcal{O}\to\mathcal{X}\}$
+- *Common decision theoretic criteria*:
+- (1) Worst case loss: $\sup_{s\in\mathcal{S}}\ell(Y^{x(o(s))}(s),x(o(s)),s)$ 
+  - Optimization leads to **minimax** loss $\inf_{x(.)}\sup_{s\in\mathcal{S}}\ell(Y^{x(o(s))}(s),x(o(s)),s)$
+  - This reflects high degree of concern for  performing tolerably in the very worst case, without consideration of improvements in other situations
+- (2) Average loss: given a probability measure $P$ over $\mathcal{S}$, the **risk** of rule $x()$ $R_P(x(.)):=\int_{s\in\mathcal{S}}\ell(Y^{x(o(s))}(s),x(o(s)),s)dP(s)$
+  - The smallest possible risk $\inf_{x(.)}R_P(x(.))$ is called the **Bayes risk**, and if a rule achieves it, it can be called a **Bayes policy**
+  - This may reflect a better balance across settings, but one needs to choose the distribution carefully
+
+
+  
+## Statistical Decision Theory 
+
+- Split $s\in\mathcal{S}$ into two parts: **parameters** $\theta$ and **variables** $\omega$, $s=(\theta,\omega)\in(\Theta,\Omega)$, and use a criterion that treats them asymmetrically
+  - Why? Well, @wald1950statistical said so, and he's the guy with that clever idea about [airplanes](https://upload.wikimedia.org/wikipedia/commons/b/b2/Survivorship-bias.svg), so...
+  - Idea: parameters reflect fixed features of the world that we may hope to learn and rely on, while variables represent idiosyncratic variation which may best be modeled as random
+- A (probability) **model** maps parameter space to probability measures over variables $\{P_{\theta}(\omega):\ \theta\in\Theta\}$ 
+- A *causal* probability model induces a joint distribution over observed and counterfactual variables $(o(\omega,\theta),Y^{x}(\omega,\theta))$ for each $\theta\in\Theta$
+- In a Structural Causal Model (per lectures 1, 4), w.l.o.g. we can take $\omega=(U_1,\ldots,U_p)$ and $\theta=\{f_1,\ldots,f_p\}$, and the distribution of observables and counterfactuals can be derived by solving the original and mutilated models, respectively
+- We define the **risk** of a policy $x()$ *given parameters $\theta$* as $R_\theta(x()):=\int_{s\in\mathcal{S}}\ell(Y^{x(o(\omega,\theta))}(\omega,\theta),x(o(\omega,\theta)),\omega)dP_\theta(\omega)$
+- If we knew $\theta$, we could choose a rule which minimized the risk for that $\theta$, but we don't
+- So to find a decision rule, need criteria which map from (a subset of) $\{f(.):\mathcal{\Theta}\to\mathbb{R}\}$ to $\mathbb{R}$ applied to the risk of a policy $R_\theta(x())$
+- As before, we can consider average vs worst case
+- *Worst case* risk is $\sup_{\theta\in\Theta}R_\theta(x(.))$, and optimal value is minimax risk $\inf_{x()}\sup_{\theta\in\Theta}R_\theta(x(.))$
+- If $\Pi(\theta)$ is a probability measure over $\theta$, *average risk* of rule $x()$ is $\int_{\theta\in\Theta} R_\theta(x(.))d\Pi(\theta)$
+
+## Bayes: How
+
+- Average risk with respect to distribution $\Pi(\theta)$ expands to $\int_{\theta\in\Theta}\int_{\omega\in\Omega}\ell(Y^{x(o(\omega,\theta))}(\omega,\theta),x(o(\omega,\theta)),\omega)dP_\theta(\omega)d\Pi(\theta)$, 
+  - Which is exactly risk with respect to measure $\Pi \circ P_\theta$, a joint measure over $s=(\theta,\omega)$
+  - Therefore minimum value is Bayes risk and predictor is Bayes policy: back to symmetry
+- This gives us procedure for computing Bayes policy. 
+  - Applying L.I.E., risk is $\int_{o\in\mathcal{O}}\int_{\theta\in\Theta}\int_{\omega\in\Omega}\ell(Y^{x(o)}(\omega,\theta),x(o),\omega)dP(\omega|o,\theta)d\Pi(\theta|o)dP(o)$
+  - Optimizing over rules $x(.)\ \mathcal{O}\to\mathcal{X}$, minimum risk is achieved by minimizing **conditional risk** $\underset{x(o)\in\mathcal{X}}{\inf}\int_{\theta\in\Theta}\int_{\omega\in\Omega}\ell(Y^{x(o)}(\omega,\theta),x(o),\omega)dP(\omega|o,\theta)d\Pi(\theta|o)$ for any $o\in\mathcal{O}$
+    - Replaces optimizing over *functions* with optimizing over $\mathcal{X}$ (scalar or vector)
+- To compute conditional risk apply Bayes rule:
+  - $P(\omega|o,\theta)=P(o|\omega,\theta)P_\theta(\omega)/P(o|\theta)$ and $\Pi(\theta|o)=P(o|\theta)\Pi(\theta)/P(o)$
+  - Composition is $P(o|\omega,\theta)P_\theta(\omega)\Pi(\theta)/P(o)=\delta_{o=o(\omega,\theta)}P_\theta(\omega)\Pi(\theta)/\int\int\delta_{o=o(\omega,\theta)}dP_\theta(\omega)d\Pi(\theta)$ since $o$ is function of state
+- In practice, compute **posterior** by computational method (like MCMC), sample from *posterior predictive distribution* to get conditional risk, and then optimize over $\mathcal{X}$ 
+- With modern probabilistic programming languages like [Stan](https://mc-stan.org/) or [Turing](https://turing.ml/), easy to specify distribution of parameters, then distribution of data given observables, and let modern algorithms do the sampling and posterior prediction
+  - It may take hours rather than seconds, but use that time to think hard about your model and objective 
+- Example application: with loss function given by expected social welfare, parameters $\theta$ given by response function, with Gaussian process prior, @kasy2018optimal derives posterior optimal tax rate schedule     
+
+## Bayes: Why 
+
+- Average case risk is less pessimistic than worst case methods, and can perform especially well if prior reflects information about more important or probable outcomes
+- By equivalence of Bayes and putting a distribution directly over states, any prior implies an ex ante weighting on importance of states
+- Prior reflects subjective knowledge and judgment about features of model, in exactly the same way the likelihood does 
+- There is also sense that even if goal is not weighted averaging with respect to an informed prior, Bayes methods may be useful
+- A decision rule $x(.)$ is **dominated** if there is some $x^*()$ such that $R_\theta(x^{*}())\leq R_\theta(x())$ $\forall\theta\in\Theta$ and $R_\theta(x^{*}())< R_\theta(x())$ for some $\theta$
+  - A decision rule $x(.)$ is **admissible** if it is not dominated
+- Admissibility is a Pareto-like criterion for decisions: in principle, if you care about risk, can restrict search to these rules only
+  - In practice, for computational reasons, these may be hard to find, so inadmissible rules used all the time
+- *Complete class* theorems state that under some regularity criteria, for any admissible rule, there is a sequence of priors for which the risk of the Bayes decision converges to the risk of that rule
+  - So even if concern is some other Pareto-respecting criterion like worst case risk, can consider searching among (limits of) Bayes procedures
+- These theorems don't tell you what prior to use, but do narrow the search space 
+
+## Relative Comparisons: (Statistical) Regret
+
+- Sometimes measure performance relative to a (possibly infeasible) benchmark of best possible decision rule if $\theta$ were known 
+- Let $\mathcal{F}$ be a class of decision rules $f(.):\ \mathcal{O}\to\mathcal{X}$ used for comparison
+- The **Oracle Risk** over class $\mathcal{F}$ is $\underset{f\in\mathcal{F}}{\inf}R_{\theta}(f)$ and a rule which achieves it, if one exists, is called the *oracle policy* $f^{*}_\theta$ 
+- (Statistical) **regret** of $x(.)$ (in state $s$ relative to rules $\mathcal{F}$) is $R_{\theta}(x())- \underset{f\in\mathcal{F}}{\inf}R_{\theta}(f)$ 
+  - It measures how much worse you do by not knowing the parameter $\theta$
+- Based on decomposition $R_{\theta}(x())=\underset{f\in\mathcal{F}}{\inf}R_{\theta}(f)+(R_{\theta}(x())- \underset{f\in\mathcal{F}}{\inf}R_{\theta}(f))$, also called the "excess risk" relative to oracle
+- Practical justification for use is that if you are going to consider rules in $\mathcal{F}$, best you can hope for is to control excess risk
+- As it is a function of parameters, bringing it to a decision requires specifying criterion
+  - *Maximum regret* $\max_{\theta\in\Theta}\{R_{\theta}(x())- \underset{f\in\mathcal{F}}{\inf}R_{\theta}(f)\}$ more common than average
+
+## Alternate perspective: (Ex post) Regret
+
+- Even without statistical model, can compare decisions to *realized* outcomes. 
+- Let $\{s_i\}_{i=1}^{n}\in\otimes_n\mathcal{S}$ be a *sequence* of states and $\{x_i(.)\}_{i=1}^{n}$ be a sequence of decision rules, called a **strategy**, where choice of $x_i:\ \mathcal{O}\to\mathcal{X}$ may depend on past states 
+- (Ex post) **Regret** of strategy $\{x_i(.)\}_{i=1}^{n}$ in state $s$ relative to rules $\mathcal{F}$ is $Reg_{\mathcal{F}}(\{x_i(.)\}_{i=1}^{n})(\{s_i\}_{i=1}^{n}):=\frac{1}{n}\sum_{i=1}^{n}\ell(Y^{x_i(o(s_i))}(s_i),x_i(o(s_i)),s_i)-\underset{f\in\mathcal{F}}{\inf}\frac{1}{n}\sum_{i=1}^{n}\ell(Y^{f(o(s_i))}(s),f(o(s_i)),s_i)$
+  - It measures how much worse a decision was than the best possible rule in a class chosen depending on the state $s$
+- Worst case regret is $\underset{{\{s_i\}_{i=1}^{n}\in\otimes_n\mathcal{S}}}{\sup}Reg_{\mathcal{F}}(\{x_i(.)\}_{i=1}^{n})(\{s_i\}_{i=1}^{n})$
+- Strategies which achieve $o(n)$ worst case regret (and so vanishing average regret per observation) exist under surprisingly mild conditions, allowing decisions approximately at least as good as the best of a set of comparison rules without a probability model
+  - Perspective has origins in game theory (@cesa2006prediction), optimization (@hazan2019introduction), and statistics (@shalev2011online)
+- Low (statistical or ex post) regret procedures do well whenever comparators do well; the catch is that they are allowed to do badly when comparators also do so
+
+  
+
+
+```{r,eval=FALSE,echo=FALSE}
+#TODO: can we describe regret in static setting? sequential definition makes it nontrivial. comparison to $\underset{f\in\mathcal{F}}{\inf}\frac{1}{n}\sum_{i=1}^{n}\ell(Y^{f(o(s_i))}(s),f(o(s_i)),s_i)$ makes comparison nontrivial
+
+- Sometimes measure performance relative to a (possibly infeasible) benchmark  
+- Let $\mathcal{F}$ be a class of decision rules $f(.):\ \mathcal{O}\to\mathcal{X}$ used for comparison
+  - It might be a set of models, experts, or simple set of comparisons like constant functions
+- **Regret** of $x(.)$ in state $s$ relative to rules $\mathcal{F}$ is $\text{Reg}_\mathcal{F}(x)(s):=\ell(Y^{x(o(s))}(s),x(o(s)),s)-\underset{f\in\mathcal{F}}{\inf}\ell(Y^{f(o(s))}(s),f(o(s)),s)$
+  - It measures how much worse a decision was than the best possible rule in a class chosen *ex post*, i.e. depending on the state $s$
+```
+
+## Example applications
+
+- Statistical decision theory well studied when goal is parameter estimation
+  - Consider $y\sim N(\theta,1)$, observable $y$, and decision $x(y)$, and loss $\ell(\theta,x(y))=(\theta-x(y))^2$
+  - Choice $x(y)$ is assumed to have no effect on outcome, so causal problem here trivial: pure prediction setting
+  - Risk is $R_{\theta}(x(.))=\int(\theta-x(y))^2f(y|\theta)dy$ is MSE of estimator
+- Consider classical hypothesis testing problem (as in @manski2021econometrics)
+  - Binary decision $x\in\{0,1\}$ with observables $o$ given state $\theta$ and loss $\ell(x,\theta)$
+  - Optimal outcome would be to choose $x=1$ when $\ell(1,\theta)<\ell(0,\theta)$ and $x=0$ when $\ell(1,\theta)>\ell(0,\theta)$
+  - Let $\mathcal{E}_\theta(x) =P_\theta(x(o)=1)$ when $\ell(1,\theta)>\ell(0,\theta)$ and $=P_\theta(x(o)=0)$ when $\ell(1,\theta)<\ell(0,\theta)$ be probability of error
+  - *Risk* is given by $E_\theta[\ell(x(o),s)]= \mathcal{E}_\theta(x)\max\{\ell(1,\theta),\ell(0,\theta)\}+(1-\mathcal{E}_\theta(x))\min\{\ell(1,\theta),\ell(0,\theta)\}$
+  - $= \min\{\ell(1,\theta),\ell(0,\theta)\}+\mathcal{E}_\theta(x)|\ell(1,\theta)-\ell(0,\theta)|$
+  - *Regret* is $\mathcal{E}_\theta(x)|\ell(1,\theta)-\ell(0,\theta)|$: subtract off loss in case $\theta$ were known
+  - Neyman Pearson hypothesis testing fixes maximum error of one kind, then minimizes other subject to that constraint
+  - Risk or regret criteria typically differ from fixed $\alpha$ hypothesis test due to value of states
+- Example suggests that using hypothesis tests of positive average treatment effects may not be desirable way to decide whether treatment should be implemented  
+
+
+<!-- - For causal application, consider binary experiment $x\in\{0,1\}$ with binary outcome $Y\in\{0,1\}$ -->
+<!-- - Goal is to maximize outcome $\ell(Y^x,x)=Y^1x+Y^0(1-x)=Y^0+(Y^1-Y^0)x$ -->
+
+
+<!-- - TODO: Exact example here? Risk, regret of binary decision? -->
+  
+## Finding Optimal Procedures
+
+- Given a criterion (and possibly a model), the optimal decision rule is merely a matter of computation
+- Except in a few settings, this computation is rarely tractable, so it is almost never done exactly
+    - Instead, we apply approximations and heuristics
+- So why go through all that work of setting up optimization problems? 
+  - Because *given* a rule, we can then evaluate it by one of the above criteria, compare it to known rules, and in some cases prove near or approximate optimality
+- For Bayes, wide range of computational methods give approximations, whose properties will not be discussed in detail
+  - MCMC methods introduce sampling error, which can (usually) be decreased by running long enough
+  - Most importantly but often not discussed, tractability concerns may encourage use of models which do not reflect full range or set of sources of variation relevant to decision problem, such as by use of convenient parametric functional forms 
+  - Risk of Bayes decision rules with respect to a distribution outside of the support of the prior not optimized, and may only perform well in certain cases (@muller2013risk)
+- In settings where we have abundant data, we may use asymptotic approximations, or at least methods with guarantees that depend on sample size
+- By learning the parameters or distribution of variables, it is possible to approximate the risk and the optimal decision, to varying degrees of accuracy
+  
+  
+## Plug-in methods
+
+- Simplest class of methods, so ubiquitous as to be used without mentioning or naming, is to first apply some estimator $\widehat{\theta}$ to learn parameters or features of the causal model, then plug this estimate into the decision problem, which is then solved "as if" the parameter is equal to its estimate
+  - Called plug-in, or "as if" optimization, or "predict-then-optimize"
+- Decision rule minimizing point estimate of risk is $\widehat{x}_{\widehat{\theta}}$ such that $R_{\widehat{\theta}}(\widehat{x}_{\widehat{\theta}}())\leq \underset{x}{\inf} R_{\widehat{\theta}}(x())+\epsilon$ for sufficiently small $\epsilon\overset{p}{\to}0$  
+- When the arg min exists and is unique, equivalent to solve for the optimal decision rule as a function of parameters, then plug in
+- This procedure relies on (lower semi-)continuity of the minimized criterion with respect to parameters
+  - Sufficient conditions are given by Berge's Theorem of the Maximum: criterion should be (lower semi-)continuous and constraint set (upper hemi-)continuous, nonempty, and compact valued in $\theta$
+  - Together with consistency of $\widehat{\theta}$, obtain convergence of risk to minimum value  
+- While one obtains *pointwise* consistency of the risk in this way, need stronger conditions for maximum or even average risk convergence
+- Use of a point estimate neglects uncertainty due to the fact that model parameters are not known
+  - May be reasonable in cases where impact of uncertainty on decision is minimal, as might be the case in large samples
+- Method also relies on model accurately describing optimization environment
+  - Under misspecification, parameter estimates may converge to best predictor under one criterion (eg squared prediction error, KL distance, etc)
+  - But best approximation generally not best in terms of minimizing loss of decision problem 
+- If $\hat{\theta}$ converges at (slow) nonparametric rates, plug in usually inherits the same
+  - So avoiding misspecification by flexible modeling comes at cost in terms of reduced precision
+- A benefit of multi-step approaches is that they allow for division of labor
+- An applied econometrician who does not know how their estimates will be used may want to provide a summary of the model which is informative more broadly rather than for any one task
+  - @andrews2021communication formally model this tradeoff using heterogeneous loss functions and priors across an audience 
+    
+  
+  
+  
+## Decision Rule Asymptotics
+
+- A more principled approach to approximations might also take uncertainty into account
+- Intuitively, if parameter estimates are asymptotically Gaussian, under appropriate continuity conditions, decision problem should be "close to" that under Gaussian distribution
+- This should allow accounting for uncertainty in decisions
+  - @brainard1967uncertainty principle suggests that when policy effectiveness is known only up to a noisy estimate, a risk averse policymaker may want diversify across policies exactly as in portfolio allocation problem  
+- One can work "backwards" by finding an an optimal procedure in the limiting problem and apply it to (suitably rescaled) regular estimates in finite samples
+- Conditions for this to be a valid approach, in the sense of yielding comparable risk, are due to Le Cam, surveyed in @hirano2020
+  - Sufficiently well behaved asymptotically normal estimates can be analyzed in this way
+
+
+
+## Empirical optimization 
+
+- As an alternative to approximating the model and its parameters, may instead just try to approximate the criterion function 
+- For any fixed $x()$, $R_\theta(x())$ is a scalar functional of the model. If it is identified and regularly estimable, it may be substantially easier to estimate than the model as a whole
+- Let $\phi_i(x())$ be an influence function for $R_\theta(x())$, so that $E_\theta[\phi_i(x())]=R_\theta(x())$
+  - Denote the $\widehat{R}(x()):=\frac{1}{n}\sum_i\phi_i(x())$ the **empirical risk** of rule $x()$
+- The most common example of this by far is when the variables entering the loss function are directly observable, in which case  $\phi_i(x())=\ell(Y_i^{x(o_i)},x(o_i),\omega_i)$ is the loss function itself and the empirical risk is just the sample average loss
+- To compare across decision rules, we can consider choosing from a set of decision rules $\mathcal{F}$
+- **Empirical risk minimization** chooses $\widehat{x}^{ERM}:=\underset{x(.)\in\mathcal{F}}{\arg\min}\widehat{R}(x())$
+- Under some conditions, can provide strong bounds on excess risk of ERM estimate
+- Excess risk $R_{\theta}(\widehat{x}^{ERM})-\underset{x()\in\mathcal{F}}{\inf} R_\theta(x())= \stackrel{\text{Generalization Error}}{R_\theta(\widehat{x}^{ERM})-\widehat{R}(\widehat{x}^{ERM})}+\stackrel{\text{Oracle approximation}}{( \widehat{R}(\hat{x}^{ERM})-\underset{x()\in\mathcal{F}}{\inf} R_\theta(x()))}$
+  - $\leq R_\theta(\widehat{x}^{ERM})-\widehat{R}(\widehat{x}^{ERM})+\widehat{R}(x^{*})-R_\theta(x^{*})$ if $x^*$ is value achieving infimum, because $\widehat{x}^{ERM}$ is minimizer of empirical risk
+  - $\leq 2 \underset{x\in\mathcal{F}}{\sup}|\widehat{R}(x)-R(x) |$
+- Convergence of excess risk therefore implied by *uniform convergence* of empirical risk to population risk
+- Tradeoff relative to plug-in approach is that control on uniform error limits complexity of class of *rules* $\mathcal{F}$ instead of class of parameters $\Theta$
+- But since function class $\mathcal{F}$ limited, oracle risk may be high because it need not contain best unrestricted rule 
+
+## Uniform convergence of risk functional
+
+- Bound on $\underset{x\in\mathcal{F}}{\sup}|\widehat{R}(x)-R(x)|$ implies good performance of ERM
+- Note that relative to oracle risk, $\widehat{R}(\widehat{x}^{ERM})$ is usually biased *downwards* since minimization lets it fit both true value and noise
+  - Uniform bounds on sample convergence limit amount by which this *overfitting* occurs
+- Convergence in probability to 0 follows from a *uniform law of large numbers* over class $\mathcal{F}$
+- Can show even stronger finite sample results which bound uniform error in expectation and probability
+- Consider $\mathcal{F}$ such that $\Vert f\Vert_{\infty}\leq F$ for all $f\in \mathcal{F}$ and $z_i$ iid 
+- Then $E[\underset{f\in\mathcal{F}}{\sup}\left|\frac{1}{n}\sum_{i}f(z_i)-Ef(z_i)\right|]$ is bounded, in turn, by each of the following 3 complexity measures
+  - **Rademacher complexity**: $\frac{2}{n}E[E_\sigma[\underset{f\in\mathcal{F}}{\sup}\left|\frac{1}{n}\sum_i\sigma_if(z_i)\right||\{z_i\}_{i=1}^{n}]]$ where $\{\sigma_i\}_{i=1}^{n}$ are a collection of iid $\{-1,1\}$ (Rademacher) random variables. It measures expected maximum correlation with random noise
+  - **Entropy integral**: measure of the number of balls of radius $\epsilon$ around functions $f_i\in\mathcal{F}$ can cover set $\mathcal{F}$, at a collection of scales $\epsilon$ 
+  - **Vapnik-Chervonenkis (VC) dimension**: measure of dimension of set of points for which all patterns can be distinguished by functions in $\mathcal{F}$ 
+- See @vanderVaart1996weak, @mohri2018foundations for proofs, interpretations, and conditions which ensure complexity is bounded
+- For practical purposes, you can think of strongest assumption, VC dimension $v$ finite, as covering most parametric models, and $v$ as measuring (effective) number of parameters
+  - Upper bound is proportional to $F\sqrt{\frac{v}{n}}$
+- As bounds on $\underset{x\in\mathcal{F}}{\sup}|\widehat{R}(x)-R(x) |$ hold uniformly over iid probability distributions, they do not need correct specification or any specification of probability model
+- Do nearly as well as best rule in class, for any distribution over the data
+
+
+
+<!-- - TODO: describe heuristics. As-if/plugin, (penalized) empirical optimization,  solve the asymptotic problem  -->
+
+## Application: Binary Treatment Assignment
+
+- @kitagawa2018should describe empirical risk minimization for case when goal is assignment of a binary treatment $X$ according to a rule based on covariates $Z$ in order to maximize the average realized outcome $Y$ among the population $-\ell=Y^1X+Y^0(1-X)$ 
+  - "empirical welfare maximization" $W(x())=-R(x())=E[Y^1x(Z)+Y^0(1-x(Z))]$ since sign reversed
+- Policy targeting applicable when treatment may be beneficial for some populations but harmful to others
+  - Uses in precision medicine, aid and welfare programs, targeted educational interventions, etc
+- Assume exogeneity and overlap $Y^1,Y^0\perp X|Z$,  $\epsilon\leq \pi(z)\leq 1-\epsilon$ for $\pi(z)=P(x=1|Z=z)$
+  - Then $W(x())$ identified with (IPW) influence function $\frac{YX}{\pi(Z)}x(Z)+\frac{Y(1-X)}{1-\pi(Z)}(1-x(Z))$
+  - Standard conditioning result, under backdoor criterion for $Z$
+- Optimal decision rule if distribution known satisfies $x(z)=1\{E[Y^1-Y^0|Z=z]\geq 0\}$
+  - Plug-in requires estimating CATE, a high dimensional task likely to have slow convergence rates
+- Restricting to $x()\in\mathcal{F}$ and (for now) known propensity score, $\widehat{x}^{EWM}:=\underset{x\in\mathcal{F}}{\arg\max}\frac{1}{n}\sum_i[\frac{Y_iX_i}{\pi(Z_i)}x(Z_i)+\frac{Y_i(1-X_i)}{1-\pi(Z_i)}(1-x(Z_i))]$  
+- Assume $Y\in[-M/2,M/2]$, $\mathcal{F}$ has VC dimension $v<\infty$
+- Then strict overlap and outcome bound give boundedness, plus VC condition allow direct application of uniform bound
+  - $E[\underset{x\in\mathcal{F}}{\inf}W(x)-W(\hat{x}^{ERM})]\leq C\frac{M}{\epsilon}\sqrt{\frac{v}{n}}$
+  - Empirical welfare maximizer converges at parametric rates
+  
+
+## Decision Rule Sets
+
+- Convergence requirements dictate that $\mathcal{F}$ be a fairly simple class of rules
+- Vapnik Chervonenkis (VC) class of dimension $v$ is "essentially" parametric with $v$ parameters
+- Eg: linear eligibility score $\mathcal{F}=\{1\{\sum_{j=0}^d\beta_j o_j\geq 0\}:\ \beta\in\mathbb{R}^{d+1}\}$ has VC dimension $d+1$
+  - Measure attributes, weight them by number of points, and assign treatment to those with score above a number
+- Decision trees of fixed depth $L$ over $d$ covariates are likewise a VC class with $v=\tilde{O}(2^L\log(d))$
+  - Follow ordered checklist of rules of form "if $x_j>c_1$, check $x_k<c_2$, else check $x_h>c_3$", etc
+- Because results are finite sample, VC dimension can grow (slowly) with sample  
+- Rules of this form need not approximate the shape of ideal policy given by CATE
+  - Point of optimization is that they do as well as possible in *welfare* terms
+  
+
+## Constraints on Policy Targeting
+
+- In practice, simplicity is often a virtue, since policies constrained by variety of desiderata
+- Budget constraint may restrict allocations to maximum fraction of population
+- Fairness concerns may require equalizing assignments across groups
+- Implementation challenges may make it hard for administrators to properly run a complex rule
+  - Equal pandemic UI expansions in dollar value due to limited capability to quickly change state disbursement software
+- Cost of data gathering may limit which variables can be used in assignment rule
+- Privacy concerns or potential for manipulation or misreporting may also prevent gathering some variables
+  - E.g., poverty surveys may use asset test based on easily observable items (like TVs, or non-dirt floors) rather than reported income
+- Need to avoid misreporting may be facilitated by building in incentive compatibility constraints
+- Political economy may limit set of rules that can be approved or sustained
+- Longstanding argument on "universal vs targeted benefits" hinges on many of these constraints and costs to targeting
+  - Specific constraints, as well as scope for welfare improvements due to heterogeneity, should determine shape of rule and degree of customization
+- In some applications, like web services, automated decisions may allow for much more complicated rules  
+  
+
+## Extensions
+
+- Estimated propensity scores can be handled by plugging them in to empirical maximizer formula
+- Regression estimates $\mu(x,z)=E[Y|X=x,Z=z]$ can be applied by plugging into $\underset{x\in\mathcal{F}}{\arg\max}\frac{1}{n}\sum_i[(\hat{\mu}(1,Z_i)-\hat{\mu}(0,Z_i))x(Z_i)]$
+  - Note this differs from plugging CATE estimate into optimal rule
+- As you should be expecting by now, there is an AIPW version allowing machine learning estimates of first stage regression and propensity scores (@athey2021policy)
+  - Letting $\widehat{\Gamma}_i=\hat{\mu}(1,Z_i)-\hat{\mu}(0,Z_i)+\frac{X_i-\hat{\pi}(Z_i)}{\hat{\pi}(Z_i)(1-\hat{\pi}(Z_i))}(Y_i-\hat{\mu}(X_i,Z_i))$, obtain $\widehat{x}^{DR}=\underset{x()\in\mathcal{F}}{\arg\max}\frac{1}{n}\sum_{i=1}^{n}(2x(Z_i)-1)\hat{\Gamma}_i$
+  - Policy rule still required to be in class with finite VC dimension to ensure uniform bound
+- Similar principles apply in settings beyond binary treatment under conditional random assignment
+  - eg multinomial assignments @zhou2018offline, or dynamic budgets @adusumilli2020dynamically
+- In cases where effect is not point identified, decision theory still provides choices of ordering that can be used to learn policy rules
+  - Given an identified set $T\subset\Theta$ *maximum regret* of rule $x$ over that set $\max_{\theta\in T}(R_{\theta}(x())-\underset{x\in\mathcal{F}}{\inf}R_{\theta}(x))$ can be calculated
+  - @kallus2018confounding propose to optimize treatment policies with respect to an estimate of this quantity when observed treatments assigned with confounding and so do not point identify the causal effects
+  - @assunccao2019optimal apply minimax regret methods to environmental targeting with spillovers, in which effects are not point identified
+
+
+## Simulation Example
+
+- Apply `policytree` library (@sverdrup2020policytree) implementing @athey2021policy DR method with random forest nuisance estimators and decision tree policy class
+
+```{r}
+library(policytree)
+set.seed(1234)
+n <- 2000
+p <- 5
+# Rounding down continuous covariates decreases runtime.
+Z <- round(matrix(rnorm(n * p), n, p), 2)
+colnames(Z) <- make.names(1:p)
+X <- rbinom(n, 1, 1 / (1 + exp(Z[, 3])))
+tau <- 1 / (1 + exp((Z[, 1] + Z[, 2]) / 2)) - 0.5
+Y <- Z[, 3] + X * tau + rnorm(n)
+c.forest <- grf::causal_forest(Z, Y, X) #Get nuisance functions
+dr.scores <- double_robust_scores(c.forest) #Get scores functions
+tree <- policy_tree(Z, dr.scores, 2) #Optimize over tree policies of depth 2
+tree
+```
+
+## Estimated optimal tree policy
+
+```{r}
+plot(tree)
+```
+
+
+## Conclusions
+
+- Decision theory offers a framework for making decisions based on data and models
+  - Loss function describes quality of outcome in a given state, criterion evaluates decision rules across states 
+- Different criteria reflect tradeoffs over when and what kinds of errors are tolerated, as they inevitably must be
+- Decision theory paired with causal models provides ways to evaluate policies, even without knowing all features of model or environment
+- Approximations may be based on learning the model class or learning the policy class, either of which may be preferable in some situations
+
+
+
+## References

@@ -56,7 +56,7 @@ library(gridExtra) #Graph Display
     - E.g., causal quantity is ATE $E[Y^{X=x_1}-Y^{X=x_0}]$, identification formula is $\int (E[Y|X=x_1,Z=z]-E[Y|X=x_0,Z=z])dP(z)$
 - Actually deriving the identification result may be challenging: search space can be large or infinite
   - For restricted model classes, relationships can be described by set of rules, via which search can be automated
-  - This has been done comprehensively for acyclic Nonparametric Structural Equation Model with Independent Errors (NPSEM-IE)
+  - This has been done comprehensively for acyclic Structural Causal Model with independent errors
   - Representable by a causal Directed Acyclic Graph or **DAG**
 - Today: Brief summary of known identification results for DAGs
   - Model assumptions let you convert qualitative reasoning about which variables are related to which others and how into estimation formulas and observables implications
@@ -68,7 +68,7 @@ library(gridExtra) #Graph Display
 
     <!-- - Code examples via R library `dagitty` @textor2016robust -->
 
-## NPSEM-IE and DAGs, review  
+## Structural Causal Models and DAGs, review  
 
 - Endogenous variable $Y_1,Y_2,\ldots,Y_p$ described by Structural Equation Model
 $$Y_1=f_1(Y_2,\ldots,Y_p,U_1)$$
