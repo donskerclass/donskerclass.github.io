@@ -11,6 +11,70 @@
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Papers I Liked 2021</title>
+      <link>/post/papers-i-liked-2021/</link>
+      <pubDate>Thu, 30 Dec 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/papers-i-liked-2021/</guid>
+      <description>&lt;script src=&#34;/rmarkdown-libs/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+
+&lt;p&gt;A list of 10 papers I read and liked in 2021. As in previous years, this is by date read rather than released or published, and selection is in no particular order. Overall, my list reflects my interests this year, prompted by research and teaching, in online learning, micro-founded macro, and causal inference, and, to the extent possible, intersections of these areas. As usual, I’m likely to have missed a lot of great work even in areas on which I focus, so absence likely indicates that I didn’t see it, or it’s on my ever expanding to read list, so ping me with your recommendations!&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Block, Dagan, and Rakhlin &lt;a href=&#34;http://arxiv.org/abs/2102.01729&#34;&gt;Majorizing Measures, Sequential Complexities, and Online Learning&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;Sequential versions of metric entropy type conditions which are the bread and butter of iid data analysis extended to the setting of online estimation.&lt;/li&gt;
+&lt;li&gt;See also: This builds on Rakhlin, Sridharan, and Tewari (2015) &lt;a href=&#34;https://link.springer.com/content/pdf/10.1007/s00440-013-0545-5.pdf&#34;&gt;essential earlier work&lt;/a&gt; on uniform martingale laws of large numbers by sequential versions of Rademacher complexity. More generally, there were many advances in inference and estimation for online-collected data this year: see the papers at the NeuRIPS &lt;a href=&#34;https://sites.google.com/view/causal-sequential-decisions/home&#34;&gt;Causal Inference Challenges in Sequential Decision Making&lt;/a&gt; workshop for a few.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Klus, Schuster, and Maundet &lt;a href=&#34;https://arxiv.org/abs/1712.01572&#34;&gt;Eigendecompositions of Transfer Operators in Reproducing Kernel Hilbert Spaces&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;A Koopman operator &lt;span class=&#34;math inline&#34;&gt;\(\mathcal{K}[f_t](x)\)&lt;/span&gt; mapping &lt;span class=&#34;math inline&#34;&gt;\(f\to E[f(X_{t+\tau})|X_t=x]\)&lt;/span&gt;, is a way of summarizing a possibly nonlinear and high dimensional dynamical system using a linear operator, which allows summarization and computation using linear algebra tools. Since this is effectively an evaluation operator, it pairs nicely with kernel mean embeddings and RKHS theory, which is precisely the condition which ensures continuity, allowing analysis in arbitrarily high dimension at no extra cost.&lt;/li&gt;
+&lt;li&gt;See also: Budišić, Mohr, and Mezić (2009) &lt;a href=&#34;https://doi.org/10.1063/1.4772195&#34;&gt;Applied Koopmanism&lt;/a&gt; for an intro to Koopman analysis of dynamical systems.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Antolín-Díaz, Drechsel, and Petrella &lt;a href=&#34;http://econweb.umd.edu/~drechsel/papers/advances.pdf&#34;&gt;Advances in Nowcasting Economic Activity: Secular Trends, Large Shocks and New Data&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;Classic linear time series models used in forecasting, causal, and structural macroeconomics have taken a beating in the past two years with the huge fluctuations due to the pandemic. But a dirty secret known to forecasters is that black box ML models designed to be much more flexible have, if anything, an even more dismal track record. This work adding carefully specified and empirically validated mechanisms for shifts, outliers, mean and volatility changes and so on to the kind of dynamic factor models that have substantially outperformed offers a chance to substantially improve fit and handling of big shifts while retaining performance. This attention to distributional properties of macro data is surprisingly rare, and should encourage more work on understanding the sources of these features.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Karadi, Schoenle, and Wursten &lt;a href=&#34;https://sites.google.com/site/pkaradi696/KaradiSchoenleWursten.pdf&#34;&gt;Measuring Price Selection in Microdata: It’s Not There&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;A venerable result in sticky price models, going back to Golosov and Lucas, is that “menu costs” of price changes ought to result in very limited actual real response of output to monetary impulses because even though costs keep prices fixed most of the time, any product that is seriously mispriced will be selected to have its price changed, so real effects should be minimal. This paper tests that theory directly using price microdata and shows that in response to identified monetary shocks, the prices that change do not appear to be those which are out of line, suggesting a much smaller selection effect than in baseline menu cost models. I liked this paper, beyond the importance of its empirical results, as a model for combining micro and macro data: to claim a microeconomic mechanism responds to an aggregate shock, your results are much more credible actually measuring variation in that shock and the micro response to it, rather than only using macro or only using micro variation.&lt;/li&gt;
+&lt;li&gt;See also: Wolf &lt;a href=&#34;http://economics.mit.edu/files/22576&#34;&gt;The Missing Intercept: A Demand Equivalence Approach&lt;/a&gt; describing how &lt;em&gt;both&lt;/em&gt; causal variation at the micro (cross-sectional) level and at the macro (time series) level are necessary to identify aggregate responses. This kind of hybrid approach is a welcome change which takes into account both the value of “&lt;a href=&#34;https://doi.org/10.1257/jep.32.3.59&#34;&gt;identified moments&lt;/a&gt;” using microeconomic causal inference tools in macro with the reality that if you want to credibly measure aggregate causal effects, you need random variation at the aggregate level also.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Hall, Payne, Sargent, and Szöke &lt;a href=&#34;https://people.brandeis.edu/~ghall/papers/Yield_Curve_May_10_2021.pdf&#34;&gt;Hicks-Arrow Prices for US Federal Debt 1791-1930&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;A time series of risk and term structure adjusted U.S. interest rates going way back, estimated using a Bayesian hierarchical term structure model, which allows handling the variety of bond issuance terms and missingness that make comparing over time using models for modern yield curves quite difficult.&lt;/li&gt;
+&lt;li&gt;See also: &lt;a href=&#34;https://turing.ml/&#34;&gt;Turing&lt;/a&gt;, the probabilistic programming language used for these results, which combines modern MCMC sampling algorithms with the full power of Julia’s Automatic Differentiation stack to allow fitting even complicated structural models with elements not standard in more statistics-specialized programming languages and benefitting from the ability of Bayes to handle inference with complicated missingness and dependence structures that become extremely challenging without it, even for simulation-based estimators.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Callaway and Sant’Anna &lt;a href=&#34;https://doi.org/10.1016/j.jeconom.2020.12.001&#34;&gt;Difference-in-Differences with multiple time periods&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;The diff-in-differdämmerung struck hard this year, with methods for handling DiD (particularly but not only with variation in treatment timing) up in the air and new papers coming out at an increasing pace. In trying to summarize at least &lt;a href=&#34;https://donskerclass.github.io/CausalEconometrics/DifferenceinDifferences.html&#34;&gt;a bit of this literature&lt;/a&gt; for &lt;a href=&#34;https://donskerclass.github.io/CausalEconometrics.html&#34;&gt;a new class&lt;/a&gt;, I found this paper, and others by Pedro Sant’Anna and collaborators, crystal clear about the sources of the issues and how to resolve them, with the bonus of well-documented &lt;a href=&#34;https://bcallaway11.github.io/did/&#34;&gt;software&lt;/a&gt; and extensive examples.&lt;/li&gt;
+&lt;li&gt;See also: too many papers on DiD to list.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Farrell, Liang, and Misra &lt;a href=&#34;https://arxiv.org/abs/2010.14694&#34;&gt;Deep Learning for Individual Heterogeneity: An Automatic Inference Framework&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;Derives influence functions and doubly robust estimators for conditional loss-based estimation allowing, e.g., nonparametric dependence of coefficients on high-dimensional inputs in Generalized Linear Models. Results are flexible enough to be widely applicable, and simple enough to be easy to implement and interpret.&lt;/li&gt;
+&lt;li&gt;See also: Hines, Dukes, Diaz-Ordaz, Vansteelandt &lt;a href=&#34;https://arxiv.org/abs/2107.00681&#34;&gt;Demystifying statistical learning based on efficient influence functions&lt;/a&gt; for an overview of this increasingly essential but always-confusing topic&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Foster and Syrgkanis &lt;a href=&#34;https://arxiv.org/abs/1901.09036&#34;&gt;Orthogonal Statistical Learning&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;A very general theory extending “Double Machine Learning” approach to loss function based estimation where instead of a root n estimable regular parameter, you may have a more complex object like a function (e.g., a conditional treatment effect, a policy, etc) which you want to make robust to high dimensional nuisance parameters.&lt;/li&gt;
+&lt;li&gt;See also: I went back and reread the published version of the &lt;a href=&#34;https://doi.org/10.1111/ectj.12097&#34;&gt;original “Double ML” paper&lt;/a&gt; to write up teaching notes, which was helpful for really thinking through the results.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Rambachan and Shephard &lt;a href=&#34;https://asheshrambachan.github.io/assets/files/arns_commontimeseries_causal.pdf&#34;&gt;When do common time series estimands have nonparametric causal meaning?&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;Potential outcomes for time series are a lot harder than you would think at first, because repeated intervention necessarily vastly expands the space of possible relationships between treatments, and between treatments and outcomes. This paper lays out the issues and proposes some solutions.&lt;/li&gt;
+&lt;li&gt;See also: I based my &lt;a href=&#34;https://donskerclass.github.io/CausalEconometrics/TimeSeries.html&#34;&gt;time series causal inference teaching notes&lt;/a&gt; mostly on this paper.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Breza, Kaur, and Shamdasani &lt;a href=&#34;https://drive.google.com/file/d/1RiMgkKu7DJqfnqU3vIqQszD1TEREY9jf/view?usp=sharing&#34;&gt;Labor Rationing&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;How do economies respond to labor supply shocks? Breza and et al just go out there and run the experiment, setting up a bunch of factories and hiring away a quarter of eligible workers in half of 60 villages in Odisha. In peak season wages rise, like textbook theory, but in lean season, wages do nothing as it appears most workers are effectively unemployed.&lt;/li&gt;
+&lt;li&gt;See also: The authors’ other work in the same setting testing theories of wage rigidity. For example, they find strong &lt;a href=&#34;https://drive.google.com/file/d/1Z2ZsrFZ71-Upq7dvN7MXy225HT0HgkqY/view?usp=sharing&#34;&gt;experimental support&lt;/a&gt; for &lt;a href=&#34;https://delong.typepad.com/files/bewley-wages.pdf&#34;&gt;Bewley’s&lt;/a&gt; morale theory for why employers don’t just cut wages. By running experiments at the market level, they have been able to provide a lot of compelling evidence on issues that have previously been relegated to much more theoretical debate.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Efficient Online Estimation of Causal Effects by Deciding What to Observe</title>
       <link>/publication/onlinemomentselection/</link>
       <pubDate>Mon, 23 Aug 2021 00:00:00 -0400</pubDate>
@@ -539,16 +603,6 @@ I will say that the standout, read in March and a clear winner for best paper I 
 &lt;li id=&#34;fn5&#34;&gt;&lt;p&gt;Basically, establishing convergence to stochastic integrals by showing weak convergence by tightness in the &lt;a href=&#34;https://en.wikipedia.org/wiki/C%C3%A0dl%C3%A0g#Skorokhod_space&#34;&gt;Skorokhod topology.&lt;/a&gt; While highly involved and nontrivial, the unit root case avoids one technical complication common to other models built on empirical processes, as the empirical process in the estimator for the unit root model is measurable in the sigma-field over the Skorokhod topology, while empirical processes in general need not be measurable, something of a complication for stable convergence. This complication shows up in a variety of non-smooth or semiparametric estimators such as simulated method of moments or quantile regression which one might want to use for either the cross-section or time-series component of the model. In the standard case this is resolved by the machinery of weak convergence in outer measure; I suspect that it could be extended to stable convergence in a straightforward fashion, but it remains to be done.&lt;a href=&#34;#fnref5&#34; class=&#34;footnote-back&#34;&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;/div&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>Why I’m blogging</title>
-      <link>/post/why-i-m-blogging/</link>
-      <pubDate>Wed, 03 Jun 2015 00:00:00 +0000</pubDate>
-      
-      <guid>/post/why-i-m-blogging/</guid>
-      <description>&lt;p&gt;In an effort to get into the habit of writing down my thoughts, I am, ill-advisedly, experimenting with starting a blog. I expect to cover mainly topics in statistics, econometrics, machine learning, and numerical computation, with some chance of also entertaining thoughts on how these relate to macroeconomics. Actual macroeconomics will be kept to a minimum, as that topic attracts sufficient attention online already, except in the case that I lack the self-control to avoid arguing on the internet. I also expect that unless I begin to use it for brief summaries and comments, this won’t be frequently updated, and may die an untimely death in the face of more pressing matters. The main uses are likely to be working through concepts that I only partially understand, in order to clarify my thoughts and to provide a benchmark so that when or if some kind of an understanding is reached, there will be a public record on the internet of my &lt;strike&gt;ignorance&lt;/strike&gt; intellectual evolution. If the record of such a process also serves to draw the interest of the reader into the topics that preoccupy me and direct them to more reliable sources, all the better.&lt;/p&gt;
 </description>
     </item>
     
