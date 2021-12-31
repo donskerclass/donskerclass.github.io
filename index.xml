@@ -13,7 +13,7 @@
     <item>
       <title>Papers I Liked 2021</title>
       <link>/post/papers-i-liked-2021/</link>
-      <pubDate>Thu, 30 Dec 2021 00:00:00 +0000</pubDate>
+      <pubDate>Fri, 31 Dec 2021 00:00:00 +0000</pubDate>
       
       <guid>/post/papers-i-liked-2021/</guid>
       <description>&lt;script src=&#34;/rmarkdown-libs/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
@@ -24,11 +24,11 @@
 &lt;li&gt;Block, Dagan, and Rakhlin &lt;a href=&#34;http://arxiv.org/abs/2102.01729&#34;&gt;Majorizing Measures, Sequential Complexities, and Online Learning&lt;/a&gt;
 &lt;ul&gt;
 &lt;li&gt;Sequential versions of metric entropy type conditions which are the bread and butter of iid data analysis extended to the setting of online estimation.&lt;/li&gt;
-&lt;li&gt;See also: This builds on Rakhlin, Sridharan, and Tewari (2015) &lt;a href=&#34;https://link.springer.com/content/pdf/10.1007/s00440-013-0545-5.pdf&#34;&gt;essential earlier work&lt;/a&gt; on uniform martingale laws of large numbers by sequential versions of Rademacher complexity. More generally, there were many advances in inference and estimation for online-collected data this year: see the papers at the NeuRIPS &lt;a href=&#34;https://sites.google.com/view/causal-sequential-decisions/home&#34;&gt;Causal Inference Challenges in Sequential Decision Making&lt;/a&gt; workshop for a few.&lt;/li&gt;
+&lt;li&gt;See also: This builds on Rakhlin, Sridharan, and Tewari (2015)’s &lt;a href=&#34;https://link.springer.com/content/pdf/10.1007/s00440-013-0545-5.pdf&#34;&gt;essential earlier work&lt;/a&gt; on uniform martingale laws of large numbers by sequential versions of Rademacher complexity. More generally, there were many advances in inference and estimation for online-collected data this year: see the papers at the NeuRIPS &lt;a href=&#34;https://sites.google.com/view/causal-sequential-decisions/home&#34;&gt;Causal Inference Challenges in Sequential Decision Making&lt;/a&gt; workshop for a few.&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
 &lt;li&gt;Klus, Schuster, and Maundet &lt;a href=&#34;https://arxiv.org/abs/1712.01572&#34;&gt;Eigendecompositions of Transfer Operators in Reproducing Kernel Hilbert Spaces&lt;/a&gt;
 &lt;ul&gt;
-&lt;li&gt;A Koopman operator &lt;span class=&#34;math inline&#34;&gt;\(\mathcal{K}[f_t](x)\)&lt;/span&gt; mapping &lt;span class=&#34;math inline&#34;&gt;\(f\to E[f(X_{t+\tau})|X_t=x]\)&lt;/span&gt;, is a way of summarizing a possibly nonlinear and high dimensional dynamical system using a linear operator, which allows summarization and computation using linear algebra tools. Since this is effectively an evaluation operator, it pairs nicely with kernel mean embeddings and RKHS theory, which is precisely the condition which ensures continuity, allowing analysis in arbitrarily high dimension at no extra cost.&lt;/li&gt;
+&lt;li&gt;A Koopman operator &lt;span class=&#34;math inline&#34;&gt;\(\mathcal{K}[f_t](x)\)&lt;/span&gt; mapping &lt;span class=&#34;math inline&#34;&gt;\(f\to E[f(X_{t+\tau})|X_t=x]\)&lt;/span&gt;, is a way of summarizing a possibly nonlinear and high dimensional dynamical system using a linear operator, which allows summarization and computation using linear algebra tools. Since this is effectively an evaluation operator, it pairs nicely with kernel mean embeddings and RKHS theory, which gives precisely the properties needed to make these objects well behaved, allowing analysis in arbitrarily high dimension at no extra cost.&lt;/li&gt;
 &lt;li&gt;See also: Budišić, Mohr, and Mezić (2009) &lt;a href=&#34;https://doi.org/10.1063/1.4772195&#34;&gt;Applied Koopmanism&lt;/a&gt; for an intro to Koopman analysis of dynamical systems.&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
 &lt;li&gt;Antolín-Díaz, Drechsel, and Petrella &lt;a href=&#34;http://econweb.umd.edu/~drechsel/papers/advances.pdf&#34;&gt;Advances in Nowcasting Economic Activity: Secular Trends, Large Shocks and New Data&lt;/a&gt;
