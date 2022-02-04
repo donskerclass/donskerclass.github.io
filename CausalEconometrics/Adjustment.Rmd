@@ -41,7 +41,7 @@ ggdag(yxzdag)+theme_dag_blank()+labs(title="Z confounds relationship of X to Y")
 - Overlap
     - $P(X=x|Z=z)>0$ $\forall z$ in support of $Z$
 - (Causal) Consistency
-    - $Y_i=Y_i^x1\{X_i=x\}$
+    - $Y_i=\sum_xY_i^x1\{X_i=x\}$
 - These can be derived from full structural model, but for today take as given
 - We are continuing to assume treatment is well defined, observations are independent, and there is no interaction among units (i.e. SUTVA)
 
