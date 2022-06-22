@@ -18,7 +18,7 @@ bibliography: classrefs.bib
 
 ## Classical answer: maximum likelihood
 
-- $\widehat{\theta}_{MLE}=\underset{\theta\in\Theta}{\arg\min}\log \ell(\{x_i\}_{i=1}^{n},\theta)$
+- $\widehat{\theta}_{MLE}=\underset{\theta\in\Theta}{\arg\max}\log \ell(\{x_i\}_{i=1}^{n},\theta)$
 - $\widehat{\psi}_{MLE}=\Psi(\mathbb{P}_{\widehat{\theta}_{MLE}})$
 - If $\Theta$ finite dimensional, under some regularity conditions, asymptotically optimal to maximize likelihood, and plug in likelihood to estimate functional
 - Limit theory review (we'll use this form): Take FOC and Taylor expand

@@ -97,7 +97,7 @@ bibliography: classrefs.bib
 - **Theorem**: 
 $$\begin{gather*} E[Y^1-Y^0]\in[\left\{E[Y|X=1]P(X=1)-E[Y|X=0](1-P(X=1))\right\}-P(X=1), \\
 \left\{E[Y|X=1]P(X=1)-E[Y|X=0](1-P(X=1))\right\}+(1-P(X=1))] \end{gather*}$$
-- **Corollary**: Width of possible interval learnable from data is 1 (as opposed to 2 with data) and is $[0,1]$ at largest, $[-1,0]$ at smallest, so worst case interval always contains 0.
+- **Corollary**: Width of possible interval learnable from data is 1 (as opposed to 2 without data) and is $[0,1]$ at largest, $[-1,0]$ at smallest, so worst case interval always contains 0.
 
 - **Proof**: $E[Y^1-Y^0]=E[Y^1X+Y^1(1-X)]-E[Y^0X+Y^0(1-X)]$
 $=E[Y^1X]-E[Y^0(1-X)]+E[Y^1(1-X)]-E[Y^0X]$
