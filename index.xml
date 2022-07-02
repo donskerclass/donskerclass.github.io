@@ -11,6 +11,39 @@
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>SED 2022 - Notes on contemporary macro</title>
+      <link>/post/sed-2022/</link>
+      <pubDate>Sat, 02 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/post/sed-2022/</guid>
+      <description>&lt;script src=&#34;/rmarkdown-libs/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+
+&lt;p&gt;I just got back from an excellent &lt;a href=&#34;https://www.economicdynamics.org/sedam_2022/&#34;&gt;meeting of the Society for Economic Dynamics&lt;/a&gt;, a top conference for work in dynamic economics, principally but not exclusively in macroeconomics. As one of the first in-person conferences I’ve been to since 2020 (last year they were hybrid and I presented from home), it was a chance to catch up not just with colleagues and friends but also with the state of modern academic macro, after some time focusing more on other things. While the conference is fresh in my mind, I thought I’d jot down a few bigger picture notes to start thinking about where the field is and where it might be headed.&lt;/p&gt;
+&lt;p&gt;Of course, the conference has so many parallel sessions that I’m sure no two people had the same experience, aside from the plenary talks, and my particular focus, mostly on computational and econometric methods, is a specialized niche within the whole, but given that it’s particularly valuable for methodologists to have a sense of what applied problems people currently work on and how they’re going about it, I did try to explore a little more. That said, even within what I saw these are just first impressions and themes.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;HANK models have matured&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Research literatures in macroeconomics seem to have a lifecycle that goes in stages.&lt;/p&gt;
+&lt;p&gt;First, some creative thinkers come up with a concept and implement an early version showing it can be done. For heterogeneous agent New Keynesian (HANK) literature, around the early to mid 2010s, the idea was to merge our &lt;a href=&#34;https://donskerclass.github.io/post/an-empirical-heterogeneous-agents-models-reading-list/&#34;&gt;benchmark incomplete markets models&lt;/a&gt; of inequality and individual spending and saving behavior with our &lt;a href=&#34;https://press.princeton.edu/books/hardcover/9780691164786/monetary-policy-inflation-and-the-business-cycle&#34;&gt;benchmark New Keynesian models&lt;/a&gt; of monetary policy, inflation, and business cycles to start to answer questions about how they interact.&lt;/p&gt;
+&lt;p&gt;Second, the research community enters a stage of twiddling with all the knobs, investigating all the features of a type of model and understanding which features are important for which outcomes and why, and how they interact. Some of the choices in the initial model may have been just placeholder first guesses, that after a period of trial and error over different specifications will be swapped out for something more robust or tractable until the literature settles down on a small set of benchmarks. HANK had been actively in this stage in the late 2010s, with many competing variations working out questions about specification in terms of fiscal transfers, portfolio choices, preferences and so on, along with the role of methods (discrete vs continuous time, MIT shocks vs Krusell-Smith vs perturbation, sequence versus state space, etc). There’s still some of this settling of basic questions going on, but there seemed to be more of this in the previous 2 or 3 SED meetings.&lt;/p&gt;
+&lt;p&gt;Third, after enough knob twiddling, people understand the framework well enough to put the model to work, as a tool for basic measurement and for policy analysis. HANK now seems to be entering in this mature stage, what Kuhnians would call “normal science”, with lots of applications to understanding the effects of particular policy proposals or shocks, measuring and quantifying different sources of inequality, and as a baseline for incorporating new proposed deviations or frictions. I went to a lot of talks where the format was “here’s a policy issue or fact to explain. We motivate with some simple empirics and maybe a toy model with just the one force, then embed it in a quantitative HANK model to measure that it explains x percent of this trend, or implies that this policy is x percent more/less effective” and fewer that were trying to resolve basic issues of the form “what happens if we take a HANK model and swap out sticky prices vs wages, or real vs nominal debt, etc”.&lt;/p&gt;
+&lt;p&gt;I suppose beyond those stages, other literatures in macroeconomics that have tread the path before (representative agent DSGE?) maintain a long lifetime of continued routine use, often fading a bit from the academic spotlight but continuing to be useful to policy-makers, both for day-to-day measurement and as a mature and reliable way to get a first pass at the pressing issues of the day. Beyond that, either continued probing of points of empirical dissatisfaction or merging with ideas from some previously disjoint strand lead to new strands of research ideas. For HANK, I suspect much of the original interest was from the desire to reconcile the profession’s incompatible benchmark models of individual behavior and of business cycle aggregates, with the most notable empirical problem being dissatisfaction with the MPC implications of the typical representative agent &lt;a href=&#34;http://noahpinionblog.blogspot.com/2014/01/the-equation-at-core-of-modern-macro.html&#34;&gt;Euler equation&lt;/a&gt;. I think there are many years left of both basic exploration and normal science left to do with HANK, though pattern matching suggests that something will eventually come along to form the next generation. It seems too early to specify what that might be. Despite widespread dis-ease with other aspects of the New Keynesian paradigm for monetary economics and many proposals for modifications or replacements, it has proved remarkably persistent by serving as a baseline framework for encompassing divergent views on mechanisms and policies. While disagreements remain, the days when “freshwater” and “saltwater” macroeconomists expressed disagreement mostly through &lt;a href=&#34;https://en.wikiquote.org/wiki/Robert_Lucas_Jr.#Quotes:~:text=The%20main%20development,submitted%20any%20more.&#34;&gt;laughter&lt;/a&gt; have largely been replaced by conversations about parameter values in shared model classes between researchers who cannot be clustered nearly so easily into ideological camps.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Plenaries&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;The plenary talks were a good chance to get bigger picture overviews of different subfields, at a range of stages of maturity.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Giuseppe Moscarini gave a talk on his work over the past decade in the area of cross-sectional wage dynamics, which has developed since the seminal work of &lt;a href=&#34;https://www.jstor.org/stable/2527292&#34;&gt;Burdett and Mortensen&lt;/a&gt; into a mature area providing a foundation for studies of employer-firm matched data, wage inequality, monopsony, career progression, and so on, particularly his work with Postel-Vinay on the role of job-to-job switching in wage growth. Continuing the theme of the New-Keynesianization of everything, while the more tractable Diamond-Mortensen-Pissarides model of &lt;em&gt;aggregate&lt;/em&gt; labor market flows had been merged into monetary models, he presented new work merging the disaggregated “job-ladder” style models into a NK framework suggesting that &lt;a href=&#34;https://campuspress.yale.edu/moscarini/data/&#34;&gt;aggregate job-to-job recruiting&lt;/a&gt;, as opposed to just unemployment, is an important and cyclically distinct determinant of aggregate wage inflation.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Esteban Rossi-Hansberg presented work that strikes me as very much in the new paradigm stages, on integrating regional heterogeneity into integrated assessment climate models. Here the question is compelling: while the carbon cycle is global, impacts and adaptation efforts are highly diverse across places, and figuring out how locations which may face very different flooding, extreme weather, temperature changes, and so on will adapt economically is important for measuring global costs and coordinating mitigation efforts. With recent progress in quantitative spatial economics and computational methods applicable to high resolution heterogeneity, these can be put into models now, and Rossi-Hansberg and collaborators have provvided some noteworthy examples. But as he emphasized in the talk, there’s still a lot to learn about how the basic mechanisms work, given their current difficulty, and I suspect there is a lot of “knob-twiddling” work to do just to figure out what are the important aspects to put into such a model and how to specify and solve them, before these reach the normal science stage where we can just focus on arguing over a few crucial parameters like climate macroeconomists working with aggregate models have been up to for years now. This talk inspired me, though I currently don’t do any work in climate, to attend some of the climate sessions later on in the talk, where young researchers are working hard to figure it out.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;On the last day, IMF chief economist Gita Gopinath gave a talk on how open economy macroeconomic research informs the current work of the Fund and its policy framework. The talk was surprisingly academic in style, with a discussion of models and empirics in a way that you don’t usually get out of public-facing speeches by policy-makers, but directed at informing working economists about the role the work plays in the policy process. This involves aggregating a long history of work on available policy tools to synthesize policy recommendations, not any single model or study but a systematic review of many, with some modeling work done mainly to quantify and reconcile models of competing effects each described individually. The resulting framework reflects a very gradual evolution of the Fund’s views, from its 1990s Mundell-Fleming inspired recommendations for exchange rate flexibility as a stabilizing buffer, to incorporating decades of work since the Asian Financial Crisis of 1997-98 on models of borrowing constraints, sudden stops, and financial frictions suggesting that in some contingent cases capital controls may be a desirable measure. This stance broadly was already conventional wisdom by the time I graduated with an International Economics degree in 2009, but putting it in an official IMF policy document, collecting a large number of careful studies of pros and cons represents a long process. As a bonus, she also gave a brief overview of one of her pre-policy research contributions, on dominant currncy pricing in open economy New Keynesian models. This is a clear example of valuable knob-twiddling research, showing that the symmetric pricing assumption used in early models largely out of convenience was not only implausible but also consequential, with ikely implications for global trade volumes during the current Fed tightening cycle.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Miscellaneous thoughts&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;On the econometrics side, after watching a presentation by Ashesh Rambachan on IRF interpretation (&lt;a href=&#34;https://asheshrambachan.github.io/assets/files/arns_commontimeseries_causal.pdf&#34;&gt;paper&lt;/a&gt;, &lt;a href=&#34;https://donskerclass.github.io/CausalEconometrics/TimeSeries.html&#34;&gt;my notes&lt;/a&gt;), I saw the implications all over other talks. Micro people have been reckoning with the need to precisely define the counterfactual path of a shock in dynamic models, as measured IRFs can be a mixture of other things. Some talks with IRFs gave this serious thought, formally or not, others not so much; gratefully, audiences seemed willing to provide helpful feedback in those cases.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;https://scholar.harvard.edu/straub/publications/using-sequence-space-solve-and-estimate-heterogeneous-agent-models&#34;&gt;Sequence space methods&lt;/a&gt; for heterogeneous agents models are seeing really fast adoption, from a fairly technical 2021 Econometrica paper to a relatively common approach. In addition to speed, I think this in part reflects interpretability, since it lets economists derive equilibrium conditions which can be informative even before fully solving numerically.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Wisconsin cheese curds are better than I expected.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Differentiable State Space Models and Hamiltonian Monte Carlo Estimation (Coming Soon!)</title>
       <link>/publication/differentiablestatespace/</link>
       <pubDate>Tue, 25 Jan 2022 00:00:00 -0500</pubDate>
@@ -477,108 +510,6 @@ Finally, we get to my contribution. More or less, I came up with a way to solve 
 &lt;br /&gt;
 &lt;br /&gt;&lt;a href=&#34;#fnref2&#34; class=&#34;footnote-back&#34;&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;/ol&gt;
-&lt;/div&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>Top Papers Read in 2015</title>
-      <link>/post/top-papers-read-in-2015/</link>
-      <pubDate>Sun, 27 Dec 2015 00:00:00 +0000</pubDate>
-      
-      <guid>/post/top-papers-read-in-2015/</guid>
-      <description>&lt;div&gt;
-So, inspired by &lt;a href=&#34;http://www.econpointofview.com/2015/12/best-old-journal-articles-i-read-in-2015/&#34;&gt;Brian&lt;/a&gt; and the general spirit of end-of-year reflection, some thoughts on what I’ve read this year.
-&lt;/div&gt;
-&lt;div&gt;
-&lt;br /&gt;
-&lt;/div&gt;
-&lt;div&gt;
-According to my reference manager software, I’ve read 183 papers this year, which is somewhat overstated because many were read last year but are dated incorrectly, and a substantial portion of the list contains slides, lecture notes, or other documents not quite meriting the status of article. I think as I’ve progressed through grad school I find it much easier to get through technical material than I once did, though some of the volume reflects a period in the spring when I was reading quite a bit to find a new research topic.  
-&lt;/div&gt;
-&lt;div&gt;
-&lt;br /&gt;
-&lt;/div&gt;
-&lt;div&gt;
-In, apparently, reverse alphabetical order, a list of papers I enjoyed this year, making no claim of endorsement of conclusions, just ones I enjoyed reading or from which I felt I learned a lot. A star indicates papers read directly for some sort of work.
-&lt;/div&gt;
-&lt;div&gt;
-&lt;br /&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Sanz-Solé, Marta (2008) &lt;a href=&#34;http://www.ub.edu/plie/Sanz-Sole/cursos/lecturenotes-london.pdf&#34;&gt;Applications of Malliavin Calculus to Stochastic Partial Differential Equations&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Rakhlin, Alexander &amp;amp; Karthik Sridharan (2015) &lt;a href=&#34;http://arxiv.org/abs/1503.01212&#34;&gt;Hierarchies of Relaxations for Online Prediction Problems with Evolving Constraints&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Paul, Arnab &amp;amp; Suresh Venkatasubramanian (2015) &lt;a href=&#34;http://arxiv.org/abs/1412.6621&#34;&gt;Why Does Deep Learning Work? - A Perspective From Group Theory&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Mukherjee, Sayan &amp;amp; John Steenbergen (2013) &lt;a href=&#34;http://arxiv.org/abs/1310.5099&#34;&gt;Random Walks on Simplicial Complexes and Harmonics&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Mohammed, Saleh-Eldin, Tusheng Zhang, &amp;amp; Huaizhong Zhao (2008) &lt;a href=&#34;http://bookstore.ams.org/MEMO-196-917&#34;&gt;The Stable Manifold Theorem for Semilinear Stochastic Evolution Equations and Stochastic Partial Differential Equations&lt;/a&gt;*
-&lt;/div&gt;
-&lt;div&gt;
-Méléard, Sylvie (1996) &lt;a href=&#34;http://www.springerlink.com/index/G772652P33H7105R.pdf&#34;&gt;Asymptotic Behaviour of some interacting particle systems; McKean-Vlasov and Boltzmann models&lt;/a&gt;*
-&lt;/div&gt;
-&lt;div&gt;
-Kadri, Hachem et. al. (2015) &lt;a href=&#34;http://arxiv.org/abs/1510.08231&#34;&gt;Operator-valued Kernels for Learning from Functional Response Data&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Jakab, Zoltan &amp;amp; Michael Kumhof (2015) &lt;a href=&#34;http://www.bankofengland.co.uk/research/Documents/workingpapers/2015/wp529.pdf&#34;&gt;Banks are not intermediaries of loanable funds — and why this matters&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Itô, Kiyosi (1983) &lt;a href=&#34;http://www.springerlink.com/index/VLV462170NT62231.pdf&#34;&gt;Distribution-valued processes arising from independent Brownian motions&lt;/a&gt;*
-&lt;/div&gt;
-&lt;div&gt;
-Hairer, Martin (2014) &lt;a href=&#34;http://www.hairer.org/notes/Regularity.pdf&#34;&gt;Introduction to regularity structures&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Hahn, Jinyong, Guido Kuersteiner, Maurizio Mazzocco (2015) &lt;a href=&#34;http://arxiv.org/abs/1507.04415&#34;&gt;Estimation with Aggregate Shocks&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Guéant, Olivier, Jean-michel Lasry, &amp;amp;  Pierre-Louis Lions (2011) &lt;a href=&#34;http://mfglabs.com/wp-content/uploads/2012/12/paris-princeton.pdf&#34;&gt;Mean field games and applications&lt;/a&gt;*
-&lt;/div&gt;
-&lt;div&gt;
-Gao, Tingran (2015) &lt;a href=&#34;http://arxiv.org/abs/1503.05459&#34;&gt;Hypoelliptic diffusion maps I: tangent bundles&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Florens, Jean-Pierre &amp;amp; Sébastien Van Bellegem (2014) &lt;a href=&#34;http://econpapers.repec.org/RePEc:eee:econom:v:186:y:2015:i:2:p:465-476&#34;&gt;Instrumental variable estimation in functional linear models&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Faust, Jon, &amp;amp; Eric M. Leeper (2015) &lt;a href=&#34;https://www.kansascityfed.org/~/media/files/publicat/sympos/2015/econsymposium-faust-leeper-paper.pdf&#34;&gt;The Myth of Normal: The Bumpy Story of Inflation and Monetary Policy&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Desmet, Klaus, Dávid Krisztián Nagy, &amp;amp; Esteban Rossi-Hansberg (2015) &lt;a href=&#34;https://www.princeton.edu/~erossi/GD.pdf&#34;&gt;The Geography of Development: Evaluating Migration Restrictions and Coastal Flooding&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Creal, Drew (2009) &lt;a href=&#34;http://faculty.chicagobooth.edu/drew.creal/research/papers/creal2009survey.pdf&#34;&gt;A survey of sequential Monte Carlo methods for economics and finance&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Cohen, Albert, Marc Hoffmann, &amp;amp;  Markus Reiss (2004) &lt;a href=&#34;http://math.uni-heidelberg.de/studinfo/reiss/Publikationen/GalInvProb.pdf&#34;&gt;Adaptive Wavelet Galerkin Methods for Linear Inverse Problems&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-Chen, Xiaohong &amp;amp; Timothy Christensen (2015) &lt;a href=&#34;http://dx.doi.org/10.1016/j.jeconom.2015.03.010&#34;&gt;Optimal uniform convergence rates and asymptotic normality for series estimators under weak dependence and weak conditions I&lt;/a&gt;*
-&lt;/div&gt;
-&lt;div&gt;
-Beylkin, G.,  Coifman, Ronald &amp;amp; Vladimir Rokhlin (1991) &lt;a href=&#34;https://amath.colorado.edu/faculty/beylkin/papers/BE-CO-RO-1991.pdf&#34;&gt;Fast Wavelet Transforms and Numerical Algorithms I&lt;/a&gt;*
-&lt;/div&gt;
-&lt;div&gt;
-Belloni, Alexandre, Victor Chernozhukov, &amp;amp; Kengo Kato (2014) &lt;a href=&#34;http://economics.mit.edu/files/10492&#34;&gt;Uniform post-selection inference for least absolute deviation regression and other Z-estimation problems&lt;/a&gt;
-&lt;/div&gt;
-&lt;div&gt;
-&lt;br /&gt;
-&lt;/div&gt;
-&lt;div&gt;
-This list is by no means representative of my reading for the year, covering substantially less on topics where I read a lot due to research, especially on functional data analysis, and probably more on the mathematics than the economics side, I suppose because those results are more novel to me. The selection of papers is largely by whim and happenstance: I would do well to read more systematically, especially classic journal articles, rather than whatever recent work catches my eye.  I could say a bit about why I liked each of these papers, but maybe better to keep this short, so just ask if you’re interested. 
-&lt;/div&gt;
-&lt;div&gt;
-&lt;br /&gt;
-&lt;/div&gt;
-&lt;div&gt;
-I will say that the standout, read in March and a clear winner for best paper I read this year, is &lt;a href=&#34;http://www-stat.wharton.upenn.edu/~rakhlin/&#34;&gt;Rakhlin&lt;/a&gt; and &lt;a href=&#34;http://www.cs.cornell.edu/~sridharan/&#34;&gt;Sridharan&lt;/a&gt; on nonstationary prediction on graphs. It extends their &lt;a href=&#34;http://www-stat.wharton.upenn.edu/~rakhlin/courses/stat928/stat928_notes.pdf&#34;&gt;essential earlier work&lt;/a&gt; on regret-based statistical learning theory for nonstationary forecasting to learning about processes on graphs, bringing together results from a host of areas to elucidate the relationship between learning, structure, and computation. The work that Rakhlin and Sridharan are doing isn’t directly related to what I do day to day, but I think in the long run it stands a chance of completely changing the way we go about learning from and using data, so it’s very much worth keeping track of. 
 &lt;/div&gt;
 </description>
     </item>

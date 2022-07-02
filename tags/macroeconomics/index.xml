@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
-    <lastBuildDate>Tue, 29 Oct 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 02 Jul 2022 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/macroeconomics/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>SED 2022 - Notes on contemporary macro</title>
+      <link>/post/sed-2022/</link>
+      <pubDate>Sat, 02 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/post/sed-2022/</guid>
+      <description>I just got back from an excellent meeting of the Society for Economic Dynamics, a top conference for work in dynamic economics, principally but not exclusively in macroeconomics. As one of the first in-person conferences I’ve been to since 2020 (last year they were hybrid and I presented from home), it was a chance to catch up not just with colleagues and friends but also with the state of modern academic macro, after some time focusing more on other things.</description>
+    </item>
     
     <item>
       <title>On Online Learning for Economic Forecasts</title>
