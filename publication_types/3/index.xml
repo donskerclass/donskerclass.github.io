@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
-    <lastBuildDate>Tue, 25 Jan 2022 00:00:00 -0500</lastBuildDate>
+    <lastBuildDate>Wed, 13 Jul 2022 00:00:00 -0400</lastBuildDate>
     
 	<atom:link href="/publication_types/3/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Automated Solution of Heterogeneous Agent Models</title>
+      <link>/publication/automatedsolution/</link>
+      <pubDate>Wed, 13 Jul 2022 00:00:00 -0400</pubDate>
+      
+      <guid>/publication/automatedsolution/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>Differentiable State Space Models and Hamiltonian Monte Carlo Estimation (Coming Soon!)</title>
@@ -18,15 +27,6 @@
       <pubDate>Tue, 25 Jan 2022 00:00:00 -0500</pubDate>
       
       <guid>/publication/differentiablestatespace/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Automated Solution of Heterogeneous Agent Models</title>
-      <link>/publication/automatedsolution/</link>
-      <pubDate>Sun, 03 Nov 2019 00:00:00 -0400</pubDate>
-      
-      <guid>/publication/automatedsolution/</guid>
       <description></description>
     </item>
     

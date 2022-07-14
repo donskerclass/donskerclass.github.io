@@ -11,6 +11,15 @@
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Automated Solution of Heterogeneous Agent Models</title>
+      <link>/publication/automatedsolution/</link>
+      <pubDate>Wed, 13 Jul 2022 00:00:00 -0400</pubDate>
+      
+      <guid>/publication/automatedsolution/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>SED 2022 - Notes on contemporary macro</title>
       <link>/post/sed-2022/</link>
       <pubDate>Sat, 02 Jul 2022 00:00:00 +0000</pubDate>
@@ -244,15 +253,6 @@
 &lt;li&gt;&lt;p&gt;Variational Inference:  Not a sampler per se. It comes up with a parametric model for the posterior shape and then optimizes the fit to the posterior according to a computationally feasible criterion (ie, one which doesn&amp;rsquo;t require computing the normalizing constant in Bayes rule), allowing you to optimize instead of sampling. In general, this has no guarantee of reaching the true posterior, no matter how long you run it, but if you want a slightly wrong answer very fast it can be a good choice. It&amp;rsquo;s also popular for Bayesian neural networks, and other &amp;ldquo;big&amp;rdquo; models like high dimensional topic models.&lt;/p&gt;&lt;/li&gt;
 &lt;/ol&gt;
 </description>
-    </item>
-    
-    <item>
-      <title>Automated Solution of Heterogeneous Agent Models</title>
-      <link>/publication/automatedsolution/</link>
-      <pubDate>Sun, 03 Nov 2019 00:00:00 -0400</pubDate>
-      
-      <guid>/publication/automatedsolution/</guid>
-      <description></description>
     </item>
     
     <item>
