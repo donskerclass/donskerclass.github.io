@@ -68,7 +68,7 @@ bibliography: classrefs.bib
     - This is the problem of **generalization**
   - Your new setting may have different attributes describable by changes in (parts of) distribution and causal model
     - This is the problem of **external validity** or **transportation** of causal effects
-  - The process via which you observed the data may have led to systematic differences in observed sampling distribution and and population distribution
+  - The process via which you observed the data may have led to systematic differences in observed sampling distribution and population distribution
     - This is the problem of **sample selection**
 - For each problem, will provide a brief overview of formal characterizations of the problem and proposed strategies to mitigate or resolve the issue
   
@@ -78,7 +78,7 @@ bibliography: classrefs.bib
   - Extrapolating effects from sample to population, or respectively, a new sample from same distribution
 - If taking statistical decision theory perspective, performance of estimator or policy $\widehat{x}()$ is measured by *risk* $R_{\theta}(\widehat{x})=E_{p_\theta}[\ell(\widehat{x}())]$ 
   - Expectation of loss with respect to (unknown) distribution $p_{\theta}$ of new samples from population
-- *Empirical risk* approximation uses expectation of (an estimate of) loss with respect to sample distribution $\widehat{R}(\widehat{x})=\frac{1}{n}\sum_{i=1}^{n}\phi_i(\widehat{x}())$ 
+- *Empirical risk* approximation uses expectation of (an estimate of) loss with respect to sample distribution $\widehat{R}(\widehat{x})=\frac{1}{n}\sum_{i=1}^{n}\ell_i(\widehat{x}())$ 
   - Same samples used to estimate $\widehat{x}$ are used to evaluate it
 - Empirical risk minimization operates on principle of minimizing this approximation error in sample, so empirical performance may not reflect population performance
   - Other extremum estimators may optimize proxies for this risk

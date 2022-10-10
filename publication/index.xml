@@ -13,20 +13,20 @@
     
     
     <item>
+      <title>Differentiable State Space Models and Hamiltonian Monte Carlo Estimation</title>
+      <link>/publication/differentiablestatespace/</link>
+      <pubDate>Thu, 06 Oct 2022 00:00:00 -0400</pubDate>
+      
+      <guid>/publication/differentiablestatespace/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Automated Solution of Heterogeneous Agent Models</title>
       <link>/publication/automatedsolution/</link>
       <pubDate>Wed, 13 Jul 2022 00:00:00 -0400</pubDate>
       
       <guid>/publication/automatedsolution/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Differentiable State Space Models and Hamiltonian Monte Carlo Estimation (Coming Soon!)</title>
-      <link>/publication/differentiablestatespace/</link>
-      <pubDate>Tue, 25 Jan 2022 00:00:00 -0500</pubDate>
-      
-      <guid>/publication/differentiablestatespace/</guid>
       <description></description>
     </item>
     
