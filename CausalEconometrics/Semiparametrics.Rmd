@@ -181,7 +181,7 @@ $\partial_\eta E[\phi(x_i,\theta_0,\eta_0)][\eta-\eta_0]=0$
 - Call these terms the *influence function* term, the *empirical process* term, and the *remainder* term
 - $(a)\overset{d}{\to}N(0,Var(\phi(x_i,\theta_0,\eta_0)))$ by CLT and (1)
     - This will be dominant term: limit as if we knew $\eta_0$
-- $(c)= \sqrt{n}E\phi(x_i,\theta_0,\widehat{\eta})+\sqrt{n}\partial_{\eta}E\phi(x_i,\theta_0,\eta_0)[\eta-\eta_0]+\sqrt{n}\frac{1}{2}\int_0^1\partial^2_{r}E[\phi(x_i,\theta_0,\eta_0+r(\widehat{\eta}-\eta_0))]dr$
+- $(c)= \sqrt{n}E\phi(x_i,\theta_0,\eta_0)+\sqrt{n}\partial_{\eta}E\phi(x_i,\theta_0,\eta_0)[\eta-\eta_0]+\sqrt{n}\frac{1}{2}\int_0^1\partial^2_{r}E[\phi(x_i,\theta_0,\eta_0+r(\widehat{\eta}-\eta_0))]dr$
     - $=0+0+\sqrt{n}\frac{1}{2}\int_0^1\partial^2_{r}E[\phi(x_i,\eta_0+r(\widehat{\eta}-\eta_0))]dr$
     - First term by moment definition (1), second by Neyman orthogonality (2)
     - $\leq \sqrt{n}*o_p(n^{-1/2})=o_p(1)$
