@@ -13,6 +13,15 @@
     
     
     <item>
+      <title>Local Causal Discovery for Estimating Causal Effects</title>
+      <link>/publication/localcausaldiscovery/</link>
+      <pubDate>Fri, 17 Feb 2023 00:00:00 -0500</pubDate>
+      
+      <guid>/publication/localcausaldiscovery/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Differentiable State Space Models and Hamiltonian Monte Carlo Estimation</title>
       <link>/publication/differentiablestatespace/</link>
       <pubDate>Thu, 06 Oct 2022 00:00:00 -0400</pubDate>
