@@ -67,7 +67,7 @@ scrollable: true
 
 - Replace $u(x_j)$ with $u(x_j)+\zeta_j$, $\zeta\sim P(\zeta)$
 - $x^*=\arg\max_j\{u(x_j)+\zeta_j\}$ induces $P(x^*=x_j)$ (Conditional) Choice probability (CCP)
-- (Multinomial) Logit model, or **Plackett-Luce** (1960) choice model
+- (Multinomial) Logit model, or **Plackett-Luce** (1959) choice model
     - $\zeta_j\overset{iid}{\sim}\text{Gumbel}\implies P(x^*=x_k)=\frac{exp(u(x_k))}{\sum_j exp(u(x_k))}$
     - Alternate derivations: maximum entropy among all multinomial distributions, Luce axioms directly over choice probabilities
     - Special property: *Independence of irrelevant alternatives*
@@ -82,7 +82,7 @@ scrollable: true
 - Aggregation of rational preferences studied in **Social Choice Theory**
     - Voting rule: map $\{\succ_i\}_{i=1}^{N}\to \{\succ\}$
 - Example rules:
-    - (sequential) Majority vote: pair off choices $a,b$, discard b if $\sum_{i} 1\{a\succ_i b\}>\frac{1}{2}$
+    - (sequential) Majority vote: pair off choices $a,b$, discard b if $\frac{1}{N}\sum_{i} 1\{a\succ_i b\}>\frac{1}{2}$
     - Dictatorship: use person j's preferences
 - Famous results
     - Condorcet: Majority vote outcome depends on order: $\exists$ distributions of rational preferences such that preference defined by majority winner is not transitive
