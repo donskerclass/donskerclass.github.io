@@ -68,7 +68,7 @@ scrollable: true
 - Replace $u(x_j)$ with $u(x_j)+\zeta_j$, $\zeta\sim P(\zeta)$
 - $x^*=\arg\max_j\{u(x_j)+\zeta_j\}$ induces $P(x^*=x_j)$ (Conditional) Choice probability (CCP)
 - (Multinomial) Logit model, or **Plackett-Luce** (1959) choice model
-    - $\zeta_j\overset{iid}{\sim}\text{Gumbel}\implies P(x^*=x_k)=\frac{exp(u(x_k))}{\sum_j exp(u(x_k))}$
+    - $\zeta_j\overset{iid}{\sim}\text{Gumbel}\implies P(x^*=x_k)=\frac{exp(u(x_k))}{\sum_j exp(u(x_j))}$
     - Alternate derivations: maximum entropy among all multinomial distributions, Luce axioms directly over choice probabilities
     - Special property: *Independence of irrelevant alternatives*
         - $Pr(a|\{a,b\})/Pr(b|\{a,b\})=Pr(a|\{a,b,c\})/Pr(b|\{a,b,c\})$
