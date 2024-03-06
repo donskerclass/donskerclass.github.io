@@ -1,0 +1,50 @@
+---
+title: "Econometric Consulting Office Hours"
+output: html_document
+---
+
+Due to a sudden opening in my schedule and a persistent interest in keeping on top of current issues in econometrics, I will be holding free weekly virtual office hours open to anybody in the world with Econometrics or Statistics problems they think I can help with. I will commit only to the scheduled time, and will start first come first serve, but I will take reservations by email or social media message: 
+
+Email: <dchilder@andrew.cmu.edu>
+
+Twitter: [@donskerclass](https://twitter.com/DonskerClass) Bluesky: [@donskerclass](https://bsky.app/profile/donskerclass.bsky.social) Mastodon: [@childers@bayes.club](https://bayes.club/@childers)
+
+Time: Wednesdays 4:00-6:00PM EST US (or by appointment, within reason)
+
+Location: Zoom, TBA
+
+Who: Anyone. Grad students, researchers, government workers. Private sector okay but if your question is long or boring I reserve the right to negotiate a consulting fee.
+
+What I can probably help with: Theory questions. Research design. Modeling.
+
+Particular expertise: Time series. Causal inference. Bayes. Structural approaches. Machine learning.
+
+Theory: Asymptotics. Statistical learning. Bayes/MCMC. Identification. Decision theory. Semiparametrics.
+
+Fields: I know most about macro (DSGE, heterogeneous agents, VARs, etc), but can follow along in applied micro (labor, development, health, etc) $\&$ some finance.
+
+Code: I think in R, can write Julia, and can get by in Python. I am likely to suggest you build a model in Stan. I know Stata but if it's relevant to your question I suspect you can get better help elsewhere.
+
+Questions you might want to think about/prepare in your reservation email if you want a thoughtful and well-considered response from me:
+
+- Theory questions: 
+  - State the assumptions and question setup as precisely as you can. 
+  - Add references if there's a concept on which you are building.
+- Design and modeling questions:
+  - What is your research question?
+  - What kind of data do you anticipate using to answer the question?
+  - How are the variables you care about operationalized and measured in that data?
+- Causal questions:
+  - Who or what process determines the treatment? What are they thinking and why?
+  - What is known about determinants of the outcome? Where might the treatment enter in?
+  - If you are coming in with a particular estimation strategy (eg IV, DiD, etc), why do you think the assumptions are reasonable your setting?
+  - Proper understanding of the answers of the above questions should in most cases make you extremely uncomfortable with DiD. If you still think you have a DiD problem, expect me to try to help you figure out what you should do instead.
+  
+Any leg work you can do is helpful. If working with data, summary stats, plots, basic regressions. For causal questions, draw a plausible DAG. For questions with an economic background, sketch elements you might want in a model: are there decisions being made? people interacting through markets? I don't expect a dissertation, and probably won't read more than about a page per request anyway. A single line question could be enough if it's clearly explained.
+  
+
+
+
+
+
+
