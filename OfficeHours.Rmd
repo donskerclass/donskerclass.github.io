@@ -3,17 +3,17 @@ title: "Econometric Consulting Office Hours"
 output: html_document
 ---
 
-Due to a sudden opening in my schedule and a persistent interest in keeping on top of current issues in econometrics, I will be holding free weekly virtual office hours open to anybody in the world with Econometrics or Statistics problems they think I can help with. I will commit only to the scheduled time, and will start first come first serve, but I will take reservations by email or social media message: 
+Due to a sudden opening in my schedule and a persistent interest in keeping on top of current issues in econometrics, I will be holding free weekly virtual office hours open to anybody in the world with Econometrics or Statistics problems they think I can help with. I will commit only to the scheduled time, and will start first come first serve, but I will take reservations by email, form, or social media message: 
 
-Email: <dchilder@andrew.cmu.edu>
+Email: <dchilder@andrew.cmu.edu> or Sign up form: <https://forms.gle/yQpi6jafUHqPRo76A>
 
 Twitter: [@donskerclass](https://twitter.com/DonskerClass) Bluesky: [@donskerclass](https://bsky.app/profile/donskerclass.bsky.social) Mastodon: [@childers@bayes.club](https://bayes.club/@childers)
 
-Time: Wednesdays 4:00-6:00PM EST US (or by appointment, within reason)
+Time: Wednesdays 4:00-6:00PM EST US (or by appointment)
 
 Location: Zoom, TBA
 
-Who: Anyone. Grad students, researchers, government workers. Private sector okay but if your question is long or boring I reserve the right to negotiate a consulting fee.
+Who: Anyone. Grad students, researchers, government workers. Private sector is okay but in that case if your question requires work that exceeds the allotted time I may request to negotiate a consulting fee.
 
 What I can probably help with: Theory questions. Research design. Modeling.
 
@@ -37,8 +37,8 @@ Questions you might want to think about/prepare in your reservation email if you
 - Causal questions:
   - Who or what process determines the treatment? What are they thinking and why?
   - What is known about determinants of the outcome? Where might the treatment enter in?
-  - If you are coming in with a particular estimation strategy (eg IV, DiD, etc), why do you think the assumptions are reasonable your setting?
-  - Proper understanding of the answers of the above questions should in most cases make you extremely uncomfortable with DiD. If you still think you have a DiD problem, expect me to try to help you figure out what you should do instead.
+  - If you are coming in with a particular estimation strategy (eg IV, DiD, etc), why do you think the assumptions are reasonable in your setting?
+  - Proper understanding of the answers of the above questions should in most cases make you at best ambivalent about DiD. If you still think you have a DiD problem, expect me to try to help you figure out what else you should do.
   
 Any leg work you can do is helpful. If working with data, summary stats, plots, basic regressions. For causal questions, draw a plausible DAG. For questions with an economic background, sketch elements you might want in a model: are there decisions being made? people interacting through markets? I don't expect a dissertation, and probably won't read more than about a page per request anyway. A single line question could be enough if it's clearly explained.
   
