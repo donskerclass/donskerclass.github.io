@@ -11,6 +11,15 @@
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Timing as an Action: Learning When to Observe and Act</title>
+      <link>/publication/timingasanaction/</link>
+      <pubDate>Sat, 09 Mar 2024 00:00:00 -0500</pubDate>
+      
+      <guid>/publication/timingasanaction/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Papers I Liked 2023</title>
       <link>/post/papers-2023/</link>
       <pubDate>Sun, 31 Dec 2023 00:00:00 +0000</pubDate>
@@ -432,124 +441,6 @@ and &lt;a href=&#34;https://aauclert.people.stanford.edu/research&#34; target=&#
       
       <guid>/publication/functionvaluedstates/</guid>
       <description>&lt;p&gt;Previous versions of this paper circulated under the title &lt;em&gt;On the Solution and Application of Rational Expectations Models with Function-Valued States&lt;/em&gt;&lt;/p&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>Top Papers 2017</title>
-      <link>/post/top-papers-2017/</link>
-      <pubDate>Thu, 07 Dec 2017 00:00:00 +0000</pubDate>
-      
-      <guid>/post/top-papers-2017/</guid>
-      <description>&lt;p&gt;
-Inspired by Paul Goldsmith-Pinkham and following on &lt;a href=&#34;https://www.bloomberg.com/view/articles/2017-12-04/the-best-books-and-research-on-economics-in-2017&#34;&gt;Noah Smith&lt;/a&gt; and others in an end of-year tradition, here is a not-quite-ordered list of the top 10-ish papers I read in 2017. I read too many arxiv preprints and older papers to choose ones based on actual publication date, so these are chosen from the “Read in 2017” folder of my reference manager, which tells me that I have somehow read 176 papers (so far) in 2017. There was a lot of chaff in this set, and many more good works still sitting in my “to read” folder, but I did manage to find a few gems, which I can list and briefly describe, in sparsely-permuted alphabetical order.
-&lt;/p&gt;
-&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;
-Arellano, Blundell, &amp;amp; Bonhomme &lt;a href=&#34;http://www.ucl.ac.uk/~uctp39a/ABB_Ecta_May_2017.pdf&#34;&gt;Earnings and Consumption Dynamics: A Nonlinear Panel Data Framework&lt;/a&gt; Econometrica 2017
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;
-This paper solves a problem which one would think would have been tackled a long time ago, but turned out to require several modern tools. What is the reduced form implied by intertemporally optimizing dynamic decision models of the kind underlying quantitative heterogeneous agent macro models, and can it be identified and estimated from micro panel data? They show that the form is a nonparametric Hidden Markov Model, and given long enough panels and some standard completeness conditions the distributions can be nonparametrically identified and estimated using conditional distribution estimation methods based on sieve quantile regressions. This seems like a good start to taking seriously the implications of these models and reformulating them to match micro data.
-&lt;/p&gt;
-&lt;p&gt;
-See also: their &lt;a href=&#34;http://www.cemfi.es/~arellano/AR_Survey_Revised_2.pdf&#34;&gt;survey&lt;/a&gt; in the Annual Review of Economics showing how most dynamic models used in macro correspond to their framework.
-&lt;/p&gt;
-&lt;ol start=&#34;2&#34; style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;
-Susan Athey &amp;amp; Stefan Wager &lt;a href=&#34;http://arxiv.org/abs/1702.02896&#34;&gt;Efficient Policy Learning&lt;/a&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;
-Part of a growing literature on learning optimal (economic) policies from data by directly estimating the policy to maximize welfare, rather than learning model parameters which are only ex post used in policy exercises without proper accounting for uncertainty. This paper focuses on the binary policy case, in the presence of unconfounded observational data on program results: find a policy rule &lt;span class=&#34;math inline&#34;&gt;&lt;span class=&#34;math inline&#34;&gt;\(\pi(X)\)&lt;/span&gt;&lt;/span&gt; out of some class of policies which apply a program or not to an individual with covariates X. This paper takes a minimax approach, using a doubly robust estimator and showing approximately optimal approximation bounds on regret (relative to the unknown best policy in the class) over possible nonparametric structural parameters, using some novel bounds. These bounds rely strongly on the binary structure, so extending to more complicated policy problems may take some work, but the approach seems highly promising.
-&lt;/p&gt;
-&lt;p&gt;
-See also: &lt;a href=&#34;https://arxiv.org/abs/1704.06431&#34;&gt;Luedtke and Chambaz&lt;/a&gt; who claim to achieve faster (&lt;span class=&#34;math inline&#34;&gt;&lt;span class=&#34;math inline&#34;&gt;\(\frac{1}{n}\)&lt;/span&gt;&lt;/span&gt; instead of &lt;span class=&#34;math inline&#34;&gt;&lt;span class=&#34;math inline&#34;&gt;\(\frac{1}{\sqrt{n}}\)&lt;/span&gt;&lt;/span&gt;) rates in the same problem. This appears to have motivated an update to the original version of the Athey Wager paper showing that the &lt;span class=&#34;math inline&#34;&gt;&lt;span class=&#34;math inline&#34;&gt;\(\frac{1}{\sqrt{n}}\)&lt;/span&gt;&lt;/span&gt; rate and their bound is (worst case) optimal in the shrinking signal regime, where the size of the treatment effect function is of the same order as the noise, when the measurement issue is of first order importance for policy, unlike in the fixed signal size regime, where statistical uncertainty has lower order effect.
-&lt;/p&gt;
-&lt;ol start=&#34;3&#34; style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;
-Max Kasy &lt;a href=&#34;https://scholar.harvard.edu/kasy/publications/optimal-taxation-machine-learning&#34;&gt;“A Machine Learning Approach to Optimal Policy and Taxation”&lt;/a&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;
-In the same vein as above, but allows continuous instead of binary policies, and takes a Bayesian instead of a minimax approach, advocating nonparametric Gaussian process methods for estimating unknown policy effects, which are shown to fit naturally in many optimal policy problems, and allow straightforward Bayesian decision analysis to be used, which has advantages for composition with other types of problems.
-&lt;/p&gt;
-&lt;ol start=&#34;4&#34; style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;
-Andrii Babii &lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2962746&#34;&gt;Honest confidence sets in nonparametric IV regression and other ill ‐ posed models&lt;/a&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;
-Confidence bands for NPIV and similar Tikhonov-regularized inverse problems. It’s well-known that Tikhonov methods are optimal only up to a certain level of ill-posedness, and these bounds may be a bit conservative, but results should be quite useful in a variety of settings.
-&lt;/p&gt;
-&lt;ol start=&#34;5&#34; style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;
-Beskos, Girolami, Lan, Farrell, &amp;amp; Stuart &lt;a href=&#34;http://arxiv.org/abs/1606.06351&#34;&gt;Geometric MCMC for Infinite-Dimensional Inverse Problems&lt;/a&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;
-Hamiltonian Monte-Carlo for nonparametric Bayes! Introduces a family of dimension-free MCMC samplers which generalize the hits of finite dimensional MCMC, from metropolis Hastings to MALA to HMC, to the case of an infinite-dimensional parameter. The issue of mutual singularity of infinite-dimensional measures requires the posterior to be nonsingular with respect to the original, e.g., Gaussian Process prior (meaning, among other things, no tuning of length scale parameters), but within this restricted class, it allows models based on nonlinear transformations which make it applicable to computational inverse problems like PDE models and so greatly expands the class of feasible nonparametric Bayesian methods without relying on conjugacy or variational inference or many of the similar process-dependent or poorly understood tricks used to extend Bayes to the high-dimensional setting.
-&lt;/p&gt;
-&lt;p&gt;
-See also: Betancourt &lt;a href=&#34;http://arxiv.org/abs/1701.02434&#34;&gt;A Conceptual introduction to Hamiltonian Monte Carlo&lt;/a&gt;, a brilliant and beautifully illustrated overview of how (finite-dimensional) HMC works and how to apply it.
-&lt;/p&gt;
-&lt;ol start=&#34;6&#34; style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;
-Chen, Christensen, Tamer &lt;a href=&#34;http://arxiv.org/abs/1605.00499&#34;&gt;MCMC Confidence Sets for Identified Sets&lt;/a&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;
-A clever idea for inference in partially identified models. They note that in many cases, even when structural parameters are non-identified, the identified set itself is a regular parameter (or deviates from regularity in a tractable way) in the sense of inducing a (possibly non-classical) Bernstein von Mises theorem, so the Bayesian posterior for the identified set itself (though not the parameter) converges to a well-behaved distribution. For models defined by a (quasi-)likelihood, these sets are essentially the minima of the criterion function, and so CCT show that in the limit, the quantiles of the likelihood in MCMC samples from the (quasi)-posterior define a valid frequentist confidence interval for the identified set. As the fully Bayesian posterior will in general concentrate inside the identified set (this is what having prior information means), one can then easily extract both Bayesian and valid frequentist assessments of uncertainty from the same MCMC chain, even without identification. This approach is conservative if you want inference for the parameter itself, for which the available methods often involve a bunch of delicate tuning parameter manipulation, and does not seem applicable to many cases where the identified set is itself irregularly identified, or in many cases of weak identification, which seems dominant in the kinds of models I tend to work on, but this is why this field is so active.
-&lt;/p&gt;
-&lt;p&gt;
-See also: Too many papers to list on weak or partial identification in specific settings. Andrews &amp;amp; Mikusheva (2015) and Qu (2014) on DSGEs.
-&lt;/p&gt;
-&lt;ol start=&#34;7&#34; style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;
-Rachael Meager &lt;a href=&#34;http://economics.mit.edu/files/12292&#34;&gt;Aggregating Distributional Treatment Effects : A Bayesian Hierarchical Analysis of the Microcredit Literature&lt;/a&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;
-A spearhead in a hopefully coming paradigm shift in economics toward taking seriously the issues of “tiny data” in the big-data era. Some clever mix of economically and structurally informed parametric modeling and Bayesian computation for aggregating information in quantile treatment curves across studies, with an application based on 7 data points (!) which themselves are estimated functions derived from medium-scale field experiments. This hierarchical paradigm of sharing information between flexibly modeled components for parts where data is abundant and more judiciously parameterized components where it is not, in a seamless way, seems to characterize a useful and principled approach to an omnipresent situation in economic data with applications far beyond the program evaluation context.
-&lt;/p&gt;
-&lt;ol start=&#34;8&#34; style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;
-Ulrich Müller &amp;amp; Mark Watson &lt;a href=&#34;http://www.princeton.edu/~umueller/lfcorr.pdf&#34;&gt;Long Run Covariability&lt;/a&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;
-Speaking of tiny data, this is the latest in Müller and Watson’s series on long run and low frequency modeling for time series, using cosine expansions to explicitly bring out the small-sample nature of the problem of learning about long-run behavior, given that we are only getting new data points on 50 year periods approximately every 50 years. This paper extends from univariate to multivariate modeling, offering a simple alternative to cointegration based approaches which restrict our modeling of long term relationships based on a very particular parametric structure. The new methods don’t alleviate the need for simple parametric models in this tiny data space, but they do show explicitly how the problem is that of fitting a curve to a scatterplot with 10-12 points at most, and so permit use of explicit small sample methods to describe and analyze the data.
-&lt;/p&gt;
-&lt;p&gt;
-See also: their survey paper on this research agenda, &lt;a href=&#34;http://www.princeton.edu/~umueller/ULFE.pdf&#34;&gt;“Low Frequency Econometrics”&lt;/a&gt;
-&lt;/p&gt;
-&lt;ol start=&#34;9&#34; style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;
-Mikkel Plagborg-Møller &lt;a href=&#34;https://scholar.princeton.edu/sites/default/files/mikkelpm/files/irf_bayes.pdf&#34;&gt;Bayesian Inference on Structural Impulse Response Functions&lt;/a&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;
-An alternative to Bayesian VARs, which put priors on autoregression coefficients and then derive IRFs under some bizarre exact or partial exclusion restrictions, you can put priors on IRFs directly, essentially by putting priors on the moving average representation instead. This also has some nice asymptotic theory, showing that the autocovariances are the part which is actually identified, and the posterior converges to a distribution over the set of IRFs consistent with a given spectrum, with priors providing weights inside of that by marginalization to the identified set. The results here impose a finite order vector MA representation, which reduces comparability with VAR-based methods, though it doesn’t seem obviously worse.
-&lt;/p&gt;
-&lt;ol start=&#34;10&#34; style=&#34;list-style-type: decimal&#34;&gt;
-&lt;li&gt;
-Al-Shedivat, Wilson, Saatchi, Hu, and Xing &lt;a href=&#34;http://arxiv.org/abs/1610.08936&#34;&gt;Learning Scalable Deep Kernels with Recurrent Structure&lt;/a&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;
-While MCMC methods are now becoming practical for the small data regime in Bayesian nonparametrics, and conjugacy based methods like Gaussian process regression allow work in the medium data regime, for even moderately large data sets, the cubic complexity of these methods makes them impractical, and so a huge literature on simplifications or approximations has developed. Restricting covariance processes allows reduction to quadratic (certain kernel approximations), linearithmic (spectral methods) or even linear time, but many of these methods cost a lot in terms of expressivity. A Gaussian process is already modeling the mean of the unobserved points as a linear function of the observed values, and approximations strongly restrict the coefficients. This paper, by among others, some folks at CMU, offers a linear time GP approximation method which seems to offer a nice compromise. Using choice of points to approximate and some interpolation techniques, they can get the numerical approximation costs down a lot, but the method allows for quite complex kernels, including, in this case, a kernel parametrized by a (recurrent) neural network optimized along with the process, which allows quite a bit of flexibility. This kind of merger of classical nonparametric Bayes and neural network methods seems very promising, and this is just one bit of an explosion of approaches to combining the two methods, but this seems like a very practical one.
-&lt;/p&gt;
-&lt;p&gt;
-See also: Many papers from the Blei lab at Columbia, with a variety of approaches for speeding up Bayes, often relying on variational inference, which is based on approximating posteriors via optimization of (normalization-constant-free) lower bounds. The Blei lab has a lot of work attempting to turn variational inference from black magic into science, though I still find it all quite mysterious. &lt;a href=&#34;http://arxiv.org/abs/1601.00670&#34;&gt;This tutorial&lt;/a&gt; isn’t a bad intro for applications. The &lt;a href=&#34;http://www.nowpublishers.com/article/Details/MAL-001&#34;&gt;classic book by Wainwright and Jordan&lt;/a&gt;, which offers a theoretical perspective, is an imposing weight on my to-read list.
-&lt;/p&gt;
-&lt;div id=&#34;takeaways&#34; class=&#34;section level2&#34;&gt;
-&lt;h2&gt;
-Takeaways
-&lt;/h2&gt;
-&lt;p&gt;
-This year was big on Bayes for me, reflecting both my research interests and the movement in the profession, which is looking at principled approaches to mixing theory and data to allow the data to take precedence when it is abundant (nonparametric methods) and let theory pull some weight in the subcomponents of the problem where it is not (macro time series, for one, causal inference in observational data for another). This also reflects the long-awaited publication of the Ghosal and van der Vaart Bayesian Nonparametrics textbook, which sent me down several lines of inquiry and displaced reading papers for me for much of the summer.
-&lt;/p&gt;
-&lt;/div&gt;
 </description>
     </item>
     

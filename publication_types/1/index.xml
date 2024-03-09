@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
-    <lastBuildDate>Fri, 17 Feb 2023 00:00:00 -0500</lastBuildDate>
+    <lastBuildDate>Sat, 09 Mar 2024 00:00:00 -0500</lastBuildDate>
     
 	<atom:link href="/publication_types/1/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Timing as an Action: Learning When to Observe and Act</title>
+      <link>/publication/timingasanaction/</link>
+      <pubDate>Sat, 09 Mar 2024 00:00:00 -0500</pubDate>
+      
+      <guid>/publication/timingasanaction/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>Local Causal Discovery for Estimating Causal Effects</title>
