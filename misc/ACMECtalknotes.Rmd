@@ -5,7 +5,7 @@ date: "2024-07-08 - 2024-07-11"
 output: html_document
 ---
 
-All of the following are the notes I took in real time during the talks at [ACM Economics and Computation 2024](https://ec24.sigecom.org/), mostly as a way to help me concentrate on the speaker. I am neither a game theorist nor a computer scientists, though some of my best friends are in those groups. The talk selection is idiosyncratic, and I didn't take notes on all talks, especially keynotes. They are likely full of typos and misunderstandings. Please yell at me if there's anything egregious: it's an invitation to learn more.
+All of the following are the notes I took in real time during the talks at [ACM Economics and Computation 2024](https://ec24.sigecom.org/), mostly as a way to help me concentrate on the speaker. I am neither a game theorist nor a computer scientist, though some of my best friends are in those groups. The talk selection is idiosyncratic, and I didn't take notes on all talks, especially keynotes. They are likely full of typos and misunderstandings. Please yell at me if there's anything egregious: it's an invitation to learn more.
 
 # Dynamics Workshop
 
