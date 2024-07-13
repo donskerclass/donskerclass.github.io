@@ -62,7 +62,7 @@ Homotopy approach: start at model with no bonds, iteratively add more bonds afte
 
 ### Generalized markov games:
 
-Maekov game where policy set depends on other players' choice of policies via a "feasible policy correspondence"
+Markov game where policy set depends on other players' choice of policies via a "feasible policy correspondence"
 
 Markov perfect generalized Nash equilibrium: like MPE optimal from any starting state
 
@@ -70,7 +70,7 @@ Generalized Nash Equilibrium: only optimality under initial state sampled from f
 
 Equilibrium: existence by Ky Fan fixed point. 
 
-Compute: worst case PPAD hard (contains Nash) for exactly
+Compute: worst case PPAD hard (contains Nash) for exact computation
 
 Instead find stationary point of exploitability (max regret metric).
 
@@ -82,7 +82,7 @@ Finds local GNE, not MPGNE, but if initial distribution has full support
 
 Infinite horizon exchange economy with finite set of assets, with Markov transition function. Consumers optimize choice of goods, assets, subject to budget and investment set constraints.
 
-Sequential, recursive Radner equilibrium: latter imposes MArkovianity of policy.
+Sequential, recursive Radner equilibrium: latter imposes Markovianity of policy.
 
 reducible to MPGNE generalized markov game: add auctioneer player to n consumers. Feasible action correspondence defined by budget constraint. 
 
@@ -123,10 +123,14 @@ Boundary conditions typically rule out explosion, which gives high norm, so intu
 
 
 $\dot{x}=F(x,y)$
+
 $\dot(y)=G(x,y)$
+
 $0=H(x,y)$
+
 $x(0)=x_0$
-$\lim_{t\to\infty}B(t,x(t),y(t))$
+
+$\lim_{t\to\infty}B(t,x(t),y(t))=0$
 
 Can minimize squared error in first four, but last one is not a closed form formula, so can't just calculate square norm.
 
@@ -141,7 +145,7 @@ Set up as HJB + Kolmogorov Forward, integrated into a Master equation.
 
 Avoid hard borrowing constraints with penalty.
 
-How to approx functional derivative part for infinitesimal generator of KFE
+How to approximate functional derivative part for infinitesimal generator of KFE
 
 Use finite number of agents, discretize state, and/or project solution on basis function space.
 
@@ -152,13 +156,13 @@ Draw samples from states, update parameters for SGD on master equation error wit
 Tips:
 How to draw samples?
 
-1. Draw moments from dist, then samples from dist subject to moment constraints
+1. Draw moments from distribution, then samples from distributio subject to moment constraints
 
-2. Solve nfor steady state in current state, draw samples from mixtures of steady states
+2. Solve for steady state in current state, draw samples from mixtures of steady states
 
 3. Ergodic sampling: simulate economy a long time, use draws from simulated distribution.
 
-Sugests start with 2, move to 3.
+Payne suggests start with 2, move to 3.
 
 In continuous time, hard part is you need derivatives of equations. 
 
@@ -166,7 +170,7 @@ In continuous time, hard part is you need derivatives of equations.
 ## Michael Curry: Deep RL for economic modeling 
 
 
-use deep RL for agents optimization. But market clearing hard since joint across agents. Use exploitability metrics to at least measure convergence.  
+Use deep RL for agents' optimization. But market clearing hard since joint across agents. Use exploitability metrics to at least measure convergence.  
 
 
 # Session: Learning in games with dynamics
@@ -204,7 +208,7 @@ Algorithm is explore to learn parameters, then commit to a monotonic decreasing 
 
 Repeated multiplayer game, all players play no external regret algorithm
 
-$R(t) = \sum_t u(x_i^*,x_{-1}^t)-u_i(x^t) O_{\Gamma}(T^{1/2})$
+$R(t) = \sum_t u(x_i^*,x_{-i}^t)-u_i(x^t) = O_{\Gamma}(T^{1/2})$
 
 In general, this need not converge.
 
@@ -214,9 +218,9 @@ Can show: with $B=O(1)$, no way to converge in worse case.
 
 Implementation theory: theres a vector $p^*$ in strategy space such that if added to all payoffs, equilibrium strategy becomes weakly dominant, and which is 0 at equilibrium: leads to $O(T^{1/4})$ steering in normal form.
 
-In extensive form, even if mediator given full strategy, linear cost of implementation in dominant strategies. But can make dominant for a single player. Pay large amount to stay on equilibrium when other player deviates. LEads to method which is sublinear in cost.
+In extensive form, even if mediator given full strategy, linear cost of implementation in dominant strategies. But can make dominant for a single player. Pay large amount to stay on equilibrium when other player deviates. Leads to method which is sublinear in cost.
 
-Steering to mixed strategy: allow mediator to recommend, and then "obey recommendations" is a pure nash, and so can be steered to by previous algorithms. Same for any Bayes-correlated equilibrium.
+Steering to mixed strategy: allow mediator to recommend, and then "obey recommendations" is a pure Nash, and so can be steered to by previous algorithms. Same for any Bayes-correlated equilibrium.
 
 ## Complex Dynamics in Autobidding Systems
 
@@ -232,14 +236,14 @@ In 3 bidder case, can do "rock paper scissors": system has only oscillatory dyna
 
 ## Preferences evolve and so should your bandits
 
-Specific model of bandits w/ history-dependent preferences where history impact encoded as one scalar, associated with a value for each arm that is accumulated gradually, and this scalar multiplies rewards. For small persistence, use UCB and incur a little extra cost. For medium, explore to learn params then commit to optimal scheme. For high persistence, batched bandits with switching costs. 
+Specific model of bandits w/ history-dependent preferences where history impact encoded as one scalar, associated with a value for each arm that is accumulated gradually, and this scalar multiplies rewards. For small persistence, use UCB and incur a little extra cost. For medium, explore to learn parameters then commit to optimal scheme. For high persistence, batched bandits with switching costs. 
 
 
 # Learning in Auctions
 
 ## Joint ad auctions
 
-2 bidders, correlated value. Learn allocation region. Can show it is northeast-closed subgraph in valuation square. Approximate with adaptive discretization: grid plus small number of points. Sublinear regret in stochastic or $sigma-$ smoothed adversary case, worst case impossible in fully adversarial case. Nonparametric class, unbounded pseudo-dimension, but still learnable
+2 bidders, correlated value. Learn allocation region. Can show it is northeast-closed subgraph in valuation square. Approximate with adaptive discretization: grid plus small number of points. Sublinear regret in stochastic or $\sigma-$ smoothed adversary case, worst case impossible in fully adversarial case. Nonparametric class, unbounded pseudo-dimension, but still learnable
 
 ## Learning to maximize gains from trade in small markets
 
@@ -307,7 +311,7 @@ Contracts with rich but imperfect monitoring data: use convergence rate to first
 
 Show optimal rate achieved by binary wage contracts, while linear contracts are suboptimal in terms of rate.
 
-Action set $A$ finite, distributions $\mu_{a}$. Observe $n$ signals $X_1\ldots x_n$ from $\mu_a$
+Action set $A$ finite, distributions $\mu_{a}$. Observe $n$ signals $x_1\ldots x_n$ from $\mu_a$
 
 Risk neutral principal. Contract $W(x_1...x_n)\to[w,\infty)$
 
@@ -315,7 +319,7 @@ Agent risk averse, has outside option. Minimize implementation cost of $a^*$ sub
 
 First best cost $u^{-1}(c(a^*))$ achievable in limit under identifiability condition on $\mu_as$
 
-Can show cost converges to first best at $exp(-\min_{a\in A^-} KL(\mu_a,\mu_{a*})n)$ and this can be achieved for binary contracts.
+Can show cost converges to first best at rate $exp(-\min_{a\in A^-} KL(\mu_a,\mu_{a*})n)$ and this can be achieved for binary contracts.
 
 (Large deviations result, plus Neyman-Pearson lemma? or maybe just Le Cam inequality?)
 
@@ -330,12 +334,13 @@ Linear contracts also converge to optimal, but at rate $\Omega(1/n)$, instead of
 
 Forecast $p_t\in\mathbb{R}^d$ sent to downstream agents, who take an action, receive a utility $u(a,p)$ based on action and outcome
 
-Swap regret
+Swap regret:
+
 $\max_{\phi:A\to A}\sum_t u(\phi(a_t),y_t)-u(a_t,y_t)$
 
 Optimal bounds $\tilde{O}(\sqrt{|A|T})$
 
-Calibration: unbiasedness of forecast conditional on value of forecast: acts like a no wap condition on forecasts. Ensures low swap regret for agents who take forecast as ground truth probability.
+Calibration: unbiasedness of forecast conditional on value of forecast: acts like a no swap condition on forecasts. Ensures low swap regret for agents who take forecast as ground truth probability.
 
 But Lower bounds on calibration are above $\sqrt{T}$
 
@@ -364,7 +369,7 @@ Decision makers DM rely on forecasts *if* they are credible, according to a cali
 
 binary prediction 
 
-f $\epsilon_T$ close to empirical mean on all days when forecast is $f$
+$f$ $\epsilon_T-$close to empirical mean on all days when forecast is $f$
 
 Game: expert knows stochastic process. 
 
@@ -382,7 +387,7 @@ Take distribution of conditionals $p_t$, and produce forecasts by taking *mean p
 
 Reduce game to Bayesian persuasion where expert chooses indirect utility-maximizing MPC, *if* process is stationary and ergodic
 
-Foster Vohra uninformed expert can induce a particular level, even in adversaial setting, lower than informed decision maker
+Foster Vohra: uninformed expert can induce a particular level, even in adversaial setting, lower than informed decision maker
 
 Also have results for no regret DM, instead of calibration testing DM: this is implied by calibrated forecasts, so expert can get at least as much as in calibration test DM setting. Can show ways to get strictly more if class of no regret learning (eg mean based) is known.
 
@@ -410,15 +415,15 @@ Pareto dominated: Multiplicative Weights, OGD, FTPL
 
 Pareto optimal: Any no swap regret algorithms
 
-Geometric tool to show no regret + pareto optimality: menus
+Geometric tool to show no regret + Pareto optimality: menus
 
 Need L, O payoffs, and L regret. 
-Can summarize entire transcript of play into correlated strategy profile CSP: $\phi=\frac{1}{T}\sum_t x_t\otimes y_y$ is all info needed to evaluate algorithm. 
+Can summarize entire transcript of play into correlated strategy profile (CSP): $\phi=\frac{1}{T}\sum_t x_t\otimes y_y$ is all info needed to evaluate algorithm. 
 Lives in same space as correlated equilibrium
 
-Ask: what CSPs can be induced against $\mathcal{A}$: 
+Ask: what CSPs can be induced against $\mathcal{A}$?: 
 
-Menu $M(\mathcal{A})$ is convex hull of all CSPs that can be induced playing against $\mathcal{A}$: nm-dimensional simplex. Extreme points are pur strategies. Optimizer will play perpendicular to boundary
+Menu $M(\mathcal{A})$ is convex hull of all CSPs that can be induced playing against $\mathcal{A}$: nm-dimensional simplex. Extreme points are pure strategies. Optimizer will play perpendicular to boundary
 
 Can show all no swap regret algorithms have same menu $\mathcal{M}_{NSR}$: convex hull of all no swap regret CSPs
 
@@ -444,7 +449,7 @@ Here, no secret info: conditional on policy recommendation, action is independen
 
 Similar to Camara et al 2020, but algorithm is now poly time, and policy regret is polynomial in $|Y|$, avoids assuming ties for agent are near-ties for principal.
 
-HEre: optimal stable policy oracle: policy p is stable under prior $\pi$ if any action other than BR, either agent does mch worse or principal is near indifferent.
+Here: optimal stable policy oracle: policy p is stable under prior $\pi$ if any action other than BR, either agent does mch worse or principal is near indifferent.
 
 By running optimal stable policy oracle, if forecast is well-calibrated conditional on (policy, recommendation)=(p,a) two other conditioning sets of events, policy regret is sublinear. (Exact calibration guarantees this, but sets used are polynomial)
 
@@ -471,10 +476,10 @@ Want to maximize $\mathbb{E}_{d\in D}[\sum_i \log p_{\theta}(d_i|d_1...d_{i-1})]
 
 Hallucinations: bad data, tricky prompts, **heavy-tailed fact distribution**
 
-Assume: each document has 1 fact
-Everything either fact or hallucination
-Documents iid from distribution D
-All documents start the same (eg "Fact:"): no prompt variation
+Assume: each document has 1 fact.
+Everything either fact or hallucination.
+Documents iid from distribution D.
+All documents start the same (eg "Fact:"): no prompt variation.
 
 Then model will hallucinate.
 
@@ -484,7 +489,7 @@ Ex: half the time pick repeated fact from data, half pick random thing, represen
 
 Idea: true facts drawn from distribution. Assume no unseen fact is more than r times more likely than average unseen fact.
 
-Then with high prob, fraction of hallucinations is at least fraction of rare facts - Miscalibration rate - constant * number of facts/number of hallucinations - $O(\sqrt(1/n))$
+Then with high prob, fraction of hallucinations is at least fraction of rare facts - Miscalibration rate - constant * number of facts/number of hallucinations - $O(\sqrt{1/n})$
 
 Facts/hallucinations is tiny, because there are many more plausible hallucinations than facts.
 
@@ -508,15 +513,15 @@ Maybe should be different?
 
 Most stimuli are high dimensional
 
-Intrinsically high dimensional spaces are not explorable. Many more possible sentences than sentences that have ever been spoken.$10^{12}$ data points is tiny fraction of all possible sentences.
+Intrinsically high dimensional spaces are not explorable. Many more possible sentences than sentences that have ever been spoken. $10^{12}$ data points is tiny fraction of all possible sentences.
 
 Generally need $\exp(d)$ data points to explore $d-$dimensional space: $10^{12}$ data points will only really get you exploration of a 30-dimensional space.
 
-So, underlying data must be low dimensional
+So, underlying data must be low dimensional.
 
 Feature learning:
 
-data $x\in X$, $y_i\in R$, $f: X\to R$ in $\mathcal{H}$
+data $x\in X$, $y_i\in \mathbb{R}$, $f: X\to \mathbb{R}$ in $\mathcal{H}$
 
 
 X: PCA, manifold hypothesis, etc
@@ -587,13 +592,13 @@ $c,s,\lambda$ known to principal and agent, but effort choice and realized signa
 
 At each time $t$, agent can send message $m_t\in M$ to principal
 
-Contract is map from history $h-t$ of messages to reward r. Assume limited liability, budget 1
+Contract is map from history $h_t$ of messages to reward $r$. Assume limited liability, budget 1
 
 Agent utility : $r -zc\Delta$ if acquiring info for z periods.
 
 Strategy will be stopping time $\tau$ for when to stop acquiring info.
 
-Compare to case with no dynamics, just static acquire info or not, one time. Optimnal contract is scoring rule: V-shaped payoff-function
+Compare to case with no dynamics, just static acquire info or not, one time. Optimal contract is scoring rule: V-shaped payoff-function
 
 Dynamic case: belief drifts even when no info acquired. Under parameter conditions, belief drifts toward 0, incentivizing stopping earlier. 
 
@@ -608,24 +613,23 @@ Standard single shot contract model
 
 Shared prior belief over state of nature. Conditional on state:
 
-Principal earns return minus contract payment
-agent earns contract payment minus action cost (action unobserved)
+Principal earns return minus contract payment. Agent earns contract payment minus action cost (action unobserved).
 
 Here: allow non-shared beliefs, competition across agents. Select agent from set of agents by some mechanism.
 
-If principal fixes contract and selection algorithm, how to select agents, and what behavior does it induce.
+If principal fixes contract and selection algorithm, how to select agents, and what behavior does it induce?
 
-Can use no regret algorithm. Assume bandit feedback wrt agents: only chosen agent
+Can use no regret algorithm. Assume bandit feedback wrt agents: only chosen agent observed.
 
 Assume agents informed and rational, assume non-responsive Nash equilibrium of extensive form among agents.
 
-Principal finds algo with no policy regret, approximate limited liability.
+Principal finds algorithm with no policy regret, approximate limited liability.
 
 Policy regret to best constant selection algorithm: pick agent 1 each round. That agent no longer has selection incentives, so only maximizes contract reward.
 
 Look for monotone selection algorithm: if reward of an action is higher, probability of selection of that action is increasing.
 
-If selection algo is monotone, high effort increases probability of being selected, so agent works harder (weakly) to get re-selected. So regret relative to constant selection is non-positive.
+If selection algorithm is monotone, high effort increases probability of being selected, so agent works harder (weakly) to get re-selected. So regret relative to constant selection is non-positive.
 
 Enforcing limited liability: open account for each agent, at the end of all rounds return any negative payment.
 
@@ -647,7 +651,7 @@ Design of experiment: split into treatment B and control A, then collect observa
 
 Var(estimated effect) = Var(Average Group B) + Var(Average Group A) = $Var(B)/n_B + Var(A)/n_A$
 
-If Var(B)>Var(B), should set $n_B>n_A$
+If Var(B)>Var(A), should set $n_B>n_A$
 
 Neyman allocation formula: $n_A \propto \sigma_{A}/(\sigma_A+\sigma_B)$
 
@@ -657,9 +661,9 @@ Related to best arm identification. Under normality, or asymptotically under sma
 
 Dai et al studies adversarial environment, in design-based setting.
 
-Q: how to set length of each stage, how to allocate in stage.
+Question: how to set length of each stage, how to allocate in stage?
 
-Criterion: second order efficiency. First order efficiency (hahn 11, Armstrong 22) does not determine how to set length. 
+Criterion: second order efficiency. First order efficiency (Hahn '11, Armstrong '22) does not determine how to set length. 
 
 Active learning literature gets square-root rates, conjectures optimal: this paper refutes that conjecture
 
@@ -671,11 +675,11 @@ M stages, given ex ante
 
 $\tau=E[Y(1)-Y(0)]$
 
-MSE of $E(\hat{\tau}-\tau)^2=\sigma^2(1)/T(1)+$
+MSE of $E(\hat{\tau}-\tau)^2=\sigma^2(1)/T(1)+\sigma^2(0)/T(0)$
 
 Optimal MSE is $\frac{1}{T}(\sigma(1)+\sigma(0))^2$
 
-Study *ratio* of variance to optimal, obtain ratio $1+O(T^{-M/(M+1)})$ for pilot then plug in estimator
+Study *ratio* of variance to optimal, obtain ratio $1+O(T^{-M/(M+1)})$ for pilot-then-plug-in estimator
 
 
 ## Enhancing External validity in experiments with ongoing sampling: Chen Wang, w/ Han and Huang
@@ -699,7 +703,7 @@ $S_{it}$ indicates whether user i participates up to time t
 
 $\tau_t=E[Y(1)-Y(0)|S_{it}=1]$
 
-Assume $P(S_{it}=1)=1$, so $\lim_t\tau_t=\tau$. So there is time $T_r$ after which $d(\tau_t,\tau)<\rho$. Representative stage
+Assume $P(S_{iT}=1)=1$, so $\lim_t\tau_t=\tau$. So there is time $T_r$ after which $d(\tau_t,\tau)<\rho$. Representative stage
 
 Could use extrapolation method, but need overlap: $P(S_{it}=1)>\eta$ during overlap stage $T_o$ to $T_r$
 
@@ -725,7 +729,7 @@ Personalize: use HTE estimators (OLS, S, T learners, causal forest) in predict-t
 
 Find larger gains in larger expeiments.
 
-Why? Not all heterogeneity is "actionable". Depends on within and across-treatment heterogeneity, correlation, .
+Why? Not all heterogeneity is "actionable". Depends on within and across-treatment heterogeneity, correlation.
 
 Care about difference in effects. Look only for regions where best arm changes
 
@@ -790,9 +794,9 @@ Construct tests for hypothesis like: is a particular point on the frontier
 
 ## An Alternative Approach for Nonparametric Analysis of Random Utility Models: Turansick
 
-Test of Kitamura and Stoye for Random utility model is computationally intense: develop faster method. Use Weyl-Minkowski, define problem through vertices rather than facets of polytope
+Test of Kitamura and Stoye for Random Utility Model is computationally intense: develop faster method. Use Weyl-Minkowski, define problem through vertices rather than facets of polytope
 
-Set X, alternatives x yz, strict preferences, distributions over preferences.
+Set X, alternatives x y z, strict preferences, distributions over preferences.
 
 Choice rules $p: X\times X\to 0,1$
 
@@ -834,7 +838,7 @@ Revealed preference indices generally NP-hard, and not always clear how to incor
 
 Ex: quasilinear preferences $u(m,a)=v(a)+m$ over (m,a). 
 
-Experiment: pick bundles in general position, collect (i) pairwise choice data (ii) how much extra numeraire makes them indifferent between less and more preferred bundle in each pair: $(m_i,a_i) ~ (m_j, a_j)+ (\alpha,0)$. M is money: this is willingness to pay. 
+Experiment: pick bundles in general position, collect (i) pairwise choice data (ii) how much extra numeraire makes them indifferent between less and more preferred bundle in each pair: $(m_i,a_i) \sim (m_j, a_j)+ (\alpha,0)$. m is money: this is willingness to pay. 
 
 If preferences quasilinear, preferences are parallel translates. Data is vector of willingness-to-pays $\alpha$. Rationalizable data are linear subspace. 
 
@@ -857,7 +861,7 @@ Buyer has unit demand, private valuation $Y$, covariate $X$, drawn from distribu
 
 Seller may or may not be able to (3rd degree) price discriminate "3PD" if X not observed or is protected
 
-If not feasible, optimal to charge uniform take-it-or-leave it price, though 3PD always weakly more profitable.
+If not feasible, optimal to charge uniform take-it-or-leave-it price, though 3PD always weakly more profitable.
 
 What if $F_{Y,X}$ unknown? Assume continuous $X$. Should seller still gain from 3PD if learning?
 
@@ -888,19 +892,19 @@ Choosing K=1 for uniform, get $O(n^{-2/3})$ rate of regret (but to uniform prici
 
 ## To Trust or Not to Trust: Assignment Mechanisms with Predictions in the Private Graph Model: Tsikiridis et al
 
-Approximation algorithms: $\forall$ instance $I$, algorithm $\mathcal{A}(I)$ outputs solution S $\gamma v(S)\geq v(OPT)$ which is $gamma$ optimal
+Approximation algorithms: $\forall$ instance $I$, algorithm $\mathcal{A}(I)$ outputs solution S $\gamma v(S)\geq v(OPT)$ which is $\gamma$ optimal
 
 With predictions: 
 
-$\forall$ instance $I$, Prdiction P, algorithm $\mathcal{A}(I,P)$ outputs solution S $\gamma v(S)\geq v(OPT)$ which is $gamma$ optimal
+$\forall$ instance $I$, Prdiction P, algorithm $\mathcal{A}(I,P)$ outputs solution S $\gamma v(S)\geq v(OPT)$ which is $\gamma$ optimal
 
 ie, add prediction input, maintain guarantee
 
-Guarantee $\alpha-$-approximation if P is perfect, $\beta$ if imperfect, $g(\eta)$ if prediction error is imperfect: interpolate between worst case and perfect case
+Guarantee $\alpha$-approximation if P is perfect, $\beta$ if imperfect, $g(\eta)$ if prediction error is imperfect: interpolate between worst case and perfect case
 
 Here: private graph model, assignment mechanisms, eg weighted bipartite matching between agents L, resources R
 
-Values $v_{ij}$ are public, compatibility edges $E_i\subseteq{i}xR$ are private
+Values $v_{ij}$ are public, compatibility edges $E_i\subseteq\{i\}\times R$ are private
 
 Agents declare edge set $D_i$ strategically
 
@@ -940,13 +944,13 @@ Each bidder maximized $v_i-p$ if allocated within $[a_i,d_i]$, 0 otherwise
 
 Design value and time strategy-proof mechanism.
 
-We know in static setting, optimum is $v_(2)$ second price. In online setting, can get 1/4 approximation of $v_(2)$ (Kleinberg et al '04)
+We know in static setting, optimum is $v_{(2)}$ second price. In online setting, can get 1/4 approximation of $v_{(2)}$ (Kleinberg et al '04)
 
 Now add predictions: evaluate by consistency (competitive ratio if prediction correct) and robustness (worst case competitive ratio)
 
-Given pridiction $\tilde{v}_(1)$ of *highest* value.
+Given prediction $\tilde{v}_{(1)}$ of *highest* value.
 
-Compare robustness to $\beta v_(2)$, consistency to $\alpha v_(1)$: different benchmarks.
+Compare robustness to $\beta v_{(2)}$, consistency to $\alpha v_{(1)}$: different benchmarks.
 
 Reason is that if prediction is correct, we can just wait for highest bidder, get highest value $v_(1)$. For robustness, just ignore prediction, use 1/4-robust algorithm for $v_(2)$.
 
@@ -956,7 +960,7 @@ Can show that within a certain class of auctions, $(1-\alpha^2)/4$ is tight, and
 
 Mechanism: 3 phases. 1st: just observe bids, don't allocate.
 
-phase 2: post max $(\tilde{v}_{(1)},v_{max})$
+phase 2: post $\max\{\tilde{v}_{(1)},v_{max}\}$
 
 phase 3: don't use prediction, just $v_{max}$
 
@@ -1013,7 +1017,7 @@ Data: $X$ a set of possible choices, A presents to B a set of binary menus $\{x,
 
 Rationalization is a set of preferences $\geq_k$ (or utilities $u_k$) that could have generated observed data set of menus of size $k$.
 
-Claim: with a continuous preference $\geq^*$ on $\mathbb{R}^d_+$, and B's choices are consistent with it, there always exists a locally non-satiated rationalizations $\geq_k$ for each $k$ such that $\lim_{k\to\infty}\geq_k$ is complete indifference.
+Claim: with a continuous preference $\geq^*$ on $\mathbb{R}^d_+$, and B's choices are consistent with it, there always exist locally non-satiated rationalizations $\geq_k$ for each $k$ such that $\lim_{k\to\infty}\geq_k$ is complete indifference.
 
 With infinite data, preferences could be recovered, but can have far away bad inferences for arbitrarily large finite data.
 
@@ -1021,7 +1025,7 @@ Model: alternatives $X$, Preferences $\geq\subseteq X\times X$ are complete ($x\
 
 Use *closed convergence topology* on space of continuous preferences. If $X$ is a closed subset of $\mathbb{R}^d$, the set of all continuous preferences is a compact metrizable space.
 
-Example: consider $\mathcal{P}$ is set of expected utility preferences, $X$ is a set of lotteries $\Delta^{d-1}\subseteq\mathbb{R}^d$. An EU preference is a $v$ such that a lottery is preferrd if $v\cdotp\geq v\cdotp^\prime$
+Example: consider $\mathcal{P}$ is set of expected utility preferences, $X$ is a set of lotteries $\Delta^{d-1}\subseteq\mathbb{R}^d$. An EU preference is a $v$ such that a lottery is preferrd if $v\cdot p\geq v\cdot p^\prime$
 
 Local strictness: for any indifference preference, there is a strict preference in a neighborhood.
 
@@ -1035,7 +1039,7 @@ Then if $\sigma_k$ in $\mathcal{P}$ weakly rationalizes data, there is a prefere
 
 The closed set is the difficult assumption in this theorem.
 
-Next case: allow B to make mistakes. Preference is a subset, so treat as hypothesis in classification problem from PAC learning: is choice in set.
+Next case: allow B to make mistakes. Preference is a subset, so treat as hypothesis in classification problem from PAC learning: is choice in set?
 
 Given $X,\mathcal{P}$, draw alternatives iid from distribution $\lambda$
 
@@ -1043,7 +1047,7 @@ Mistakes: Upon deciding, choose x over y with prob $q(\geq,x,y)$. For $x\geq y$,
 
 Kemeny-minimizing estimator: find preference in $\mathcal{P}$ that minimizes number of observations inconsistent with preference.
 
-Assume: $X$ closed subset of $R^d$, $\mathcal{P}$ closed set of locally strict preferences, and $\lambda$ has full support and for all $\geq\in\mathcal{P}$, indifference sets have $\lambda-$probability 0.
+Assume: $X$ closed subset of $\mathbb{R}^d$, $\mathcal{P}$ closed set of locally strict preferences, and $\lambda$ has full support and for all $\geq\in\mathcal{P}$, indifference sets have $\lambda-$probability 0.
 
 Then the Kemeny-minimizing estimator is consistent.
 
@@ -1053,7 +1057,7 @@ To get convergence rates, need stronger conditions: finite VC dimension of $\mat
 
 Ex: VC dimension of expected utility preferences is $d+1$
 
-$rho(\geq_k,\geq^*)$ is metric over preferences
+$\rho(\geq_k,\geq^*)$ is metric over preferences
 
 $N(\eta,\delta)$ is smallest $N$ such that for all $k\geq N$ such that $Pr(\rho(\geq_k,\geq^*)<\eta)\geq 1-\delta$
  
@@ -1083,11 +1087,11 @@ Related to "problemistic search", "rugged landscapes"
 
 Characterize optimal search process.
 
-Space $S=[0,1]$, quality $q: S\to \mathbb{R}_+$. $Q\subset R^d$ is set of possible states
+Space $S=[0,1]$, quality $q: S\to \mathbb{R}_+$. $Q\subset \mathbb{R}^d$ is set of possible states
 
 At each time, pick $x_t$, learn $q(x_t)$, or stop and take best item discovered so far.
 
-See history $h_t$, Consider set $Q_h$ of states consistent with history $h$.
+See history $h_t\in H$, Consider set $Q_h$ of states consistent with history $h$.
 
 Strategy $\sigma$ is plan $H\to Q$
 
@@ -1141,7 +1145,7 @@ Network architecture has residual connections, separate components for time
 
 ## Coarse Personalization: Walter Zhang, Sanjog Misra
 
-What should promotion levels be, and who shoud get them.
+What should promotion levels be, and who shoud get them?
 
 Common method: estimate across promotions, estimate heterogeneous treatments, threshold to set treatment.
 
@@ -1151,7 +1155,7 @@ Search space of personalizations is exponential.
 
 Traditional methods discretize then personalize: STP. $S$ is segmentation
 
-$\max_{S,T}\Pi(S,T(S))\geq \max_{S,T}\Pi(S_0,T(S_0))$ personalization always helpful
+$\max_{S,T}\Pi(S,T(S))\geq \max_{T}\Pi(S_0,T(S_0))$ personalization always helpful
 
 Apply RCT, find sparse set of unique effective promotions.
 
@@ -1233,11 +1237,11 @@ Positive results: algorithms based on learning dynamics can compute several equi
 
 Geometry of correlated strategies still to be understood.
 
-Contributions:
+### Contributions:
 
 ### 1. Learning dynamics for imperfect-info games
 
-Learning shows that it is possible to find equilibrium form local, decentralized procedure. Currently, these are fastest known way to compute equilibria.
+Learning shows that it is possible to find equilibrium from local, decentralized procedure. Currently, these are fastest known way to compute equilibria.
 
 Extensive form correlated equilibrium: introduced first poly-time learning algorithm for this equilibrium class
 
@@ -1279,7 +1283,7 @@ Sortition: democracy based on representatives chosen by lotteries instead of ele
 
 Sortition foundation deploys algorithm for citizen's assemblies, gets adopted by other organizations.
 
-Webseite Panelot: implements algorithm for panel selection by lot.
+Website Panelot: implements algorithm for panel selection by lot.
 
 Citizens' assemblies based on sortition now used in many countries.
 
@@ -1309,13 +1313,13 @@ Greedy/naive solution of allocating to highest bidder as they come in, leads to 
 
 Competitive ratio: $\min_{I\in Instances}\frac{ALG(I)}{OPT(I)}$
 
-MSVV algorithm: spent(a) is fraction of a's budget used up. Allocate query q to a who maximizes $bid(a,q)*\psi(spent(a))$
+MSVV algorithm: $spent(a)$ is fraction of $a$'s budget used up. Allocate query $q$ to $a$ who maximizes $bid(a,q)*\psi(spent(a))$
 
 Scales bids by factor defined by amount of budget already spent.
 
-$\psi(x)\propto \frac{1-e^{(-1-x)}}{1-e^{-1}}$ 
+$\psi(x)\propto \frac{1-e^{-(1-x)}}{1-e^{-1}}$ 
 
-Achieves $1-1/e$ 63 percent competitive ratio, under a "small bids" assumption.
+Achieves $1-1/e\approx 63$ percent competitive ratio, under a "small bids" assumption.
 
 Extensions: integrating auctions and pricing with budget pacing.
 
