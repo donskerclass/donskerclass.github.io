@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
-    <lastBuildDate>Thu, 06 Oct 2022 00:00:00 -0400</lastBuildDate>
+    <lastBuildDate>Sat, 07 Sep 2024 00:00:00 -0400</lastBuildDate>
     
 	<atom:link href="/publication_types/4/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Online Data Collection for Efficient Semiparametric Inference</title>
+      <link>/publication/onlinemomentselectionsemiparametric/</link>
+      <pubDate>Sat, 07 Sep 2024 00:00:00 -0400</pubDate>
+      
+      <guid>/publication/onlinemomentselectionsemiparametric/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>Differentiable State Space Models and Hamiltonian Monte Carlo Estimation</title>
