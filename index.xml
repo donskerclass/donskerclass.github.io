@@ -20,9 +20,9 @@
 &lt;ul&gt;
 &lt;li&gt;Zhou, Huang, Azizzadenesheli, Childers, and Lipton. “&lt;a href=&#34;https://proceedings.mlr.press/v238/zhou24c.html&#34;&gt;Timing as an Action: Learning When to Observe and Act&lt;/a&gt;” AISTATS 2024
 &lt;ul&gt;
-&lt;li&gt;We derived reinforcement learning algorithms for what economists will recognize as the sticky information setting! This incorporates periods of non-observation but turns out to be easier than a POMDP despite because the learner has the option to observe at any time, for a cost. Led by a dream team of Helen Zhou (experiments, healthcare applications) and Audrey Huang (badass RL theorist).&lt;/li&gt;
+&lt;li&gt;We derived reinforcement learning algorithms for what economists will recognize as the sticky information setting! This incorporates periods of non-observation but turns out to be easier than a POMDP because the learner has the option to observe at any time, for a cost. Led by a dream team of Helen Zhou (experiments, healthcare applications) and Audrey Huang (badass RL theorist).&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Gupta, Childers, and Lipton. “&lt;a href=&#34;https://arxiv.org/abs/2411.03195&#34;&gt;Online Data Collection for Efficient Semiparametric Inference&lt;/a&gt;”
+&lt;li&gt;Gupta, Lipton, and Childers. “&lt;a href=&#34;https://arxiv.org/abs/2411.03195&#34;&gt;Online Data Collection for Efficient Semiparametric Inference&lt;/a&gt;”
 &lt;ul&gt;
 &lt;li&gt;Extends our previous work on &lt;a href=&#34;https://papers.nips.cc/paper/2021/hash/af8d1eb220186400c494db7091e402b0-Abstract.html&#34;&gt;Online Moment Selection&lt;/a&gt; for combining data sources adaptively via a kind of Bandit Generalized Method of Moments to the semiparametric/double-machine learning case with nonparametric nuisance parameters. Think adaptive experiments, but for a much broader class of possibly-observational settings and models. This also builds on some fun &lt;a href=&#34;https://arxiv.org/abs/2103.06476&#34;&gt;technical work&lt;/a&gt; on &lt;a href=&#34;https://github.com/gostevehoward/confseq&#34;&gt;uniform-in-time confidence sequences&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
