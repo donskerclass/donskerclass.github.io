@@ -12,10 +12,10 @@
     
     <item>
       <title>Papers I Liked 2024</title>
-      <link>/post/papers-2023/</link>
+      <link>/post/papers-2024/</link>
       <pubDate>Tue, 31 Dec 2024 00:00:00 +0000</pubDate>
       
-      <guid>/post/papers-2023/</guid>
+      <guid>/post/papers-2024/</guid>
       <description>&lt;p&gt;This has been another year where I felt like I slacked on my reading, and that probably is genuinely true for the tumultuous last half, but my read folder lists 154, so I can pick out a few that I liked to highlight in this end-of-year tradition. These are in approximate chronological order by date read, and as always I make no claim to depth or representativeness, so even in areas I follow there’s a lot on my should-read list. Topics shifted during the year with major career changes, from LLMs and RL to more classic econometrics to a bit of computation and even some computational game theory, to applied economics. In the past year I’ve gone through full-time work at an AI startup, two academic job searches (one still ongoing: please hire me! I’m very willing to move abroad), Covid and other health issues, homelessness (I was fine, don’t worry about it), a visiting liberal arts teaching load with a new prep on short notice, and, um, a new gender, and still managed to get out two papers I’m proud of, with more ongoing. Since I am in self-promotion mode until someone gives me a job, my papers first:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Zhou, Huang, Azizzadenesheli, Childers, and Lipton. “&lt;a href=&#34;https://proceedings.mlr.press/v238/zhou24c.html&#34;&gt;Timing as an Action: Learning When to Observe and Act&lt;/a&gt;” AISTATS 2024
