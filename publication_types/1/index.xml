@@ -7,7 +7,7 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2025</copyright>
-    <lastBuildDate>Sat, 09 Mar 2024 00:00:00 -0500</lastBuildDate>
+    <lastBuildDate>Sat, 09 Mar 2024 00:00:00 +0100</lastBuildDate>
     
 	<atom:link href="/publication_types/1/index.xml" rel="self" type="application/rss+xml" />
     
@@ -15,7 +15,7 @@
     <item>
       <title>Timing as an Action: Learning When to Observe and Act</title>
       <link>/publication/timingasanaction/</link>
-      <pubDate>Sat, 09 Mar 2024 00:00:00 -0500</pubDate>
+      <pubDate>Sat, 09 Mar 2024 00:00:00 +0100</pubDate>
       
       <guid>/publication/timingasanaction/</guid>
       <description></description>
@@ -24,7 +24,7 @@
     <item>
       <title>Local Causal Discovery for Estimating Causal Effects</title>
       <link>/publication/localcausaldiscovery/</link>
-      <pubDate>Fri, 17 Feb 2023 00:00:00 -0500</pubDate>
+      <pubDate>Fri, 17 Feb 2023 00:00:00 +0100</pubDate>
       
       <guid>/publication/localcausaldiscovery/</guid>
       <description></description>
@@ -33,7 +33,7 @@
     <item>
       <title>Efficient Online Estimation of Causal Effects by Deciding What to Observe</title>
       <link>/publication/onlinemomentselection/</link>
-      <pubDate>Mon, 23 Aug 2021 00:00:00 -0400</pubDate>
+      <pubDate>Mon, 23 Aug 2021 00:00:00 +0200</pubDate>
       
       <guid>/publication/onlinemomentselection/</guid>
       <description></description>
@@ -42,7 +42,7 @@
     <item>
       <title>Estimating Treatment Effects with Observed Confounders and Mediators</title>
       <link>/publication/confoundersmediators/</link>
-      <pubDate>Mon, 14 Jun 2021 00:00:00 -0400</pubDate>
+      <pubDate>Mon, 14 Jun 2021 00:00:00 +0200</pubDate>
       
       <guid>/publication/confoundersmediators/</guid>
       <description></description>

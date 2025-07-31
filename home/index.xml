@@ -7,7 +7,7 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2025</copyright>
-    <lastBuildDate>Sun, 15 Oct 2017 00:00:00 -0400</lastBuildDate>
+    <lastBuildDate>Sun, 15 Oct 2017 00:00:00 +0200</lastBuildDate>
     
 	<atom:link href="/home/index.xml" rel="self" type="application/rss+xml" />
     
@@ -15,7 +15,7 @@
     <item>
       <title>Academic</title>
       <link>/home/hero/</link>
-      <pubDate>Sun, 15 Oct 2017 00:00:00 -0400</pubDate>
+      <pubDate>Sun, 15 Oct 2017 00:00:00 +0200</pubDate>
       
       <guid>/home/hero/</guid>
       <description>The highly flexible website framework for Hugo with an extensible plugin mechanism. Create a beautifully simple site in under 10 minutes 🚀 Latest release  
@@ -25,17 +25,17 @@
     <item>
       <title></title>
       <link>/home/about/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
       
       <guid>/home/about/</guid>
       <description>About In my research I combine approaches from Econometrics, Machine Learning, and High-dimensional Statistics to devise performant and theoretically sound methods for computation, estimation, and decision-making in structured, high-dimensional, dynamic environments, with applications to macroeconomics and causal inference.
-I love helping people with their econometric questions, and host weekly econometrics office hours, open to anyone in the world, currently Wed 10-12am Eastern Time US each week or by appointment: details and signup.</description>
+I love helping people with their econometric questions, and host weekly econometrics office hours, open to anyone in the world, currently Wed 10-12am Central European Summer Time (GMT+2) each week or by appointment: details and signup.</description>
     </item>
     
     <item>
       <title>Selected Publications</title>
       <link>/home/publications_selected/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
       
       <guid>/home/publications_selected/</guid>
       <description></description>
@@ -44,7 +44,7 @@ I love helping people with their econometric questions, and host weekly economet
     <item>
       <title>Research</title>
       <link>/home/publications/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
       
       <guid>/home/publications/</guid>
       <description></description>
@@ -53,7 +53,7 @@ I love helping people with their econometric questions, and host weekly economet
     <item>
       <title>Recent &amp; Upcoming Talks</title>
       <link>/home/talks/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
       
       <guid>/home/talks/</guid>
       <description></description>
@@ -62,18 +62,18 @@ I love helping people with their econometric questions, and host weekly economet
     <item>
       <title>Teaching</title>
       <link>/home/teaching/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
       
       <guid>/home/teaching/</guid>
-      <description>I teach or have taught the following classes at Bowdoin:
- Econ 2557: Economic Statistics Econ 2001: Economic Policy Econ 3360: Economic Forecasting  I taught the following courses at Carnegie Mellon:
+      <description>I taught the following classes at Bowdoin:
+ Econ 2557: Economic Statistics Econ 2001: Economic Policy Econ 3360: Economic Forecasting  I taught the following classes at Carnegie Mellon:
  73-374: Econometrics II 73-423: Forecasting for Economics and Business 47-805: Computational Economics (PhD) 47-811: Econometrics I (PhD): Selected Recordings 47-873: Causal Econometrics (PhD): Selected Recordings  </description>
     </item>
     
     <item>
       <title>Projects</title>
       <link>/home/projects/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
       
       <guid>/home/projects/</guid>
       <description></description>
@@ -82,7 +82,7 @@ I love helping people with their econometric questions, and host weekly economet
     <item>
       <title>Curriculum Vitae</title>
       <link>/home/cv/</link>
-      <pubDate>Tue, 15 May 2018 00:00:00 -0400</pubDate>
+      <pubDate>Tue, 15 May 2018 00:00:00 +0200</pubDate>
       
       <guid>/home/cv/</guid>
       <description>PDF</description>
@@ -91,7 +91,7 @@ I love helping people with their econometric questions, and host weekly economet
     <item>
       <title>Blog</title>
       <link>/home/posts/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
       
       <guid>/home/posts/</guid>
       <description></description>
@@ -100,7 +100,7 @@ I love helping people with their econometric questions, and host weekly economet
     <item>
       <title>Tags</title>
       <link>/home/tags/</link>
-      <pubDate>Wed, 20 Sep 2017 00:00:00 -0400</pubDate>
+      <pubDate>Wed, 20 Sep 2017 00:00:00 +0200</pubDate>
       
       <guid>/home/tags/</guid>
       <description></description>
@@ -109,7 +109,7 @@ I love helping people with their econometric questions, and host weekly economet
     <item>
       <title>Contact</title>
       <link>/home/contact/</link>
-      <pubDate>Wed, 20 Apr 2016 00:00:00 -0400</pubDate>
+      <pubDate>Wed, 20 Apr 2016 00:00:00 +0200</pubDate>
       
       <guid>/home/contact/</guid>
       <description></description>

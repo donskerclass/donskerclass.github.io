@@ -5,13 +5,13 @@ output: html_document
 
 Due to a persistent interest in keeping on top of current issues in econometrics, I will be holding free weekly virtual office hours open to anybody in the world with Econometrics or Statistics problems they think I can help with. I will commit only to the scheduled time, and will start first come first serve, but I will take reservations by email, form, or social media message: 
 
-Email: <rachelleahchilders@gmail.com> or Sign up form: <https://forms.gle/XS55FASiGGHqAZKa6>
+Email: <rachelleahchilders@gmail.com> or Sign up form: <https://forms.gle/tSk48w1msZgrCUqX8>
 
 Twitter: [@donskerclass](https://twitter.com/DonskerClass) Bluesky: [@donskerclass](https://bsky.app/profile/donskerclass.bsky.social) Mastodon: [@childers@bayes.club](https://bayes.club/@childers)
 
-Time: Wednesdays 10:00-12:00AM Eastern US (or by appointment)
+Time: Wednesdays 10:00-12:00AM Central European Summer Time (GMT+2) (or by appointment)
 
-Location: [Zoom Link](https://bowdoin.zoom.us/j/96039587180)
+Location: Zoom (Link on request)
 
 Who: Anyone. Grad students, researchers, government workers. Private sector is okay but in that case if your question requires work that exceeds the allotted time I may request to negotiate a consulting fee.
 

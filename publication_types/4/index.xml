@@ -7,7 +7,7 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2025</copyright>
-    <lastBuildDate>Sat, 07 Sep 2024 00:00:00 -0400</lastBuildDate>
+    <lastBuildDate>Sat, 07 Sep 2024 00:00:00 +0200</lastBuildDate>
     
 	<atom:link href="/publication_types/4/index.xml" rel="self" type="application/rss+xml" />
     
@@ -15,7 +15,7 @@
     <item>
       <title>Online Data Collection for Efficient Semiparametric Inference</title>
       <link>/publication/onlinemomentselectionsemiparametric/</link>
-      <pubDate>Sat, 07 Sep 2024 00:00:00 -0400</pubDate>
+      <pubDate>Sat, 07 Sep 2024 00:00:00 +0200</pubDate>
       
       <guid>/publication/onlinemomentselectionsemiparametric/</guid>
       <description></description>
@@ -24,7 +24,7 @@
     <item>
       <title>Differentiable State Space Models and Hamiltonian Monte Carlo Estimation</title>
       <link>/publication/differentiablestatespace/</link>
-      <pubDate>Thu, 06 Oct 2022 00:00:00 -0400</pubDate>
+      <pubDate>Thu, 06 Oct 2022 00:00:00 +0200</pubDate>
       
       <guid>/publication/differentiablestatespace/</guid>
       <description></description>
@@ -33,7 +33,7 @@
     <item>
       <title>Solution of Rational Expectations Models with Function Valued States</title>
       <link>/publication/functionvaluedstates/</link>
-      <pubDate>Mon, 15 Jan 2018 00:00:00 -0500</pubDate>
+      <pubDate>Mon, 15 Jan 2018 00:00:00 +0100</pubDate>
       
       <guid>/publication/functionvaluedstates/</guid>
       <description>Previous versions of this paper circulated under the title On the Solution and Application of Rational Expectations Models with Function-Valued States</description>
