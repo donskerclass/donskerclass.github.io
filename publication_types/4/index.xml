@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2025</copyright>
-    <lastBuildDate>Sat, 07 Sep 2024 00:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Tue, 12 Aug 2025 00:00:00 +0200</lastBuildDate>
     
 	<atom:link href="/publication_types/4/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Using Imperfect Synthetic Data in Downstream Inference Tasks</title>
+      <link>/publication/syntheticdatainference/</link>
+      <pubDate>Tue, 12 Aug 2025 00:00:00 +0200</pubDate>
+      
+      <guid>/publication/syntheticdatainference/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>Online Data Collection for Efficient Semiparametric Inference</title>
