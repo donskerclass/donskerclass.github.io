@@ -1,6 +1,6 @@
 ---
 title: "Causal Econometrics"
-author: "David Childers"
+author: "Rachel Childers"
 output: html_document
 ---
 

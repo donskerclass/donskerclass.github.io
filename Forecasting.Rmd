@@ -1,6 +1,6 @@
 ---
 title: "Forecasting for Economics and Business"
-author: "David Childers"
+author: "Rachel Childers"
 output: html_document
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Semiparametric Functional Estimation"
-author: "David Childers"
+author: "Rachel Childers"
 output:
   html_document:
     code_folding: hide
@@ -334,8 +334,8 @@ print(dml_plr_obj)
 ## Residual on Residual Plot from Simulation
 
 ```{r,message=FALSE, warning=FALSE}
-Vhat<-data$d-dml_plr_obj$predictions$ml_g
-Zetahat<-data$d-dml_plr_obj$predictions$ml_g
+Vhat<-data$d-dml_plr_obj$predictions$ml_m #predictor residuals
+Zetahat<-data$y-dml_plr_obj$predictions$ml_l #outcome residuals
 residuals<-data.frame(Vhat,Zetahat)
 
 ggplot(data=residuals,aes(x=Vhat,y=Zetahat))+

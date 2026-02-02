@@ -1,6 +1,6 @@
 ---
 title: "Time Series"
-author: "David Childers"
+author: "Rachel Childers"
 output:
   html_document:
     code_folding: hide
@@ -168,7 +168,7 @@ repexdag<-dagify(Y3~X3+Y2+X2+Y1+X1,Y2~X2+Y1+X1,Y1~X1) #create graph
                y=c(X1 = 1, Y1 = 0, X2=1, Y2=0, X3=1, Y3=0))
   coords_df<-coords2df(coords)
   coordinates(repexdag)<-coords2list(coords_df)
-ggdag(repexdag, edge_type = "arc")+theme_dag_blank()+labs(title="X randomized in every time period") #Plot causal graph
+ggdag(repexdag, edge_type = "arc")+theme_dag_blank()+ggplot2::labs(title="X randomized in every time period") #Plot causal graph
 ```  
   
 - **Corollary** to decomposition: If $X_{k,t}\perp(\{Y_{t+h}^{x_{1:t+h}}\  \forall x_{1:t+h}\},X_{1:t-1},(X_{1,t},\ldots,x_k,\ldots,X_{d_x,t}),X_{t+1:t+h})$
@@ -204,7 +204,7 @@ seqdag<-dagify(Y4~X4+Y3+X3+Y2+X2+Y1+X1,Y3~X3+Y2+X2+Y1+X1,Y2~X2+Y1+X1,Y1~X1,
                y=c(X1 = 1, Y1 = 0, X2=1, Y2=0, X3=1, Y3=0, X4=1, Y4=0))
   coords_df<-coords2df(coords)
   coordinates(seqdag)<-coords2list(coords_df)
-ggdag(seqdag, edge_type = "arc")+theme_dag_blank()+labs(title="X may depend on all past variables") #Plot causal graph
+ggdag(seqdag, edge_type = "arc")+theme_dag_blank()+ggplot2::labs(title="X may depend on all past variables") #Plot causal graph
 
 ``` 
 
@@ -241,7 +241,7 @@ predag<-dagify(Y3~X3+Y2+X2+Y1+X1,Y2~X2+Y1+X1,Y1~X1,
                y=c(X1 = 1, Y1 = 0, X2=0.8, Y2=0.2, X3=1, Y3=0))
   coords_df<-coords2df(coords)
   coordinates(predag)<-coords2list(coords_df)
-splitgraphs[[1]]<-ggdag(predag)+theme_dag_blank()+labs(title="DAG without intervention",subtitle="X may depend on all past variables") #Plot causal graph
+splitgraphs[[1]]<-ggdag(predag)+theme_dag_blank()+ggplot2::labs(title="DAG without intervention",subtitle="X may depend on all past variables") #Plot causal graph
 
 
 swig<-dagify(Y3_x2~X3_x2+Y2_x2+x2+Y1+X1,Y2_x2~x2+Y1+X1,Y1~X1,
@@ -251,7 +251,7 @@ swig<-dagify(Y3_x2~X3_x2+Y2_x2+x2+Y1+X1,Y2_x2~x2+Y1+X1,Y1~X1,
                y=c(X1 = 1, Y1 = 0, X2=0.8, x2=0.8, Y2_x2=0.2, X3_x2=1, Y3_x2=0))
   coords_df<-coords2df(coords)
   coordinates(swig)<-coords2list(coords_df)
-splitgraphs[[2]]<-ggdag(swig)+theme_dag_blank()+labs(title="SWIG with intervention on X2",subtitle="X may depend on all past variables") #Plot causal graph
+splitgraphs[[2]]<-ggdag(swig)+theme_dag_blank()+ggplot2::labs(title="SWIG with intervention on X2",subtitle="X may depend on all past variables") #Plot causal graph
 
 grid.arrange(grobs=splitgraphs,nrow=1,ncol=2) #Arrange In 2x2 grid
 ```  
@@ -286,7 +286,7 @@ markovdag<-dagify(Y4~X4+Y3+X3,Y3~X3+Y2+X2,Y2~X2+Y1+X1,Y1~X1,
                y=c(X1 = 1, Y1 = 0, X2=1, Y2=0, X3=1, Y3=0, X4=1, Y4=0))
   coords_df<-coords2df(coords)
   coordinates(markovdag)<-coords2list(coords_df)
-ggdag(markovdag, edge_type = "arc")+theme_dag_blank()+labs(title="X and Y depend on immediate past only") #Plot causal graph
+ggdag(markovdag, edge_type = "arc")+theme_dag_blank()+ggplot2::labs(title="X and Y depend on immediate past only") #Plot causal graph
 ```
 
 - As a common simplification, it is often assumed that causal structure is **recursive**

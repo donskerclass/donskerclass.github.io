@@ -1,6 +1,6 @@
 ---
 title: "Difference in Differences"
-author: "David Childers"
+author: "Rachel Childers"
 output:
   html_document:
     code_folding: hide

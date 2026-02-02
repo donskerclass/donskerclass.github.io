@@ -1,6 +1,6 @@
 ---
 title: "Outcome and Effect Heterogeneity"
-author: "David Childers"
+author: "Rachel Childers"
 output:
   html_document:
     code_folding: hide
@@ -380,7 +380,8 @@ abline(h=0,lty=2)
 
 ```{r,message=FALSE,warning=FALSE}
 xyz<-data.frame(peaksample$ldailywagetot_w,peaksample$treat,peaksample$bl_ldwagetot,peaksample$bl_dwagetot_miss,peaksample$bl_e_manwage,peaksample$bl_e_manwage_miss,peaksample$round_id)
-xyzclean<-as.matrix(filter(xyz,is.na(xyz)==FALSE))
+
+xyzclean<-as.matrix(na.omit(xyz))
 xcovariates<-xyzclean[,3:7]
 treat<-xyzclean[,2]
 lwage<-xyzclean[,1]

@@ -1,6 +1,6 @@
 ---
 title: "Econometrics II"
-author: "David Childers"
+author: "Rachel Childers"
 output: html_document
 ---
 

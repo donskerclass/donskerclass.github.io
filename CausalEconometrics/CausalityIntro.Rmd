@@ -1,6 +1,6 @@
 ---
 title: 'Causal Econometrics: Intro'
-author: "David Childers"
+author: "Rachel Childers"
 output:
   html_document:
     code_folding: hide
@@ -92,7 +92,7 @@ yxdag<-dagify(Y~X) #create graph with arrow from X to Y
   coords<-list(x=c(X = 0, Y = 1),y=c(X = 0, Y = 0))
   coords_df<-coords2df(coords)
   coordinates(yxdag)<-coords2list(coords_df)
-ggdag(yxdag)+theme_dag_blank()+labs(title="X causes Y",subtitle="X is a parent of Y, Y is a child of X") #Plot causal graph
+ggdag(yxdag)+theme_dag_blank()+ggplot2::labs(title="X causes Y",subtitle="X is a parent of Y, Y is a child of X") #Plot causal graph
 ```
 
 - $U_1,U_2$ not shown explicitly: $X$ and $Y$ are variables of interest, with exogenous random variation caused by $U_1,U_2$
@@ -128,7 +128,7 @@ yxzdag<-dagify(Y~X+Z, X~Z) #create graph with arrow from X to Y
   coords<-list(x=c(X = 0, Y = 1, Z=0.5),y=c(X = 0, Y = 0, Z=0.5))
   coords_df<-coords2df(coords)
   coordinates(yxzdag)<-coords2list(coords_df)
-ggdag(yxzdag)+theme_dag_blank()+labs(title="Observed Common Cause Z") #Plot causal graph
+ggdag(yxzdag)+theme_dag_blank()+ggplot2::labs(title="Observed Common Cause Z") #Plot causal graph
 ```
 ```{r, fig.height=2.5}
 yxydag<-dagitty("dag{Y<->X; X->Y}") #create graph with arrow from X to Y
@@ -136,7 +136,7 @@ yxydag<-dagitty("dag{Y<->X; X->Y}") #create graph with arrow from X to Y
   coords<-list(x=c(X = 0, Y = 1),y=c(X = 0, Y = 0))
   coords_df<-coords2df(coords)
   coordinates(yxydag)<-coords2list(coords_df)
-ggdag(yxydag)+theme_dag_blank()+labs(title="Unobserved Common Cause") #Plot causal graph
+ggdag(yxydag)+theme_dag_blank()+ggplot2::labs(title="Unobserved Common Cause") #Plot causal graph
 ```
 
 ## Limitations of DAG framework

@@ -1,6 +1,6 @@
 ---
 title: "Instrumental Variables"
-author: "David Childers"
+author: "Rachel Childers"
 output:
   html_document:
     code_folding: hide
@@ -65,7 +65,7 @@ ivgraph<-dagitty("dag{Y<-X; X<-W; X<->Y}") #create graph
   coords<-list(x=c(X = 0, Y = 2, W=-1),y=c(X = 0, Y = 0, W=0)) 
   coords_df<-coords2df(coords)
   coordinates(ivgraph)<-coords2list(coords_df)
-ggdag(ivgraph)+theme_dag_blank()+labs(title="Instrumental Variables",subtitle="Causal IV") #Plot causal graph
+ggdag(ivgraph)+theme_dag_blank()+ggplot2::labs(title="Instrumental Variables",subtitle="Causal IV") #Plot causal graph
 ```
 
 - Goal remains recovering the effect of $X$ on $Y$
@@ -197,7 +197,7 @@ ivzgraph<-dagitty("dag{Y<-X; X<-W; X<->Y; Y<-Z; X<-Z; W<-Z}") #create graph
   coords<-list(x=c(X = 0, Z = -1, Y = 2, W=-1),y=c(X = 0, Z = 0.5, Y = 0, W=0)) 
   coords_df<-coords2df(coords)
   coordinates(ivzgraph)<-coords2list(coords_df)
-ggdag(ivzgraph)+theme_dag_blank()+labs(title="Instrumental Variables",subtitle="Causal IV with Covariates") #Plot causal graph
+ggdag(ivzgraph)+theme_dag_blank()+ggplot2::labs(title="Instrumental Variables",subtitle="Causal IV with Covariates") #Plot causal graph
 ```
 
 - Often only have conditionally randomly assigned instrument, or think conditions more plausible given controls

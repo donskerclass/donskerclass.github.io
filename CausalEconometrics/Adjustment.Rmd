@@ -1,6 +1,6 @@
 ---
 title: "Adjustment"
-author: "David Childers"
+author: "Rachel Childers"
 output:
   html_document:
     code_folding: hide
@@ -29,7 +29,7 @@ yxzdag<-dagify(Y~X+Z,X~Z) #create graph with arrow from X to Y
   coords<-list(x=c(X = 0, Y = 2, Z=1),y=c(X = 0, Y = 0, Z=1))
   coords_df<-coords2df(coords)
   coordinates(yxzdag)<-coords2list(coords_df)
-ggdag(yxzdag)+theme_dag_blank()+labs(title="Z confounds relationship of X to Y") #Plot causal graph
+ggdag(yxzdag)+theme_dag_blank()+ggplot2::labs(title="Z confounds relationship of X to Y") #Plot causal graph
 ```
  
 

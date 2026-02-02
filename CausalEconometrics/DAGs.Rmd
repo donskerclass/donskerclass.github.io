@@ -1,6 +1,6 @@
 ---
 title: "Causal Graphs"
-author: "David Childers"
+author: "Rachel Childers"
 output:
   html_document:
     code_folding: hide
@@ -11,7 +11,8 @@ bibliography: classrefs.bib
 #Libraries for causal graphs
 library(dagitty) #Identification
 library(ggdag) #plotting
-library(pcalg) #search
+#General Libraries
+library(ggplot2) #Graphics
 library(gridExtra) #Graph Display
 ```
 ```{r echo=FALSE, eval=FALSE}
@@ -112,13 +113,13 @@ confoundgraph<-dagify(Y~X+Z,X~Z) #create graph
   coords<-list(x=c(X = 0, Z = 1, Y = 2),y=c(X = 0, Z = -0.1, Y = 0)) 
   coords_df<-coords2df(coords)
   coordinates(confoundgraph)<-coords2list(coords_df)
-structuregraphs[[1]]<-ggdag(confoundgraph)+theme_dag_blank()+labs(title="Confounding of effect of X on Y by Z") #Plot causal graph
+structuregraphs[[1]]<-ggdag(confoundgraph)+theme_dag_blank()+ggplot2::labs(title="Confounding of effect of X on Y by Z") #Plot causal graph
 perturbedgraph<-dagify(Y~x+Z) #create graph
 #Set position of nodes 
   coords<-list(x=c(x = 0, Z = 1, Y = 2),y=c(x = 0, Z = -0.1, Y = 0)) 
   coords_df<-coords2df(coords)
   coordinates(perturbedgraph)<-coords2list(coords_df)
-structuregraphs[[2]]<-ggdag(perturbedgraph)+theme_dag_blank()+labs(title="Perturbed Graph") #Plot causal graph
+structuregraphs[[2]]<-ggdag(perturbedgraph)+theme_dag_blank()+ggplot2::labs(title="Perturbed Graph") #Plot causal graph
 grid.arrange(grobs=structuregraphs,nrow=1,ncol=2) #Arrange In 1x2 grid
 ```
 
@@ -145,19 +146,19 @@ forkgraph<-dagify(Y~Z,X~Z) #create graph
   coords<-list(x=c(X = 0, Z = 1, Y = 2),y=c(X = 0, Z = 0, Y = 0)) 
   coords_df<-coords2df(coords)
   coordinates(forkgraph)<-coords2list(coords_df)
-edgetypes[[1]]<-ggdag(forkgraph)+theme_dag_blank()+labs(title="Fork Structure") #Plot causal graph
+edgetypes[[1]]<-ggdag(forkgraph)+theme_dag_blank()+ggplot2::labs(title="Fork Structure") #Plot causal graph
 chaingraph<-dagify(Y~Z,Z~X) #create graph
 #Set position of nodes 
   coords<-list(x=c(X = 0, Z = 1, Y = 2),y=c(X = 0, Z = 0, Y = 0)) 
   coords_df<-coords2df(coords)
   coordinates(chaingraph)<-coords2list(coords_df)
-edgetypes[[2]]<-ggdag(chaingraph)+theme_dag_blank()+labs(title="Chain Structure") #Plot causal graph
+edgetypes[[2]]<-ggdag(chaingraph)+theme_dag_blank()+ggplot2::labs(title="Chain Structure") #Plot causal graph
 collidergraph<-dagify(Z~Y,Z~X) #create graph
 #Set position of nodes 
   coords<-list(x=c(X = 0, Z = 1, Y = 2),y=c(X = 0, Z = 0, Y = 0)) 
   coords_df<-coords2df(coords)
   coordinates(collidergraph)<-coords2list(coords_df)
-edgetypes[[3]]<-ggdag(collidergraph)+theme_dag_blank()+labs(title="Collider structure") #Plot causal graph
+edgetypes[[3]]<-ggdag(collidergraph)+theme_dag_blank()+ggplot2::labs(title="Collider structure") #Plot causal graph
 grid.arrange(grobs=edgetypes,nrow=3,ncol=1) #Arrange In 3x1 grid
 ```
 
@@ -198,7 +199,7 @@ ggplot(simdata)+geom_point(aes(x=wealth,y=grades,color=admission))+
   #Regress y on x and w (with interaction)
   #lm(grades~wealth+admission+I(wealth*admission))
   geom_smooth(aes(x=wealth,y=grades,group=admission),method="lm",color="blue")+
-  labs(title="Grades vs Wealth, with Admission as Collider",
+  ggplot2::labs(title="Grades vs Wealth, with Admission as Collider",
           subtitle="Black Line: Unconditional. Blue Lines: Conditional on Admission")
 ```
 
@@ -260,7 +261,7 @@ examplegraph<-dagify(Y~A+C,B~X+Y,A~X,X~C,D~B) #create graph
   coords<-list(x=c(X = 0, A = 1, B = 1, C=1, Y=2, D=2),y=c(X = 0, A = 0.1, B=0, C=-0.1, Y = 0, D=0.1)) 
   coords_df<-coords2df(coords)
   coordinates(examplegraph)<-coords2list(coords_df)
-ggdag(examplegraph)+theme_dag_blank()+labs(title="Example Graph") #Plot causal graph
+ggdag(examplegraph)+theme_dag_blank()+ggplot2::labs(title="Example Graph") #Plot causal graph
 ```
 
 - Education $X$ versus wages $Y$ to get intuition
@@ -285,7 +286,7 @@ mediatorgraph<-dagify(Y~Z,Z~X) #create graph
   coords<-list(x=c(X = 0, Z = 1, Y = 2),y=c(X = 0, Z = 0, Y = 0)) 
   coords_df<-coords2df(coords)
   coordinates(mediatorgraph)<-coords2list(coords_df)
-ggdag(mediatorgraph)+theme_dag_blank()+labs(title="Mediator structure") #Plot causal graph
+ggdag(mediatorgraph)+theme_dag_blank()+ggplot2::labs(title="Mediator structure") #Plot causal graph
 ```
 
 - The non-descendant part warns us that controlling for *consequences* may remove part of effect we want to measure
@@ -322,7 +323,7 @@ ggdag(mediatorgraph)+theme_dag_blank()+labs(title="Mediator structure") #Plot ca
 
 ```{r,fig.height=2.5}
 mgraph<-m_bias() #A common teaching example, so it has a canned command
-ggdag(mgraph)+theme_dag_blank()+labs(title="Graph illustrating m-bias")
+ggdag(mgraph)+theme_dag_blank()+ggplot2::labs(title="Graph illustrating m-bias")
 ```
 ```{r, class.source = 'fold-show'}
 adjustmentSets(mgraph,exposure="x",outcome="y",type="all")
@@ -358,7 +359,7 @@ irrelevantgraph<-dagitty("dag{Y<-X; Y<-Z1; Y<-Z2; X<-Z2; X<-Z3; Z4}") #create gr
   coords<-list(x=c(X = 0, Z3 = 0, Z2 = 0.5, Z4 = 0.5, Z1=1, Y=1),y=c(X = 0, Z1 = 0.5, Z2 = 0.25, Z4=0.5, Z3=0.5, Y=0)) 
   coords_df<-coords2df(coords)
   coordinates(irrelevantgraph)<-coords2list(coords_df)
-ggdag(irrelevantgraph)+theme_dag_blank()+labs(title="Graph with confounders and more",subtitle = "Z1 affects Y but not X, Z3 affects X not Y, Z2 affects both, Z4 irrelevant") #Plot causal graph
+ggdag(irrelevantgraph)+theme_dag_blank()+ggplot2::labs(title="Graph with confounders and more",subtitle = "Z1 affects Y but not X, Z3 affects X not Y, Z2 affects both, Z4 irrelevant") #Plot causal graph
 ```
 ```{r, class.source = 'fold-show'}
 adjustmentSets(irrelevantgraph,exposure="X",outcome="Y",type="all")
@@ -395,7 +396,7 @@ sequencegraph<-dagify(Y~X+Z1, Z1~Z2, Z2~Z3, X~Z3) #create graph
   coords<-list(x=c(X = 0, Z3 = 0, Z2 = 0.5, Z1=1, Y=1),y=c(X = 0, Z1 = 0.5, Z2 = 0.5, Z3=0.5, Y=0)) 
   coords_df<-coords2df(coords)
   coordinates(sequencegraph)<-coords2list(coords_df)
-ggdag(sequencegraph)+theme_dag_blank()+labs(title="Graph with confounders in a chain") #Plot causal graph
+ggdag(sequencegraph)+theme_dag_blank()+ggplot2::labs(title="Graph with confounders in a chain") #Plot causal graph
 
 ```
 ```{r}
@@ -483,7 +484,7 @@ latentconfoundedgraph<-toMAG(confoundgraph)
   coords<-list(x=c(X = 0, Z = 1, Y = 2),y=c(X = 0, Z = -0.1, Y = 0)) 
   coords_df<-coords2df(coords)
   coordinates(confoundgraph)<-coords2list(coords_df)
-ggdag(confoundgraph)+theme_dag_blank()+labs(title="Confounding of effect of X on Y by Z") #Plot causal graph
+ggdag(confoundgraph)+theme_dag_blank()+ggplot2::labs(title="Confounding of effect of X on Y by Z") #Plot causal graph
 
 
 ```

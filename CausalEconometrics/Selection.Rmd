@@ -1,6 +1,6 @@
 ---
 title: "Sample Selection and External Validity"
-author: "Causal Econometrics - David Childers"
+author: "Causal Econometrics - Rachel Childers"
 output:
   html_document:
     code_folding: hide
